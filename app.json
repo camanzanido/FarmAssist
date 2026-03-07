@@ -11,7 +11,12 @@
     "ios": {
       "supportsTablet": true
     },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.farmassist.app"
+    },
     "android": {
+      "package": "com.farmassist.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
