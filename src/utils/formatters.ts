@@ -51,3 +51,7 @@ export const parseNum = (value: string | number): number => {
   const parsed = parseFloat(value.replace(/,/g, ''));
   return isNaN(parsed) ? 0 : parsed;
 };
+
+export function emptyFive(): string[] {
+  return ['', '', '', '', ''];
+}

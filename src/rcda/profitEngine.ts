@@ -1,4 +1,5 @@
-import { cltlgy, getcltlgyRevised } from '../constants/data';
+import { cltlgy } from './constants';
+import { getcltlgyRevised } from './financials';
 import { transpose2DList } from '../utils/formatters';
 
 /**

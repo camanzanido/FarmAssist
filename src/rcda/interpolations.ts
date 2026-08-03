@@ -1,4 +1,5 @@
-import { cltlgy, getIncome, getProfit, getcltlgyRevised } from '../constants/data';
+import { cltlgy } from './constants';
+import { getcltlgyRevised, getIncome, getProfit } from './financials';
 
 /**
  * Interface for the 7-point interpolation results

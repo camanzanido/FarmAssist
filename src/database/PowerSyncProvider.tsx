@@ -1,18 +1,14 @@
 import { PowerSyncContext } from '@powersync/react-native';
 import React, { useEffect, useState } from 'react';
-import { SupabaseConnector } from './connector';
-import { db } from './powersync';
-import { supabase } from './supabase';
-
-const connector = new SupabaseConnector(supabase);
+import { db } from './powersync/powersync';
 
 export function PowerSyncProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     async function init() {
+      // Only initialize the database — connection happens after login
       await db.init();
-      await db.connect(connector);
       setReady(true);
     }
     init();
@@ -22,7 +18,7 @@ export function PowerSyncProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  if (!ready) return null; // or a splash/loading screen
+  if (!ready) return null;
 
   return (
     <PowerSyncContext.Provider value={db}>

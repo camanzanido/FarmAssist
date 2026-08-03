@@ -1,5 +1,6 @@
-import { cltlgy } from '../constants/data';
-import { lookUp } from '../logic/interpolations';
+import { cltlgy } from './constants';
+import { lookUp } from './interpolations';
+
 
 export function terciles() {
   let t1 = [];
@@ -63,7 +64,8 @@ export function tercileToPointDistribution() {
   return tercileToDistribution;
 }
 
-export function incrementProfit(tercile, yield1, crop1Price, crop2Price, cost, addCost, prof, crops) {
+// TODO: Error message "[TypeError: Cannot convert undefined value to object]"
+export function incrementProfit(tercile: any[][], yield1: any, crop1Price: any, crop2Price: any, cost: any, addCost: any, prof: string | any[], crops: any[][]) {
   const n = tercile[0].length;
   let arr1 = [];
   let arr2 = [];
@@ -105,6 +107,7 @@ export function incrementProfit(tercile, yield1, crop1Price, crop2Price, cost, a
   let arr4 = [];
   for (let i = 0; i < 100; i++) {
     let curArray = [];
+    let curVal = 0;
     for (let j = 0; j < n; j++) {
       if (i === 0) {
         curArray.push(j % 2 === 0 ? prof[0][0] : prof[0][1]);
@@ -114,7 +117,7 @@ export function incrementProfit(tercile, yield1, crop1Price, crop2Price, cost, a
             : arr3.map(row => row[j - 1]);
 
         let ind = lookUp(i, searchArray);
-        let curVal = arr4[i - 1][j];
+        curVal = arr4[i - 1][j];
 
         curArray.push(j % 2 === 0 ? curVal + arr2[ind][j + 1] : curVal + arr3[ind][j]);
       }
@@ -136,7 +139,7 @@ export function incrementProfit(tercile, yield1, crop1Price, crop2Price, cost, a
     averages.push(sum / arr4.length);
   }
 
-  let firstCrop1 = [], firstCrop2 = [], secondCrop1 = [], secondCrop2 = [];
+  let firstCrop1: (string | number)[] = [], firstCrop2: (string | number)[] = [], secondCrop1: (string | number)[] = [], secondCrop2: (string | number)[] = [];
   let indx = 2;
   for (let j = 0; j < 26; j++) {
     for (let i = 0; i < 2; i++) {
@@ -180,7 +183,7 @@ export function incrementProfit(tercile, yield1, crop1Price, crop2Price, cost, a
     else crop.push(v1 > v2 ? crops[0][0] : crops[1][0]);
   }
 
-  let cropDifference = [];
+  let cropDifference: number[] = [];
   let mid = Math.floor(crop.length / 2);
   let initMid = mid;
   for (let i = 0; i < firstCrop1.length; i++) {
@@ -188,7 +191,7 @@ export function incrementProfit(tercile, yield1, crop1Price, crop2Price, cost, a
     if (crop[i] === cropMid || firstCrop1[i] === " " || secondCrop1[i] === " ") {
       cropDifference.push(0);
     } else {
-      cropDifference.push(firstCrop1[i] - Math.abs(secondCrop1[i]));
+      cropDifference.push((firstCrop1[i] as number) - Math.abs(secondCrop1[i] as number));
     }
     if (mid + 1 < crop.length) mid++;
   }
@@ -196,7 +199,7 @@ export function incrementProfit(tercile, yield1, crop1Price, crop2Price, cost, a
   return [arr1, arr2, arr3, arr4, [counters, averages], [firstCrop1, secondCrop1, firstCrop2, secondCrop2], [arrLabel, cropDifference, crop]];
 }
 
-export function getCrossOver(crop, interpolation) {
+export function getCrossOver(crop: any[][], interpolation: any[]) {
   const firstCrop = crop[0][0];
   const secondCrop = crop[1][0];
   const summary = interpolation[1];
