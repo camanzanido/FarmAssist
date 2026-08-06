@@ -26,23 +26,34 @@ export async function getCurrentUserProfile(): Promise<User | null> {
 }
 
 export async function upsertUser(user: Omit<User, 'created_at'>): Promise<void> {
-  await db.execute(
-    `INSERT INTO users (id, name, username, status, created_at, user_type)
-     VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET
-       name = excluded.name,
-       username = excluded.username,
-       status = excluded.status,
-       user_type = excluded.user_type`,
-    [
-      user.id,
-      user.name,
-      user.username,
-      user.status,
-      new Date().toISOString(),
-      user.user_type,
-    ]
-  );
+  // PowerSync exposes each table as a SQLite view (with INSTEAD OF triggers),
+  // and views don't support native UPSERT — so check-then-insert-or-update instead.
+  await db.writeTransaction(async (tx) => {
+    const existing = await tx.getOptional<{ id: string }>(
+      'SELECT id FROM users WHERE id = ?',
+      [user.id]
+    );
+
+    if (existing) {
+      await tx.execute(
+        `UPDATE users SET name = ?, username = ?, status = ?, user_type = ? WHERE id = ?`,
+        [user.name, user.username, user.status, user.user_type, user.id]
+      );
+    } else {
+      await tx.execute(
+        `INSERT INTO users (id, name, username, status, created_at, user_type)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          user.id,
+          user.name,
+          user.username,
+          user.status,
+          new Date().toISOString(),
+          user.user_type,
+        ]
+      );
+    }
+  });
 }
 
 export async function updateUser(

@@ -1,12 +1,18 @@
 // auth/authService.ts
-import { upsertUser } from '../database/repositories/users';
 import { SupabaseConnector } from '../database/powersync/connector';
 import { db } from '../database/powersync/powersync';
+import { upsertUser } from '../database/repositories/users';
 import { supabase } from '../database/supabase/supabase';
 import { UserType } from './types';
 
 // Connects PowerSync to Supabase so sync begins
 export async function connectSync() {
+  // Tear down any existing connection first — otherwise switching identities
+  // (e.g. a restored session from a previous user still connected at boot,
+  // followed by a fresh signIn/signUp) can leave PowerSync uploading local
+  // rows under the wrong user's credentials, which Supabase RLS then rejects.
+  await disconnectSync();
+
   const connector = new SupabaseConnector(supabase);
   await db.connect(connector);
 }
@@ -39,6 +45,7 @@ export async function signUp(params: {
   if (error) throw error;
   if (!data.user) throw new Error('Sign up failed — no user returned');
 
+  console.log("Successfully created auth account.");
   // 2. Write profile to local DB immediately (works offline after this)
   await upsertUser({
     id: data.user.id,
@@ -47,6 +54,8 @@ export async function signUp(params: {
     status: 'active',
     user_type: params.user_type,
   });
+
+  console.log("Successfully insert auth account locally.")
 
   // 3. Start syncing if session was returned (email confirmation off)
   if (data.session) {

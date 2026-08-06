@@ -1,15 +1,21 @@
 import { PowerSyncContext } from '@powersync/react-native';
 import React, { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
 import { db } from './powersync/powersync';
 
 export function PowerSyncProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     async function init() {
-      // Only initialize the database — connection happens after login
-      await db.init();
-      setReady(true);
+      try {
+        // Only initialize the database — connection happens after login
+        await db.init();
+        setReady(true);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+      }
     }
     init();
 
@@ -17,6 +23,15 @@ export function PowerSyncProvider({ children }: { children: React.ReactNode }) {
       db.disconnect();
     };
   }, []);
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <Text>Failed to start the local database.</Text>
+        <Text>{error.message}</Text>
+      </View>
+    );
+  }
 
   if (!ready) return null;
 
