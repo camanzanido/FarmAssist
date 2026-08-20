@@ -2,7 +2,7 @@
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { DECISIONS, DecisionType } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'; // ✅ correct import
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
   StatusBar,
@@ -17,7 +17,6 @@ export default function DecisionTypeScreen() {
   const router = useRouter();
 
   const handleNext = (decisionType: DecisionType) => {
-    // ✅ correct navigation to the combined input flow
     router.push({
       pathname: '/input-flow',
       params: { decisionType },

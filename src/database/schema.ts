@@ -4,6 +4,7 @@ export const AppSchema = new Schema({
   users: new Table({
     name: column.text,
     username: column.text,
+    email: column.text,
     status: column.text,
     created_at: column.text,
     user_type: column.text,

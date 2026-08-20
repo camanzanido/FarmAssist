@@ -1,6 +1,34 @@
 import { climatology, cltlgy } from './constants';
 
 /**
+ * Expands the 5 user-facing climate scenarios (V.Dry, Dry, Average, Wet, V.Wet)
+ * into the 7-scenario RCDA climatology (driest, very_dry, below_avg, average,
+ * above_avg, very_good, wettest) the model's functions require.
+ */
+export function expandClimateScenarios(rows: number[][]): number[][] {
+  if (rows.length !== 5) return [];
+  const [driest, belowAvg, average, aboveAvg, wettest] = rows;
+  return [
+    driest,
+    driest, // copied the driest value for very dry
+    belowAvg,
+    average,
+    aboveAvg,
+    wettest, // copied wettest value for very good
+    wettest,
+  ];
+}
+
+/**
+ * Same expansion as expandClimateScenarios, for a single option's flat
+ * 5-value scenario array (used when snapshotting an option for storage,
+ * rather than the transposed two-option matrices used mid-computation).
+ */
+export function expandScenario5to7(values: number[]): number[] {
+  return expandClimateScenarios(values.map((v) => [v])).map((row) => row[0]);
+}
+
+/**
  * Calculates adjusted yield values based on linear interpolation
  */
 export function getYield(yieldData: number[][]): number[][] {

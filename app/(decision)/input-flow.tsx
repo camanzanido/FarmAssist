@@ -3,7 +3,7 @@ import StepIndicator from '@/src/components/decision/steps-indicator';
 import { CLIMATES, DECISION_LABELS, DecisionType, FIELD_CONFIG, FieldGroup, PLACEHOLDERS } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -14,15 +14,18 @@ function emptyFive(): string[] {
 export default function DecisionInputFlow() {
   const router = useRouter();
   const { decisionType } = useLocalSearchParams<{ decisionType: DecisionType }>();
-  if (!decisionType) {
-    // Fallback – should not happen if navigated correctly
-    router.back();
-    return null;
-  }
+
+  useEffect(() => {
+    // Fallback – should not happen if navigated correctly. Navigating here
+    // is a side effect, so it has to run in an effect rather than during
+    // render (calling it inline would also skip hooks below on this first
+    // render but not on later ones, which breaks React's rules of hooks).
+    if (!decisionType) router.back();
+  }, [decisionType]);
 
   // ---------- Naming state ----------
   const [names, setNames] = useState<string[]>(['', '']);
-  const placeholders = PLACEHOLDERS[decisionType];
+  const placeholders = decisionType ? PLACEHOLDERS[decisionType] : undefined;
   const namesValid = names[0].trim().length > 0 && names[1].trim().length > 0;
 
   // ---------- Data state for both options ----------
@@ -50,15 +53,35 @@ export default function DecisionInputFlow() {
   const currentOptionIdx = step === 'data-0' ? 0 : 1;
   const currentOptionData = optionData[currentOptionIdx];
 
+  // Non-empty isn't enough — "abc" passes an empty-string check but becomes
+  // NaN once result.tsx does Number(...) on it, silently corrupting the
+  // RCDA calculation with no error shown anywhere.
+  const isValidNumber = (v: string) => {
+    const trimmed = v.trim();
+    if (trimmed === '') return false;
+    const n = Number(trimmed);
+    return Number.isFinite(n);
+  };
+  // Only flags fields the user has actually typed something invalid into —
+  // an empty field is "incomplete", not "invalid", so it doesn't turn red
+  // before the user has had a chance to type.
+  const isFieldInvalid = (v: string) => v.trim() !== '' && !isValidNumber(v);
+
   const isDataValid = () => {
     const data = currentOptionData;
     return (
-      data.yield.every(v => v.trim() !== '') &&
-      data.cost.every(v => v.trim() !== '') &&
-      data.addCost.every(v => v.trim() !== '') &&
-      data.price.trim() !== ''
+      data.yield.every(isValidNumber) &&
+      data.cost.every(isValidNumber) &&
+      data.addCost.every(isValidNumber) &&
+      isValidNumber(data.price)
     );
   };
+
+  const hasInvalidEntry =
+    currentOptionData.yield.some(isFieldInvalid) ||
+    currentOptionData.cost.some(isFieldInvalid) ||
+    currentOptionData.addCost.some(isFieldInvalid) ||
+    isFieldInvalid(currentOptionData.price);
 
   const updateCurrentOptionField = (group: FieldGroup, index: number, value: string) => {
     setOptionData(prev => {
@@ -123,6 +146,11 @@ export default function DecisionInputFlow() {
 
   const { current, total } = getStepNumber();
 
+  // All hooks above must run unconditionally on every render, so this guard
+  // (for the effect above's router.back() to take effect) has to come after
+  // them rather than as an early return at the top of the component.
+  if (!decisionType) return null;
+
   // ---------- Render naming step ----------
   if (step === 'naming') {
     return (
@@ -153,7 +181,7 @@ export default function DecisionInputFlow() {
                   </View>
                   <TextInput
                     style={s.input}
-                    placeholder={placeholders[i]}
+                    placeholder={placeholders?.[i]}
                     placeholderTextColor="#B0A898"
                     value={names[i]}
                     onChangeText={v => setNames(prev => { const updated = [...prev]; updated[i] = v; return updated; })}
@@ -312,7 +340,7 @@ export default function DecisionInputFlow() {
                 <Text style={s.fieldUnit}>(₱/kg)</Text>
               </View>
               <TextInput
-                style={s.fullWidthInput}
+                style={[s.fullWidthInput, isFieldInvalid(currentOptionData.price) && s.fieldInvalid]}
                 keyboardType="numeric"
                 value={currentOptionData.price}
                 onChangeText={updateCurrentOptionPrice}
@@ -335,7 +363,7 @@ export default function DecisionInputFlow() {
                     <View key={i} style={s.gridColumn}>
                       <Text style={s.columnLabel}>{climateName}</Text>
                       <TextInput
-                        style={s.cell}
+                        style={[s.cell, isFieldInvalid(currentOptionData[key][i]) && s.fieldInvalid]}
                         keyboardType="numeric"
                         value={currentOptionData[key][i]}
                         onChangeText={v => updateCurrentOptionField(key, i, v)}
@@ -351,6 +379,9 @@ export default function DecisionInputFlow() {
             <View style={{ height: 120 }} />
           </ScrollView>
           <View style={s.footer}>
+            {hasInvalidEntry && (
+              <Text style={s.errorText}>Enter numbers only.</Text>
+            )}
             <TouchableOpacity
               style={[s.nextBtn, !isDataValid() && s.nextBtnDisabled]}
               onPress={handleNext}
@@ -469,6 +500,11 @@ const s = StyleSheet.create({
     color: '#0A3B28',
     borderWidth: 1,
     borderColor: '#E0D9CE'
+  },
+
+  fieldInvalid: {
+    borderColor: '#D9534F',
+    borderWidth: 1.5,
   },
 
   weatherCard: { backgroundColor: '#FFFFFF', borderRadius: 20,  padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,  shadowRadius: 10,  elevation: 3, },

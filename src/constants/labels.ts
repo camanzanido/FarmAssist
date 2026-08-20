@@ -1,20 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 
 // --- Types ---
-export type DecisionType = 'crop_choice' | 'harvest' | 'apply';
+export type DecisionType = 'crop_choice' | 'harvest' | 'protect';
 export type FieldGroup = 'yield' | 'cost' | 'addCost';
 
 // --- Data ---
 export const PLACEHOLDERS: Record<DecisionType, [string, string]> = {
   crop_choice: ['e.g. Rice IR64', 'e.g. Corn OPV'],
   harvest: ['e.g. Harvest Now', 'e.g. Delay 2 Weeks'],
-  apply: ['e.g. Apply', 'e.g. Do Not Apply'],
+  protect: ['e.g. Protect', 'e.g. Do Not Protect'],
 };
 
 export const DECISION_LABELS: Record<DecisionType, string> = {
   crop_choice: 'Crop Choice',
   harvest: 'Harvest Decision',
-  apply: 'Apply or Not Apply',
+  protect: 'Protect or Not Protect',
 };
 
 
@@ -33,10 +33,10 @@ export const DECISIONS = [
     description: 'Decide whether to harvest now or delay based on expected returns.',
   },
   {
-    id: 'apply' as DecisionType,
+    id: 'protect' as DecisionType,
     icon: 'flask-outline' as const,
-    label: 'Apply or Not Apply',
-    description: 'Evaluate if applying an input (pesticide, fertilizer) is worth the cost.',
+    label: 'Protect or Not P rotect',
+    description: 'Evaluate if protecting an input (pesticide, fertilizer) is worth the cost.',
   },
 ];
 

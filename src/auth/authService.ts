@@ -1,6 +1,7 @@
 // auth/authService.ts
 import { SupabaseConnector } from '../database/powersync/connector';
 import { db } from '../database/powersync/powersync';
+import { createLocation } from '../database/repositories/locations';
 import { upsertUser } from '../database/repositories/users';
 import { supabase } from '../database/supabase/supabase';
 import { UserType } from './types';
@@ -27,6 +28,8 @@ export async function signUp(params: {
   name: string;
   username: string;
   user_type: UserType;
+  city: string;
+  province: string;
 }) {
   // 1. Create auth account in Supabase
   const { data, error } = await supabase.auth.signUp({
@@ -51,11 +54,23 @@ export async function signUp(params: {
     id: data.user.id,
     name: params.name,
     username: params.username,
+    email: params.email,
     status: 'active',
     user_type: params.user_type,
   });
 
   console.log("Successfully insert auth account locally.")
+
+  // 2b. Write the user's location — captured once at registration so it
+  // doesn't need to be re-entered on every decision (RCDA already asks for
+  // enough manual input). Decisions created offline before this account
+  // existed have no location yet; that gets claimed once decision
+  // persistence is built.
+  await createLocation({
+    city: params.city,
+    province: params.province,
+    user_id: data.user.id,
+  });
 
   // 3. Start syncing if session was returned (email confirmation off)
   if (data.session) {
@@ -87,6 +102,7 @@ export async function signIn(email: string, password: string) {
       id: data.user.id,
       name: meta.name ?? '',
       username: meta.username ?? '',
+      email: data.user.email ?? '',
       status: 'active',
       user_type: meta.user_type ?? 'farmer',
     });

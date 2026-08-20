@@ -1,4 +1,5 @@
 // auth/AuthContext.tsx
+import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import React, {
   createContext,
   useCallback,
@@ -6,7 +7,6 @@ import React, {
   useEffect,
   useReducer,
 } from 'react';
-import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { db } from '../database/powersync/powersync';
 import { supabase } from '../database/supabase/supabase';
 import { restoreSession, signIn, signOut, signUp } from './authService';
@@ -20,6 +20,8 @@ interface AuthContextValue extends AuthState {
     name: string;
     username: string;
     user_type: UserType;
+    city: string;
+    province: string;
   }) => Promise<void>;
   signOut: () => Promise<void>;
   isResearcher: boolean;
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       [userId]
     );
     if (profile) {
+      console.log(profile);
       dispatch({ type: 'SET_USER', payload: profile });
     } else {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -73,20 +76,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function boot() {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      // Check for existing local user first (enables offline use immediately)
-      const anyUser = await db.getOptional<AuthUser>('SELECT * FROM users LIMIT 1');
-      if (anyUser) {
-        dispatch({ type: 'SET_USER', payload: anyUser });
+      // getSession() reads the persisted session from AsyncStorage (no network
+      // round trip), so it's safe to check first. Scoping the local profile
+      // lookup to that session's user id — instead of "whichever row happens
+      // to be first in the local users table" — is what actually determines
+      // whether anyone is signed in; a cached row alone doesn't mean that.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await loadUserProfile(session.user.id);
+      } else {
+        dispatch({ type: 'SET_LOADING', payload: false });
       }
 
-      // Then attempt to restore cloud session in background
+      // Then (re)connect PowerSync in the background if a session exists
       const isOnline = await restoreSession();
       dispatch({ type: 'SET_ONLINE', payload: isOnline });
-
-      if (isOnline) {
-        const { data } = await supabase.auth.getUser();
-        if (data.user) await loadUserProfile(data.user.id);
-      }
 
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -131,6 +135,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     name: string;
     username: string;
     user_type: UserType;
+    city: string;
+    province: string;
   }) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {

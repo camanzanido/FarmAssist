@@ -73,6 +73,26 @@ export function optionToComputeParams(option: Option) {
   };
 }
 
+const CLIMATE_KEYS = [
+  'driest', 'very_dry', 'below_avg', 'average', 'above_avg', 'very_good', 'wettest',
+] as const;
+
+// Inverse of optionToComputeParams: pack 7-value yield/cost/addCost arrays
+// (see expandScenario5to7 in src/rcda/financials.ts) into the named DB columns.
+export function buildOptionClimateFields(
+  yield7: number[],
+  cost7: number[],
+  addCost7: number[]
+): OptionClimateFields {
+  const fields = {} as Record<string, number>;
+  CLIMATE_KEYS.forEach((key, i) => {
+    fields[`yield_${key}`] = yield7[i];
+    fields[`cost_${key}`] = cost7[i];
+    fields[`add_cost_${key}`] = addCost7[i];
+  });
+  return fields as unknown as OptionClimateFields;
+}
+
 export async function getOptionsByUser(
   userId: string,
   decisionType?: string

@@ -64,7 +64,6 @@ export function tercileToPointDistribution() {
   return tercileToDistribution;
 }
 
-// TODO: Error message "[TypeError: Cannot convert undefined value to object]"
 export function incrementProfit(tercile: any[][], yield1: any, crop1Price: any, crop2Price: any, cost: any, addCost: any, prof: string | any[], crops: any[][]) {
   const n = tercile[0].length;
   let arr1 = [];

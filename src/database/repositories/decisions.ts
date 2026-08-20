@@ -71,7 +71,7 @@ async function insertDecisionOption(data: Omit<DecisionOption, 'id'>): Promise<v
       cost_driest, cost_very_dry, cost_below_avg, cost_average, cost_above_avg, cost_very_good, cost_wettest,
       add_cost_driest, add_cost_very_dry, add_cost_below_avg, add_cost_average, add_cost_above_avg, add_cost_very_good, add_cost_wettest,
       yield_driest, yield_very_dry, yield_below_avg, yield_average, yield_above_avg, yield_very_good, yield_wettest
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id, data.decision_id, data.option_slot, data.option_name, data.price,
       data.cost_driest, data.cost_very_dry, data.cost_below_avg, data.cost_average, data.cost_above_avg, data.cost_very_good, data.cost_wettest,

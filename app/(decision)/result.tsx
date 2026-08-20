@@ -1,19 +1,9 @@
-// screens/ResultScreen.tsx
-// RESULT — Receives all collected data, calls your RCDA model, displays results.
-//
-// HOW TO PLUG IN YOUR MODEL:
-//   Import your model: import { computeRCDA } from '@/src/models/rcda';
-//   Replace the placeholder `computeResult()` function below with your actual call.
-//
-// DATA SHAPE PASSED IN:
-//   optionNames:  string[]      — ['Option A', 'Option B']
-//   yieldData:    string[][]    — [5 values for opt0, 5 values for opt1]
-//   costData:     string[][]    — same shape
-//   addCostData:  string[][]    — same shape
-//   priceData:    string[]      — [price_opt0, price_opt1]
-//   climate:      number[]      — [vDry%, middle%, vWet%]
-import { getIncome, getProfit, getYield } from '@/src/rcda/financials';
-import { getCrossOver, incrementProfit, terciles } from '@/src/rcda/model';
+import { useAuth } from '@/src/auth/AuthContext';
+import { createDecision } from '@/src/database/repositories/decisions';
+import { getLocationsByUser } from '@/src/database/repositories/locations';
+import { buildOptionClimateFields, Option } from '@/src/database/repositories/options';
+import { expandClimateScenarios, expandScenario5to7, getIncome, getProfit, getYield } from '@/src/rcda/financials';
+import { getCrossOver, incrementProfit, tercileToPointDistribution } from '@/src/rcda/model';
 import { transpose2DList } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -28,9 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// ─── Plug your model in here ────────────────────────────────────────────────
-// Replace this with your actual RCDA computation function.
-// It receives the same arrays you collect across the wizard.
+
 interface RCDAResult {
   recommendedOption: number;       // 0 or 1
   scores: number[];                // one score per option
@@ -56,10 +44,12 @@ function computeResult(params: {
   // Your crop matrix expects format: [ ["Crop A"], ["Crop B"] ]
   const crops = [[params.optionNames[0]], [params.optionNames[1]]];
 
-  // 2. Transpose the matrices
-  const transposedYield = transpose2DList(params.yield);
-  const transposedCost = transpose2DList(params.cost);
-  const transposedAddCost = transpose2DList(params.addCost);
+  // 2. Transpose the matrices, then expand the 5 collected scenarios into
+  // the 7-scenario climatology the model functions require (see
+  // expandClimateScenarios in src/rcda/financials.ts)
+  const transposedYield = expandClimateScenarios(transpose2DList(params.yield));
+  const transposedCost = expandClimateScenarios(transpose2DList(params.cost));
+  const transposedAddCost = expandClimateScenarios(transpose2DList(params.addCost));
 
   // 3. Generate baseline financial data
   const yield2 = getYield(transposedYield);
@@ -71,9 +61,11 @@ function computeResult(params: {
   console.log('Profit:', profit);
 
   // 4. Run the core interpolation engine
-  const t = terciles();
+  // incrementProfit indexes tercile by climate scenario row (7, matching `profit`),
+  // so it needs the 7-row point distribution, not the raw 3-row terciles() output.
+  const tercilePoints = tercileToPointDistribution();
   const interpolationData = incrementProfit(
-    t,
+    tercilePoints,
     yield2,
     params.price[0],
     params.price[1],
@@ -144,33 +136,150 @@ export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const decisionType = params.decisionType as string;
-  const optionNames = JSON.parse((params.optionNames as string) || '[]');
-  const yieldData = JSON.parse((params.yieldData as string) || '[]');
-  const costData = JSON.parse((params.costData as string) || '[]');
-  const addCostData = JSON.parse((params.addCostData as string) || '[]');
-  const priceData = JSON.parse((params.priceData as string) || '[]');
-  const climate = JSON.parse((params.climate as string) || '[]');
+  // Parsing runs eagerly during render (not in an effect), so malformed or
+  // missing route params — e.g. a stale deep link straight to /result —
+  // would otherwise throw here and crash the whole screen. Fall back to
+  // empty values and flag it instead; the hooks below still need to run
+  // unconditionally either way, so the actual "couldn't load" screen is
+  // rendered after them, not via an early return here.
+  let decisionType = '';
+  let optionNames: string[] = [];
+  let yieldData: number[][] = [];
+  let costData: number[][] = [];
+  let addCostData: number[][] = [];
+  let priceData: number[] = [];
+  let climate: number[] = [];
+  let paramsError = false;
 
+  try {
+    decisionType = params.decisionType as string;
+    optionNames = JSON.parse((params.optionNames as string) || '[]');
+    yieldData = JSON.parse((params.yieldData as string) || '[]').map((row: string[]) => row.map(Number));
+    costData = JSON.parse((params.costData as string) || '[]').map((row: string[]) => row.map(Number));
+    addCostData = JSON.parse((params.addCostData as string) || '[]').map((row: string[]) => row.map(Number));
+    priceData = JSON.parse((params.priceData as string) || '[]').map(Number);
+    climate = JSON.parse((params.climate as string) || '[]').map(Number);
+  } catch (err) {
+    console.error('Failed to parse decision params:', err);
+    paramsError = true;
+  }
+
+  const { user } = useAuth();
   const [result, setResult] = useState<RCDAResult | null>(null);
+  const [computeError, setComputeError] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Snapshot a single option's 5 collected scenarios into the 7-scenario
+  // DB shape (see expandScenario5to7 in src/rcda/financials.ts)
+  const buildOptionSnapshot = (index: number, userId: string, locationId: string): Option => ({
+    id: '',
+    option_name: optionNames[index],
+    decision_type: decisionType,
+    price: priceData[index],
+    location_id: locationId,
+    user_id: userId,
+    created_at: new Date().toISOString(),
+    ...buildOptionClimateFields(
+      expandScenario5to7(yieldData[index]),
+      expandScenario5to7(costData[index]),
+      expandScenario5to7(addCostData[index])
+    ),
+  });
+
+  // Pulled out so the "Retry" button on the save-failure banner can call it
+  // again without recomputing the whole RCDA result.
+  const saveDecision = async (computed: RCDAResult) => {
+    setIsSaving(true);
+    try {
+      // Signed-out farmers get '' sentinels here — a later sign-in claims
+      // any unclaimed local decisions (see UPDATE.md, 2026-08-09 entry).
+      const userId = user?.id ?? '';
+      const userLocations = userId ? await getLocationsByUser(userId) : [];
+      const locationId = userLocations[0]?.id ?? '';
+
+      await createDecision({
+        decision: {
+          decision_type: decisionType,
+          location_id: locationId,
+          user_id: userId,
+          result: optionNames[computed.recommendedOption],
+          profit_increase: Math.abs(computed.scores[0] - computed.scores[1]),
+          climate_driest: climate[0],
+          climate_mid: climate[1],
+          climate_wettest: climate[2],
+        },
+        firstOption: buildOptionSnapshot(0, userId, locationId),
+        secondOption: buildOptionSnapshot(1, userId, locationId),
+      });
+      setSaveError(false);
+    } catch (err) {
+      console.error('Failed to save decision:', err);
+      setSaveError(true);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
+    if (paramsError) return; // nothing valid to compute from
+
     // Run computation (wrap in timeout to let loading state render)
-    const timer = setTimeout(() => {
-      const computed = computeResult({
-        optionNames,
-        yield: yieldData.map((row: string[]) => row.map(Number)),
-        cost: costData.map((row: string[]) => row.map(Number)),
-        addCost: addCostData.map((row: string[]) => row.map(Number)),
-        price: priceData.map(Number),
-        climate,
-      });
+    const timer = setTimeout(async () => {
+      let computed: RCDAResult;
+      try {
+        computed = computeResult({
+          optionNames,
+          yield: yieldData,
+          cost: costData,
+          addCost: addCostData,
+          price: priceData,
+          climate,
+        });
+      } catch (err) {
+        // e.g. malformed numeric input reaching NaN this far — without this,
+        // the screen would sit on "Computing decision…" forever with no
+        // error and no way out.
+        console.error('Failed to compute decision result:', err);
+        setComputeError(true);
+        return;
+      }
       setResult(computed);
+      await saveDecision(computed);
     }, 600);
     return () => clearTimeout(timer);
   }, []);
 
   const startOver = () => router.replace('/(tabs)');
+
+  const renderFallback = (message: string) => (
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A3B28" />
+      <View style={s.banner}>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={s.bannerTitle}>Analysis Result</Text>
+        <View style={{ width: 40 }} />
+      </View>
+      <View style={s.loadingWrap}>
+        <Ionicons name="warning-outline" size={32} color="#C0392B" />
+        <Text style={s.loadingText}>{message}</Text>
+        <TouchableOpacity style={s.startOverBtn} onPress={startOver} activeOpacity={0.8}>
+          <Ionicons name="refresh-outline" size={16} color="#0A3B28" />
+          <Text style={s.startOverText}>New Analysis</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+
+  if (paramsError) {
+    return renderFallback("We couldn't load this decision. Please start a new analysis.");
+  }
+
+  if (computeError) {
+    return renderFallback("We couldn't compute this decision. Please check your inputs and try again.");
+  }
 
   return (
     <SafeAreaView style={s.safe}>
@@ -192,6 +301,20 @@ export default function ResultScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+
+          {saveError && (
+            <View style={s.saveErrorBanner}>
+              <Ionicons name="warning-outline" size={16} color="#C0392B" />
+              <Text style={s.saveErrorText}>This decision could not be saved locally.</Text>
+              <TouchableOpacity
+                style={[s.retryBtn, isSaving && s.retryBtnDisabled]}
+                onPress={() => result && saveDecision(result)}
+                disabled={isSaving}
+              >
+                <Text style={s.retryBtnText}>{isSaving ? 'Retrying…' : 'Retry'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Recommendation card */}
           <View style={s.recommendCard}>
@@ -326,6 +449,19 @@ const s = StyleSheet.create({
   loadingText: { fontSize: 14, color: '#6B7B6E' },
 
   scroll: { padding: 20 },
+
+  saveErrorBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#FBEAEA', borderRadius: 10,
+    padding: 10, marginBottom: 14,
+  },
+  saveErrorText: { fontSize: 12, fontWeight: '600', color: '#C0392B', flex: 1 },
+  retryBtn: {
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 8, backgroundColor: '#C0392B',
+  },
+  retryBtnDisabled: { opacity: 0.6 },
+  retryBtnText: { fontSize: 11, fontWeight: '700', color: '#FFFFFF' },
 
   recommendCard: {
     backgroundColor: '#0A3B28', borderRadius: 20,
