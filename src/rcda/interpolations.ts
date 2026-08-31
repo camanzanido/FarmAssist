@@ -1,9 +1,6 @@
 import { cltlgy } from './constants';
 import { getcltlgyRevised, getIncome, getProfit } from './financials';
 
-/**
- * Interface for the 7-point interpolation results
- */
 export interface InterpolationPoint {
   climatology: number;
   profitSlopeA: number;
@@ -13,9 +10,6 @@ export interface InterpolationPoint {
   revisedSlopeB: number;
 }
 
-/**
- * Ported from interpolation7Points
- */
 export const interpolation7Points = (
   crop1Price: number,
   crop2Price: number,
@@ -47,9 +41,38 @@ export const interpolation7Points = (
   return interpolationPoints;
 };
 
-/**
- * Helper to find the index of a value in a search range
- */
+export const getRevisedProfitWalk = (profit: number[][], climate: number[]): number[][] => {
+  const cltlgyRevised = getcltlgyRevised(climate);
+  if (profit.length !== 7 || cltlgyRevised.length !== 7) return [];
+
+  const slopes: number[][] = [];
+  for (let i = 0; i < 6; i++) {
+    const gap = cltlgyRevised[i + 1] - cltlgyRevised[i];
+    slopes.push([
+      (profit[i + 1][0] - profit[i][0]) / gap,
+      (profit[i + 1][1] - profit[i][1]) / gap,
+    ]);
+  }
+
+  const walk: number[][] = [[profit[0][0], profit[0][1]]];
+  for (let percentile = 2; percentile <= 99; percentile++) {
+    const segment = lookUp(percentile - 1, cltlgyRevised);
+    const prev = walk[walk.length - 1];
+    walk.push([prev[0] + slopes[segment][0], prev[1] + slopes[segment][1]]);
+  }
+  walk.push([profit[6][0], profit[6][1]]);
+  return walk;
+};
+
+export const getCrossOverAverages = (profitWalk: number[][]): [number, number] => {
+  if (profitWalk.length === 0) return [0, 0];
+  const sums = profitWalk.reduce(
+    (acc, row) => [acc[0] + row[0], acc[1] + row[1]],
+    [0, 0]
+  );
+  return [sums[0] / profitWalk.length, sums[1] / profitWalk.length];
+};
+
 export const lookUp = (lookUpValue: number, searchArray: number[]): number => {
   if (lookUpValue < 1) return 0;
   for (let i = 0; i < searchArray.length; i++) {
@@ -59,9 +82,6 @@ export const lookUp = (lookUpValue: number, searchArray: number[]): number => {
   return 0;
 };
 
-/**
- * Calculates percentile rank
- */
 export const percentRank = (array: number[], value: number): number => {
   const sortedArray = [...array].sort((a, b) => a - b);
 

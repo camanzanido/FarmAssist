@@ -1,8 +1,3 @@
-// auth/guards/RoleGuard.tsx
-// Route-level guard: bounces users whose role isn't in `allowedRoles` away
-// from the segment it wraps (e.g. app/researcher/_layout.tsx). Signed-out
-// users count as "no role" and are redirected too, since researcher routes
-// require authentication regardless of the offline-first farmer flow.
 import { Href, Redirect } from 'expo-router';
 import React from 'react';
 import { LoadingModal } from '../../components/ui/loading-modal';

@@ -1,14 +1,26 @@
+import { useAuth } from '@/src/auth/AuthContext';
 import { HapticTab } from '@/src/components/ui/haptic-tab';
+import { Colors } from '@/src/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 
 export default function TabLayout() {
+  const { isResearcher } = useAuth();
+  if (isResearcher) return <Redirect href="/researcher/dashboard" />;
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#34C759',   // green when active
-        tabBarInactiveTintColor: '#4A4A4A', // dark gray when inactive
+        tabBarActiveTintColor: Colors.ink,
+        tabBarInactiveTintColor: '#9AA79D',
+        tabBarStyle: {
+          backgroundColor: Colors.surface,
+          borderTopColor: Colors.border,
+          height: 83,
+          paddingTop: 9,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         headerShown: false,
         tabBarButton: HapticTab,
       }}

@@ -40,7 +40,7 @@ export const DECISIONS = [
   },
 ];
 
-export const CLIMATES = ['V. Dry', 'Dry', 'Average', 'Wet', 'V. Wet'] as const;
+export const CLIMATES = ['Driest', 'Below Average', 'Average', 'Above Average', 'Wettest'] as const;
 
 export interface FieldConfigItem {
   key: FieldGroup;

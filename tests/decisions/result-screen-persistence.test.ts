@@ -1,11 +1,3 @@
-/**
- * Integration test for the persistence flow driven by
- * app/(decision)/result.tsx: computeResult() -> buildOptionSnapshot() ->
- * createDecision(). result.tsx itself is a React Native screen and isn't
- * unit tested here; this exercises the exact same repository/RCDA calls
- * it makes, so a broken save (e.g. a malformed INSERT) fails a test
- * instead of silently tripping result.tsx's try/catch in the running app.
- */
 import { fakeDb, closeFakeDb, initFakeDb, resetFakeDb } from '../helpers/fake-db';
 
 jest.mock('../../src/database/powersync/powersync', () => ({ db: fakeDb }));
@@ -101,8 +93,6 @@ describe('result screen persistence flow', () => {
   });
 
   it('persists successfully for a signed-out farmer, using empty user/location sentinels', async () => {
-    // Matches result.tsx: `user?.id ?? ''` and `userLocations[0]?.id ?? ''`
-    // for a farmer who created this decision entirely offline.
     const id = await createDecision({
       decision: {
         decision_type: DECISION_TYPE,

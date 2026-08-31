@@ -1,4 +1,5 @@
 // db/decisions.ts
+import { Transaction } from '@powersync/react-native';
 import { db } from '../powersync/powersync';
 import { Option, OptionClimateFields } from './options';
 import { generateId } from './utils';
@@ -63,9 +64,12 @@ function snapshotOption(
   };
 }
 
-async function insertDecisionOption(data: Omit<DecisionOption, 'id'>): Promise<void> {
+async function insertDecisionOption(
+  tx: Transaction,
+  data: Omit<DecisionOption, 'id'>
+): Promise<void> {
   const id = generateId();
-  await db.execute(
+  await tx.execute(
     `INSERT INTO decision_options (
       id, decision_id, option_slot, option_name, price,
       cost_driest, cost_very_dry, cost_below_avg, cost_average, cost_above_avg, cost_very_good, cost_wettest,
@@ -111,8 +115,8 @@ export async function createDecision(params: {
       ]
     );
 
-    await insertDecisionOption(snapshotOption(decisionId, 0, params.firstOption));
-    await insertDecisionOption(snapshotOption(decisionId, 1, params.secondOption));
+    await insertDecisionOption(tx, snapshotOption(decisionId, 0, params.firstOption));
+    await insertDecisionOption(tx, snapshotOption(decisionId, 1, params.secondOption));
   });
 
   return decisionId;
@@ -156,9 +160,17 @@ export async function getDecisionsByLocation(locationId: string): Promise<Decisi
   );
 }
 
-// Decisions are immutable records — no update function intentionally.
-// Delete cascades to decision_options via app logic since SQLite
-// won't enforce FK constraints automatically in PowerSync.
+export async function getAllDecisions(): Promise<Decision[]> {
+  return db.getAll<Decision>('SELECT * FROM decisions ORDER BY datetime DESC');
+}
+
+export async function claimLocalDecisions(userId: string, locationId: string): Promise<void> {
+  await db.execute(
+    'UPDATE decisions SET user_id = ?, location_id = ? WHERE user_id = ?',
+    [userId, locationId, '']
+  );
+}
+
 export async function deleteDecision(decisionId: string): Promise<void> {
   await db.writeTransaction(async (tx) => {
     await tx.execute('DELETE FROM decision_options WHERE decision_id = ?', [decisionId]);

@@ -1,11 +1,5 @@
-/**
- * TDD spec for the read side of the decisions repository:
- * getDecision / getDecisionsByUser / getDecisionsByLocation.
- */
 import { closeFakeDb, fakeDb, initFakeDb, resetFakeDb } from '../helpers/fake-db';
 
-// See tests/decisions/create.test.ts for why these two mocks are required
-// and why they must stay above the `decisions` import below.
 jest.mock('../../src/database/powersync/powersync', () => ({ db: fakeDb }));
 jest.mock('../../src/database/repositories/utils', () => require('../helpers/fake-generate-id'));
 
@@ -29,8 +23,6 @@ async function createFor(overrides: Parameters<typeof makeDecisionInput>[0] = {}
   });
 }
 
-// Backdoor to set a deterministic `datetime` for ordering tests, since
-// createDecision always stamps "now" and offers no way to override it.
 async function setDatetime(decisionId: string, isoString: string) {
   await fakeDb.execute('UPDATE decisions SET datetime = ? WHERE id = ?', [isoString, decisionId]);
 }

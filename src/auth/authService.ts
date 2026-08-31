@@ -1,17 +1,20 @@
 // auth/authService.ts
 import { SupabaseConnector } from '../database/powersync/connector';
 import { db } from '../database/powersync/powersync';
-import { createLocation } from '../database/repositories/locations';
+import { claimLocalDecisions } from '../database/repositories/decisions';
+import { createLocation, getLocationsByUser } from '../database/repositories/locations';
 import { upsertUser } from '../database/repositories/users';
 import { supabase } from '../database/supabase/supabase';
 import { UserType } from './types';
 
+async function claimIfEligible(userId: string, userType: string) {
+  if (userType === 'researcher') return;
+  const locations = await getLocationsByUser(userId);
+  await claimLocalDecisions(userId, locations[0]?.id ?? '');
+}
+
 // Connects PowerSync to Supabase so sync begins
 export async function connectSync() {
-  // Tear down any existing connection first — otherwise switching identities
-  // (e.g. a restored session from a previous user still connected at boot,
-  // followed by a fresh signIn/signUp) can leave PowerSync uploading local
-  // rows under the wrong user's credentials, which Supabase RLS then rejects.
   await disconnectSync();
 
   const connector = new SupabaseConnector(supabase);
@@ -31,7 +34,7 @@ export async function signUp(params: {
   city: string;
   province: string;
 }) {
-  // 1. Create auth account in Supabase
+  // Create auth account in Supabase
   const { data, error } = await supabase.auth.signUp({
     email: params.email,
     password: params.password,
@@ -49,7 +52,7 @@ export async function signUp(params: {
   if (!data.user) throw new Error('Sign up failed — no user returned');
 
   console.log("Successfully created auth account.");
-  // 2. Write profile to local DB immediately (works offline after this)
+  // Write profile to local DB immediately (works offline after this)
   await upsertUser({
     id: data.user.id,
     name: params.name,
@@ -61,18 +64,16 @@ export async function signUp(params: {
 
   console.log("Successfully insert auth account locally.")
 
-  // 2b. Write the user's location — captured once at registration so it
-  // doesn't need to be re-entered on every decision (RCDA already asks for
-  // enough manual input). Decisions created offline before this account
-  // existed have no location yet; that gets claimed once decision
-  // persistence is built.
   await createLocation({
     city: params.city,
     province: params.province,
     user_id: data.user.id,
   });
 
-  // 3. Start syncing if session was returned (email confirmation off)
+  // Claim any decisions made locally before this account existed
+  await claimIfEligible(data.user.id, params.user_type);
+
+  // Start syncing if session was returned (email confirmation off)
   if (data.session) {
     await connectSync();
   }
@@ -90,23 +91,28 @@ export async function signIn(email: string, password: string) {
   if (!data.user || !data.session) throw new Error('Sign in failed');
 
   // Pull user profile from local DB (may already exist from prior session)
-  const existingProfile = await db.getOptional<{ id: string }>(
-    'SELECT id FROM users WHERE id = ?',
+  const existingProfile = await db.getOptional<{ id: string; user_type: string }>(
+    'SELECT id, user_type FROM users WHERE id = ?',
     [data.user.id]
   );
 
   // If no local profile (first time on this device), write from auth metadata
+  let userType: string = existingProfile?.user_type ?? 'farmer';
   if (!existingProfile) {
     const meta = data.user.user_metadata;
+    userType = meta.user_type ?? 'farmer';
     await upsertUser({
       id: data.user.id,
       name: meta.name ?? '',
       username: meta.username ?? '',
       email: data.user.email ?? '',
       status: 'active',
-      user_type: meta.user_type ?? 'farmer',
+      user_type: userType,
     });
   }
+
+  // Claim any decisions made locally before this sign-in
+  await claimIfEligible(data.user.id, userType);
 
   // Start syncing — PowerSync will pull all rows the user has RLS access to
   await connectSync();
@@ -121,7 +127,6 @@ export async function signOut() {
   if (error) throw error;
 }
 
-// Called on app boot — restores session without requiring re-login
 export async function restoreSession(): Promise<boolean> {
   const { data } = await supabase.auth.getSession();
 

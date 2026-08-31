@@ -1,286 +1,140 @@
-import TooltipModal, { TooltipModalRef } from '@/src/components/decision/tooltip-modal';
-import { screenWidth } from '@/src/constants/theme';
+import { useAuth } from '@/src/auth/AuthContext';
+import { DECISIONS } from '@/src/constants';
+import { Colors } from '@/src/constants/colors';
+import { homeCopy as copy } from '@/src/constants/copy';
+import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
+import { useSyncStatus } from '@/src/hooks/use-sync-status';
+import { formatCurrency } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useRef } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
+}
 
 export default function HomeScreen() {
   const router = useRouter();
-  const weatherModalRef = useRef<TooltipModalRef>(null!);
-  // 1. Create refs for the actual buttons
-  const weatherButtonRef = useRef<View>(null!);
-  const tutorialButtonRef = useRef<View>(null!);
-  const handleOpenTooltip = (
-    buttonRef: React.RefObject<View>,
-    modalRef: React.RefObject<TooltipModalRef>
-  ) => {
-    // .measure() calculates the size and position of the element on the screen
-    buttonRef.current?.measure((x, y, width, height, pageX, pageY) => {
+  const { user } = useAuth();
+  const { connected } = useSyncStatus();
+  const userId = user?.id ?? '';
 
-      // Calculate exactly where the modal should go
-      const calculatedTop = pageY + height + 5; // 5 pixels below the bottom of the button
-      const calculatedRight = screenWidth - pageX - width; // Distance from the right edge
-      const calculatedPointerOffset = (width / 2) - 10; // Center the triangle under the icon
+  const [lastDecision, setLastDecision] = useState<Decision | null>(null);
 
-      // Pass the math to the modal!
-      modalRef.current?.open({
-        top: calculatedTop,
-        right: calculatedRight,
-        pointerOffset: calculatedPointerOffset > 0 ? calculatedPointerOffset : 10,
-      });
-    });
+  const load = useCallback(async () => {
+    if (!userId) {
+      setLastDecision(null);
+      return;
+    }
+    try {
+      const rows = await getDecisionsByUser(userId);
+      setLastDecision(rows[0] ?? null);
+    } catch (err) {
+      console.error('Failed to load last decision:', err);
+    }
+  }, [userId]);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const goToDecision = (decisionType: string) => {
+    router.push({ pathname: '/input-flow', params: { decisionType } });
   };
 
+  const isOffline = !!user && !connected;
+
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-      {/* Header Section */}
-        <View style={styles.headerContainer}>
-          <View>
-            <Text style={styles.greeting}>Hi, Juan!</Text>
-            <Text style={styles.date}>Thursday, March 26</Text>
-          </View>
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
+      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
 
-         <View style={styles.headerActions}>
-            {/* 3. Attach the View ref, and trigger the calculation onPress */}
-            <TouchableOpacity
-              ref={weatherButtonRef}
-              onPress={() => handleOpenTooltip(weatherButtonRef, weatherModalRef)}
-              style={styles.iconButton}
-            >
-              <Ionicons name="partly-sunny-outline" size={28} color="#0A3B28" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              ref={tutorialButtonRef}
-              onPress={() =>console.log('Tutorial button pressed!')} // Replace with actual handler when you set up the second modal
-              style={styles.iconButton}
-            >
-              <Ionicons name="help-circle-outline" size={28} color="#0A3B28" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Farm Status Overview */}
-        <View style={styles.statusCard}>
-          <View style={styles.statusHeader}>
-            <Text style={styles.statusTitle}>Active Crop Profile</Text>
-            <Text style={styles.statusPlot}>Plot A</Text>
-          </View>
-          <Text style={styles.cropName}>🌾 Rice (IR64)</Text>
-          <Text style={styles.cropStage}>Day 45 • Tillering Stage</Text>
-
-          <View style={styles.dataLogContainer}>
-            <Text style={styles.dataLogText}>Last data sync: 2 days ago</Text>
-          </View>
-        </View>
-
-        {/* The Main Action Button */}
-        <View style={styles.actionSection}>
-      <TouchableOpacity
-        style={styles.mainButton}
-        onPress={() => router.push('/decision-type')}
-      >
-        <Text style={styles.mainButtonText}>Generate Decision</Text>
-      </TouchableOpacity>
-        </View>
-
-        {/* Recent System Insights (Replaces Tasks) */}
-        <View style={styles.insightSection}>
-          <Text style={styles.sectionTitle}>Recent Insights</Text>
-
-          <View style={styles.insightCard}>
-            <View style={styles.insightHeader}>
-              <Text style={styles.insightCategory}>🛡️ Crop Protection</Text>
-              <Text style={styles.insightDate}>Mar 24</Text>
+        <View style={s.header}>
+          <View style={s.headerLeft}>
+            <View style={s.avatar}>
+              <Text style={s.avatarText}>{initials(user?.name ?? 'Guest')}</Text>
             </View>
-            <Text style={styles.insightText}>
-              Conditions favorable for Leaf Blight. Early protective measures recommended based on your last observation.
-            </Text>
+            <Text style={s.greeting}>{copy.greeting(user?.name?.split(' ')[0] ?? 'there')}</Text>
           </View>
-
-          <View style={styles.insightCard}>
-            <View style={styles.insightHeader}>
-              <Text style={styles.insightCategory}>🚜 Harvest Window</Text>
-              <Text style={styles.insightDate}>Mar 15</Text>
+          {isOffline && (
+            <View style={s.offlinePill}>
+              <View style={s.offlineDot} />
+              <Text style={s.offlinePillText}>{copy.offlinePill}</Text>
             </View>
-            <Text style={styles.insightText}>
-              Estimated optimal harvest window for Plot A approaches in approximately 30 days.
-            </Text>
-          </View>
+          )}
         </View>
+
+        <Text style={s.heading}>{copy.heading}</Text>
+        <Text style={s.subtitle}>{copy.subtitle}</Text>
+
+        <View style={s.decisionList}>
+          {DECISIONS.map(d => (
+            <TouchableOpacity key={d.id} style={s.decisionRow} activeOpacity={0.75} onPress={() => goToDecision(d.id)}>
+              <View style={s.decisionIconWrap}>
+                <Ionicons name={d.icon} size={25} color={Colors.ink} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.decisionLabel}>{d.label}</Text>
+                <Text style={s.decisionDesc} numberOfLines={1}>{d.description}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.ink} style={{ opacity: 0.3 }} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {lastDecision && (
+          <View style={s.lastDecisionBlock}>
+            <Text style={s.lastDecisionHeading}>{copy.lastDecisionHeading}</Text>
+            <View style={s.lastDecisionCard}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.lastDecisionResult} numberOfLines={1}>{lastDecision.result}</Text>
+                <Text style={s.lastDecisionMeta}>{formatDate(lastDecision.datetime)} · saved on this phone</Text>
+              </View>
+              <Text style={s.lastDecisionProfit}>+{formatCurrency(lastDecision.profit_increase)}</Text>
+            </View>
+          </View>
+        )}
 
       </ScrollView>
-{/* Weather Modal */}
-      <TooltipModal ref={weatherModalRef} title="Current Weather">
-        <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' }}>Los Baños, Calabarzon</Text>
-        <Text style={{ color: '#FFFFFF', fontSize: 32, fontWeight: 'bold' }}>28°C</Text>
-        <Text style={{ color: '#FFFFFF', fontSize: 14 }}>Partly Cloudy</Text>
-      </TooltipModal>
-
-      {/* Tutorial Modal (If you set up a second ref for it)
-      <TooltipModal
-        ref={tutorialModalRef}
-        title="Quick Tips"
-        top={100}
-        right={20}
-        pointerOffset={15} // <-- Keeps the pointer closer to the right edge for the last icon
-      >
-        <Text style={{ color: '#FFFFFF', fontSize: 14 }}>
-          Tap "Generate Decision" to get AI insights for your active crop profile.
-        </Text>
-      </TooltipModal> */}
-    </View>
-
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#E6F4FE',
-  },
-  content: {
-    padding: 20,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 30,
-  },
-  headerActions: {
-    flexDirection: 'row', // This places the icons side-by-side
-    alignItems: 'center',
-    gap: 15, // Creates space between the two icons (Requires React Native 0.71+)
-  },
-  iconButton: {
-    padding: 5, // Gives a nice invisible hit area for fingers to tap easily
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#0A3B28',
-  },
-  date: {
-    fontSize: 16,
-    color: '#4A5568',
-    marginTop: 4,
-  },
-  weatherButton: {
-    padding: 5,
-  },
-  weatherIcon: {
-    fontSize: 28,
-  },
-  statusCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 40,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  statusHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  statusTitle: {
-    fontSize: 14,
-    color: '#718096',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  statusPlot: {
-    fontSize: 14,
-    color: '#0A3B28',
-    fontWeight: 'bold',
-  },
-  cropName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#2D3748',
-  },
-  cropStage: {
-    fontSize: 16,
-    color: '#4A5568',
-    marginTop: 5,
-    marginBottom: 15,
-  },
-  dataLogContainer: {
-    backgroundColor: '#F7FAFC',
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  dataLogText: {
-    fontSize: 12,
-    color: '#A0AEC0',
-    textAlign: 'center',
-  },
-  actionSection: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.dark },
+  content: { padding: 22, paddingTop: 16, paddingBottom: 40 },
 
-  mainButton: {
-    backgroundColor: '#D1E8E2',
-    width: '100%',
-    paddingVertical: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  mainButtonText: {
-    color: '#000000',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  insightSection: {
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0A3B28',
-    marginBottom: 15,
-  },
-  insightCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: '#38A169', // A green accent line
-  },
-  insightHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  insightCategory: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2D3748',
-  },
-  insightDate: {
-    fontSize: 12,
-    color: '#A0AEC0',
-  },
-  insightText: {
-    fontSize: 14,
-    color: '#4A5568',
-    lineHeight: 20,
-  }
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 26 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontSize: 14, fontWeight: '800', color: Colors.dark },
+  greeting: { fontSize: 15, fontWeight: '600', color: '#C8DFD0' },
+  offlinePill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  offlineDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.amber },
+  offlinePillText: { fontSize: 12, fontWeight: '600', color: '#E0C68F' },
+
+  heading: { fontSize: 32, fontWeight: '800', color: Colors.onDark, lineHeight: 38, letterSpacing: -0.6, marginBottom: 8 },
+  subtitle: { fontSize: 14, color: Colors.onDarkFaint, marginBottom: 24 },
+
+  decisionList: { gap: 11, marginBottom: 24 },
+  decisionRow: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  decisionIconWrap: { width: 48, height: 48, borderRadius: 14, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+  decisionLabel: { fontSize: 16, fontWeight: '800', color: Colors.ink },
+  decisionDesc: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
+
+  lastDecisionBlock: { borderTopWidth: 1, borderTopColor: Colors.onDarkDivider, paddingTop: 18 },
+  lastDecisionHeading: { fontSize: 11, fontWeight: '700', letterSpacing: 1.1, color: Colors.onDarkFaint, marginBottom: 11 },
+  lastDecisionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.onDarkCard, borderRadius: 14, padding: 14 },
+  lastDecisionResult: { fontSize: 15, fontWeight: '700', color: Colors.onDark },
+  lastDecisionMeta: { fontSize: 13, color: Colors.onDarkFaint, marginTop: 2 },
+  lastDecisionProfit: { fontSize: 15, fontWeight: '800', color: Colors.onDarkSoft },
 });

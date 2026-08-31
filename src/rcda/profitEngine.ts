@@ -2,9 +2,6 @@ import { cltlgy } from './constants';
 import { getcltlgyRevised } from './financials';
 import { transpose2DList } from '../utils/formatters';
 
-/**
- * Logic to calculate the background "stripes" for the climate graph
- */
 export const calculateClimatologyStripes = (
   hundredPointsInterpolation: any[],
   climate: number[]

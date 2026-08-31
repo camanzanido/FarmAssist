@@ -1,14 +1,5 @@
-/**
- * TDD spec for deleteDecision() — src/database/repositories/decisions.ts.
- *
- * Decisions have no update operation by design (see the comment above
- * deleteDecision in the source: "Decisions are immutable records — no
- * update function intentionally"), so CRUD here is Create/Read/Delete.
- */
 import { closeFakeDb, fakeDb, initFakeDb, resetFakeDb } from '../helpers/fake-db';
 
-// See tests/decisions/create.test.ts for why these two mocks are required
-// and why they must stay above the `decisions` import below.
 jest.mock('../../src/database/powersync/powersync', () => ({ db: fakeDb }));
 jest.mock('../../src/database/repositories/utils', () => require('../helpers/fake-generate-id'));
 
@@ -50,8 +41,6 @@ describe('deleteDecision', () => {
     const id = await createFor();
     await deleteDecision(id);
 
-    // Nothing left under this decision_id, checked directly against the
-    // decision_options table (getDecision would already return null).
     const orphaned = await fakeDb.getAll('SELECT * FROM decision_options WHERE decision_id = ?', [id]);
     expect(orphaned).toEqual([]);
   });

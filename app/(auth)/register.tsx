@@ -1,8 +1,10 @@
+import { Colors } from '@/src/constants/colors';
+import { authCopy as copy } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 import { UserType } from '../../src/auth/types';
 
@@ -19,6 +21,31 @@ type FieldErrors = Partial<Record<
   string
 >>;
 
+function Field({
+  label, value, onChangeText, error, touched, ...rest
+}: {
+  label: string;
+  value: string;
+  onChangeText: (v: string) => void;
+  error?: string;
+  touched: boolean;
+} & Omit<React.ComponentProps<typeof TextInput>, 'style' | 'value' | 'onChangeText'>) {
+  const showError = touched && !!error;
+  return (
+    <View style={s.field}>
+      <Text style={s.label}>{label}</Text>
+      <TextInput
+        style={[s.input, showError && s.inputError]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholderTextColor={Colors.placeholder}
+        {...rest}
+      />
+      {showError && <Text style={s.errorText}>{error}</Text>}
+    </View>
+  );
+}
+
 export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -31,8 +58,6 @@ export default function RegisterScreen() {
   const [touched, setTouched] = useState(false);
   const { signUp, isLoading } = useAuth();
   const router = useRouter();
-
-  const insets = useSafeAreaInsets();
 
   function getFieldErrors(): FieldErrors {
     const errors: FieldErrors = {};
@@ -81,182 +106,86 @@ export default function RegisterScreen() {
   }
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
-      {/* Close Button */}
-      <TouchableOpacity
-        onPress={() => router.back()}
-        style={{
-          position: 'absolute',
-          top: insets.top > 0 ? insets.top : 16,
-          right: 16,
-          zIndex: 10
-        }}
-      >
-        <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#333' }}>✕</Text>
-      </TouchableOpacity>
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity onPress={() => router.back()} style={s.closeBtn}>
+            <Ionicons name="close" size={22} color={Colors.ink} />
+          </TouchableOpacity>
 
-      <Text style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 24 }}>
-        Create Account
-      </Text>
+          <Text style={s.title}>{copy.registerTitle}</Text>
 
-      <Text style={{ fontSize: 13, fontWeight: '600', color: '#666', marginBottom: 8 }}>
-        I am a...
-      </Text>
+          <Text style={s.sectionLabel}>{copy.iAm}</Text>
+          <View style={s.roleRow}>
+            {ROLES.map((role) => {
+              const isSelected = userType === role.type;
+              return (
+                <TouchableOpacity
+                  key={role.type}
+                  onPress={() => setUserType(role.type)}
+                  style={[s.roleCard, isSelected && s.roleCardSelected]}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name={role.icon} size={22} color={isSelected ? Colors.ink : Colors.inkFaint} style={{ marginBottom: 6 }} />
+                  <Text style={[s.roleLabel, isSelected && s.roleLabelSelected]}>{role.label}</Text>
+                  <Text style={s.roleDesc}>{role.description}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-      <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
-        {ROLES.map((role) => {
-          const isSelected = userType === role.type;
-          return (
-            <TouchableOpacity
-              key={role.type}
-              onPress={() => setUserType(role.type)}
-              style={{
-                flex: 1,
-                borderWidth: 2,
-                borderColor: isSelected ? '#007AFF' : '#ddd',
-                backgroundColor: isSelected ? '#EAF2FF' : '#fff',
-                borderRadius: 10,
-                padding: 12,
-                alignItems: 'center',
-              }}
-            >
-              <Ionicons
-                name={role.icon}
-                size={22}
-                color={isSelected ? '#007AFF' : '#666'}
-                style={{ marginBottom: 6 }}
-              />
-              <Text
-                style={{
-                  fontWeight: 'bold',
-                  color: isSelected ? '#007AFF' : '#333',
-                  marginBottom: 2,
-                }}
-              >
-                {role.label}
-              </Text>
-              <Text style={{ fontSize: 11, color: '#777', textAlign: 'center' }}>
-                {role.description}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+          <Field label={copy.fullName} value={name} onChangeText={setName} error={errors.name} touched={touched} />
+          <Field label={copy.username} value={username} onChangeText={setUsername} error={errors.username} touched={touched} autoCapitalize="none" />
+          <Field label={copy.cityLabel} value={city} onChangeText={setCity} error={errors.city} touched={touched} />
+          <Field label={copy.provinceLabel} value={province} onChangeText={setProvince} error={errors.province} touched={touched} />
+          <Field label={copy.email} value={email} onChangeText={setEmail} error={errors.email} touched={touched} autoCapitalize="none" keyboardType="email-address" />
+          <Field label={copy.password} value={password} onChangeText={setPassword} error={errors.password} touched={touched} secureTextEntry />
+          <Field label={copy.confirmPassword} value={confirmPassword} onChangeText={setConfirmPassword} error={errors.confirmPassword} touched={touched} secureTextEntry />
 
-      <TextInput
-        placeholder="Full name"
-        value={name}
-        onChangeText={setName}
-        style={{
-          borderWidth: 1, borderColor: touched && errors.name ? '#D32F2F' : '#ddd',
-          borderRadius: 8, padding: 12, marginBottom: touched && errors.name ? 4 : 12
-        }}
-      />
-      {touched && errors.name && (
-        <Text style={{ color: '#D32F2F', fontSize: 12, marginBottom: 8 }}>{errors.name}</Text>
-      )}
+          <TouchableOpacity onPress={handleRegister} disabled={isLoading} style={[s.submitBtn, isLoading && s.submitBtnDisabled]} activeOpacity={0.85}>
+            <Text style={s.submitBtnText}>{isLoading ? copy.creatingAccount : copy.createAccount}</Text>
+          </TouchableOpacity>
 
-      <TextInput
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-        autoCapitalize="none"
-        style={{
-          borderWidth: 1, borderColor: touched && errors.username ? '#D32F2F' : '#ddd',
-          borderRadius: 8, padding: 12, marginBottom: touched && errors.username ? 4 : 12
-        }}
-      />
-      {touched && errors.username && (
-        <Text style={{ color: '#D32F2F', fontSize: 12, marginBottom: 8 }}>{errors.username}</Text>
-      )}
-
-      <TextInput
-        placeholder="City / Municipality"
-        value={city}
-        onChangeText={setCity}
-        style={{
-          borderWidth: 1, borderColor: touched && errors.city ? '#D32F2F' : '#ddd',
-          borderRadius: 8, padding: 12, marginBottom: touched && errors.city ? 4 : 12
-        }}
-      />
-      {touched && errors.city && (
-        <Text style={{ color: '#D32F2F', fontSize: 12, marginBottom: 8 }}>{errors.city}</Text>
-      )}
-
-      <TextInput
-        placeholder="Province"
-        value={province}
-        onChangeText={setProvince}
-        style={{
-          borderWidth: 1, borderColor: touched && errors.province ? '#D32F2F' : '#ddd',
-          borderRadius: 8, padding: 12, marginBottom: touched && errors.province ? 4 : 12
-        }}
-      />
-      {touched && errors.province && (
-        <Text style={{ color: '#D32F2F', fontSize: 12, marginBottom: 8 }}>{errors.province}</Text>
-      )}
-
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        style={{
-          borderWidth: 1, borderColor: touched && errors.email ? '#D32F2F' : '#ddd',
-          borderRadius: 8, padding: 12, marginBottom: touched && errors.email ? 4 : 12
-        }}
-      />
-      {touched && errors.email && (
-        <Text style={{ color: '#D32F2F', fontSize: 12, marginBottom: 8 }}>{errors.email}</Text>
-      )}
-
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={{
-          borderWidth: 1, borderColor: touched && errors.password ? '#D32F2F' : '#ddd',
-          borderRadius: 8, padding: 12, marginBottom: touched && errors.password ? 4 : 12
-        }}
-      />
-      {touched && errors.password && (
-        <Text style={{ color: '#D32F2F', fontSize: 12, marginBottom: 8 }}>{errors.password}</Text>
-      )}
-
-      <TextInput
-        placeholder="Confirm password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        style={{
-          borderWidth: 1, borderColor: touched && errors.confirmPassword ? '#D32F2F' : '#ddd',
-          borderRadius: 8, padding: 12, marginBottom: touched && errors.confirmPassword ? 4 : 20
-        }}
-      />
-      {touched && errors.confirmPassword && (
-        <Text style={{ color: '#D32F2F', fontSize: 12, marginBottom: 16 }}>{errors.confirmPassword}</Text>
-      )}
-
-      <TouchableOpacity
-        onPress={handleRegister}
-        disabled={isLoading}
-        style={{
-          backgroundColor: isLoading ? '#99C2FF' : '#007AFF',
-          padding: 14, borderRadius: 8, marginBottom: 12
-        }}
-      >
-        <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>
-          {isLoading ? 'Creating account...' : 'Create Account'}
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-        <Text style={{ textAlign: 'center', color: '#007AFF' }}>
-          Already have an account? Sign in
-        </Text>
-      </TouchableOpacity>
-    </View>
+          <TouchableOpacity onPress={() => router.push('/(auth)/login')} style={s.footerRow}>
+            <Text style={s.footerText}>
+              {copy.haveAccount} <Text style={s.footerLink}>{copy.signInInstead}</Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.bg },
+  scroll: { padding: 24, paddingBottom: 40 },
+  closeBtn: {
+    alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
+    backgroundColor: Colors.border, alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+  },
+  title: { fontSize: 26, fontWeight: '800', color: Colors.ink, marginBottom: 22, letterSpacing: -0.4 },
+
+  sectionLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.6, color: Colors.inkFaint, marginBottom: 9 },
+  roleRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  roleCard: { flex: 1, borderWidth: 1.5, borderColor: Colors.borderStrong, backgroundColor: Colors.surface, borderRadius: 14, padding: 14, alignItems: 'center' },
+  roleCardSelected: { borderColor: Colors.ink, backgroundColor: Colors.accentTint },
+  roleLabel: { fontWeight: '700', color: Colors.inkSoft, marginBottom: 2 },
+  roleLabelSelected: { color: Colors.ink },
+  roleDesc: { fontSize: 11, color: Colors.inkFaint, textAlign: 'center' },
+
+  field: { marginBottom: 14 },
+  label: { fontSize: 13, fontWeight: '600', color: Colors.inkSoft, marginBottom: 6 },
+  input: { borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface, borderRadius: 12, padding: 14, fontSize: 15, color: Colors.ink },
+  inputError: { borderColor: Colors.danger },
+  errorText: { color: Colors.danger, fontSize: 12, marginTop: 5 },
+
+  submitBtn: { backgroundColor: Colors.ink, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, marginBottom: 16 },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
+
+  footerRow: { alignItems: 'center' },
+  footerText: { fontSize: 14, color: Colors.inkSoft },
+  footerLink: { color: Colors.accent, fontWeight: '700' },
+});

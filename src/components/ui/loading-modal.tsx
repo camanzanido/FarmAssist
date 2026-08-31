@@ -1,7 +1,3 @@
-// components/ui/loading-modal.tsx
-// Reusable full-screen loading overlay. Use for any "waiting on something"
-// state (account/session restore, sync, form submits) instead of a bare
-// `return null` or a one-off ActivityIndicator per screen.
 import React from 'react';
 import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
 

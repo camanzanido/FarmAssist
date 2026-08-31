@@ -1,5 +1,3 @@
-// auth/usePermissions.ts
-// Centralizes all role-based permission checks
 import { useAuth } from './AuthContext';
 
 export function usePermissions() {

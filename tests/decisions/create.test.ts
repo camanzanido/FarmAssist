@@ -1,16 +1,5 @@
-/**
- * TDD spec for createDecision() — src/database/repositories/decisions.ts.
- * Runs against a real (ephemeral) SQLite database via sql.js; see
- * tests/helpers/fake-db.ts and jest.config.js's moduleNameMapper.
- */
 import { fakeDb, closeFakeDb, initFakeDb, resetFakeDb } from '../helpers/fake-db';
 
-// Repository tests run under plain Node, not React Native, so the real
-// PowerSync/op-sqlite database and the uuid RN polyfill are swapped for
-// Node-compatible test doubles. These jest.mock calls must stay above the
-// `decisions` import below — ts-jest doesn't auto-hoist jest.mock like
-// babel-jest does, so this file relies on plain top-to-bottom execution
-// order instead.
 jest.mock('../../src/database/powersync/powersync', () => ({ db: fakeDb }));
 jest.mock('../../src/database/repositories/utils', () => require('../helpers/fake-generate-id'));
 

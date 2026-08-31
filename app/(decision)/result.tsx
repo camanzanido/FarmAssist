@@ -1,9 +1,11 @@
 import { useAuth } from '@/src/auth/AuthContext';
+import { Colors } from '@/src/constants/colors';
+import { resultCopy as copy } from '@/src/constants/copy';
 import { createDecision } from '@/src/database/repositories/decisions';
 import { getLocationsByUser } from '@/src/database/repositories/locations';
 import { buildOptionClimateFields, Option } from '@/src/database/repositories/options';
 import { expandClimateScenarios, expandScenario5to7, getIncome, getProfit, getYield } from '@/src/rcda/financials';
-import { getCrossOver, incrementProfit, tercileToPointDistribution } from '@/src/rcda/model';
+import { getCrossOverAverages, getRevisedProfitWalk } from '@/src/rcda/interpolations';
 import { transpose2DList } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
+  Share,
   StatusBar,
   StyleSheet,
   Text, TouchableOpacity,
@@ -40,75 +43,34 @@ function computeResult(params: {
   climate: number[];
 }): RCDAResult {
 
-  // 1. Format inputs to match what your TS functions expect
-  // Your crop matrix expects format: [ ["Crop A"], ["Crop B"] ]
-  const crops = [[params.optionNames[0]], [params.optionNames[1]]];
-
-  // 2. Transpose the matrices, then expand the 5 collected scenarios into
-  // the 7-scenario climatology the model functions require (see
-  // expandClimateScenarios in src/rcda/financials.ts)
   const transposedYield = expandClimateScenarios(transpose2DList(params.yield));
   const transposedCost = expandClimateScenarios(transpose2DList(params.cost));
   const transposedAddCost = expandClimateScenarios(transpose2DList(params.addCost));
 
-  // 3. Generate baseline financial data
+  // Generate baseline financial data
   const yield2 = getYield(transposedYield);
   const income = getIncome(yield2, params.price[0], params.price[1]);
   const profit = getProfit(income, transposedCost, transposedAddCost);
 
-  console.log('Yield:', yield2); // Debug log to inspect yield
-  console.log('Income:', income);
-  console.log('Profit:', profit);
+  // Walk profit across the 100 percentiles implied by the user's climate forecast
+  const profitWalk = getRevisedProfitWalk(profit, params.climate);
+  const [optAve1, optAve2] = getCrossOverAverages(profitWalk);
 
-  // 4. Run the core interpolation engine
-  // incrementProfit indexes tercile by climate scenario row (7, matching `profit`),
-  // so it needs the 7-row point distribution, not the raw 3-row terciles() output.
-  const tercilePoints = tercileToPointDistribution();
-  const interpolationData = incrementProfit(
-    tercilePoints,
-    yield2,
-    params.price[0],
-    params.price[1],
-    transposedCost,
-    transposedAddCost,
-    profit,
-    crops
-  );
-
-  console.log('Interpolation Data:', interpolationData); // Debug log to inspect interpolation output
-
-  // 5. Calculate crossover and find the optimal crop
-  const crossOver = getCrossOver(crops, interpolationData);
-
-  console.log('Crossover Data:', crossOver); // Debug log to inspect crossover output
-
-  // crossOver returns: [percentile, [Crop1Name, Ave1, Pct1], [Crop2Name, Ave2, Pct2]]
-  const optName1 = crossOver[1][0];
-  const optAve1 = crossOver[1][1];
-  const optName2 = crossOver[2][0];
-  const optAve2 = crossOver[2][1];
-
-  console.log(`Option 1: ${optName1} with average return ₱${optAve1}/ha`);
-  console.log(`Option 2: ${optName2} with average return ₱${optAve2}/ha`);
   // Determine which option won based on the averages
   const recommendedOption = optAve1 >= optAve2 ? 0 : 1;
   const scores = [Math.round(optAve1), Math.round(optAve2)];
 
-  // 6. Map data for the UI Breakdown Table
-  // interpolationData[3] (arr4) contains the 100-point profit scale.
-  // We can sample from it to populate the 5 climate scenarios (V. Dry, Dry, Avg, Wet, V. Wet)
+  //  Map data for the UI Breakdown Table
   const CLIMATE_LABELS = ['V. Dry', 'Dry', 'Average', 'Wet', 'V. Wet'];
   const breakdown: RCDAResult['breakdown'] = [];
 
-  // Sample indices to represent the 5 scenarios across the 100 points
-  const sampleIndices = [10, 30, 50, 70, 90];
+  // Sample indices (0-based) to represent the 5 scenarios across the 100 percentiles
+  const sampleIndices = [9, 29, 49, 69, 89];
 
   params.optionNames.forEach((_, oi) => {
     CLIMATE_LABELS.forEach((cl, ci) => {
-      // arr4 shape is roughly [100 rows][n cols].
-      // Option 0 profit is at column 0, Option 1 profit is at column 1
       const pointIndex = sampleIndices[ci];
-      const netReturn = interpolationData[3][pointIndex][oi];
+      const netReturn = profitWalk[pointIndex]?.[oi] ?? 0;
 
       breakdown.push({
         optionIndex: oi,
@@ -118,7 +80,7 @@ function computeResult(params: {
     });
   });
 
-  // 7. Return the structured object for the UI
+  // Return the structured object for the UI
   return {
     recommendedOption,
     scores,
@@ -127,21 +89,13 @@ function computeResult(params: {
     breakdown,
   };
 }
-// ────────────────────────────────────────────────────────────────────────────
 
-const CLIMATE_COLORS = ['#D4845A', '#C9A85A', '#5A9A6E', '#4A8BBF', '#4A7FB5'];
 const CLIMATE_LABELS = ['V. Dry', 'Dry', 'Average', 'Wet', 'V. Wet'];
 
 export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  // Parsing runs eagerly during render (not in an effect), so malformed or
-  // missing route params — e.g. a stale deep link straight to /result —
-  // would otherwise throw here and crash the whole screen. Fall back to
-  // empty values and flag it instead; the hooks below still need to run
-  // unconditionally either way, so the actual "couldn't load" screen is
-  // rendered after them, not via an early return here.
   let decisionType = '';
   let optionNames: string[] = [];
   let yieldData: number[][] = [];
@@ -169,9 +123,8 @@ export default function ResultScreen() {
   const [computeError, setComputeError] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
 
-  // Snapshot a single option's 5 collected scenarios into the 7-scenario
-  // DB shape (see expandScenario5to7 in src/rcda/financials.ts)
   const buildOptionSnapshot = (index: number, userId: string, locationId: string): Option => ({
     id: '',
     option_name: optionNames[index],
@@ -187,13 +140,10 @@ export default function ResultScreen() {
     ),
   });
 
-  // Pulled out so the "Retry" button on the save-failure banner can call it
-  // again without recomputing the whole RCDA result.
+
   const saveDecision = async (computed: RCDAResult) => {
     setIsSaving(true);
     try {
-      // Signed-out farmers get '' sentinels here — a later sign-in claims
-      // any unclaimed local decisions (see UPDATE.md, 2026-08-09 entry).
       const userId = user?.id ?? '';
       const userLocations = userId ? await getLocationsByUser(userId) : [];
       const locationId = userLocations[0]?.id ?? '';
@@ -237,9 +187,6 @@ export default function ResultScreen() {
           climate,
         });
       } catch (err) {
-        // e.g. malformed numeric input reaching NaN this far — without this,
-        // the screen would sit on "Computing decision…" forever with no
-        // error and no way out.
         console.error('Failed to compute decision result:', err);
         setComputeError(true);
         return;
@@ -252,21 +199,29 @@ export default function ResultScreen() {
 
   const startOver = () => router.replace('/(tabs)');
 
+  const handleShare = () => {
+    if (!result) return;
+    const winner = optionNames[result.recommendedOption];
+    Share.share({
+      message: `FarmAssist: ${winner} is the better choice — expected +₱${Math.abs(result.scores[0] - result.scores[1]).toLocaleString()}/ha over ${optionNames[1 - result.recommendedOption]}.`,
+    }).catch(() => {});
+  };
+
   const renderFallback = (message: string) => (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A3B28" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
       <View style={s.banner}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          <Ionicons name="arrow-back" size={22} color={Colors.onDark} />
         </TouchableOpacity>
         <Text style={s.bannerTitle}>Analysis Result</Text>
         <View style={{ width: 40 }} />
       </View>
       <View style={s.loadingWrap}>
-        <Ionicons name="warning-outline" size={32} color="#C0392B" />
+        <Ionicons name="warning-outline" size={32} color={Colors.danger} />
         <Text style={s.loadingText}>{message}</Text>
         <TouchableOpacity style={s.startOverBtn} onPress={startOver} activeOpacity={0.8}>
-          <Ionicons name="refresh-outline" size={16} color="#0A3B28" />
+          <Ionicons name="refresh-outline" size={16} color={Colors.ink} />
           <Text style={s.startOverText}>New Analysis</Text>
         </TouchableOpacity>
       </View>
@@ -274,153 +229,168 @@ export default function ResultScreen() {
   );
 
   if (paramsError) {
-    return renderFallback("We couldn't load this decision. Please start a new analysis.");
+    return renderFallback(copy.paramsError);
   }
 
   if (computeError) {
-    return renderFallback("We couldn't compute this decision. Please check your inputs and try again.");
+    return renderFallback(copy.computeError);
   }
+
+  const savedPill = isSaving ? copy.savingPill : saveError ? copy.notSavedPill : copy.savedPill;
+  const favorFlags = result
+    ? CLIMATE_LABELS.map(cl => {
+      const winnerVal = result.breakdown.find(b => b.optionIndex === result.recommendedOption && b.climateLabel === cl)?.netReturn ?? 0;
+      const loserVal = result.breakdown.find(b => b.optionIndex === 1 - result.recommendedOption && b.climateLabel === cl)?.netReturn ?? 0;
+      return winnerVal >= loserVal;
+    })
+    : [];
+  const favorCount = favorFlags.filter(Boolean).length;
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A3B28" />
-
-      {/* Dark green top banner */}
-      <View style={s.banner}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={s.bannerTitle}>Analysis Result</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
 
       {!result ? (
-        <View style={s.loadingWrap}>
-          <ActivityIndicator size="large" color="#0A3B28" />
-          <Text style={s.loadingText}>Computing decision…</Text>
-        </View>
+        <>
+          <View style={s.banner}>
+            <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+              <Ionicons name="arrow-back" size={22} color={Colors.onDark} />
+            </TouchableOpacity>
+            <Text style={s.bannerTitle}>Analysis Result</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <View style={s.loadingWrap}>
+            <ActivityIndicator size="large" color={Colors.ink} />
+            <Text style={s.loadingText}>{copy.loading}</Text>
+          </View>
+        </>
       ) : (
         <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
-          {saveError && (
-            <View style={s.saveErrorBanner}>
-              <Ionicons name="warning-outline" size={16} color="#C0392B" />
-              <Text style={s.saveErrorText}>This decision could not be saved locally.</Text>
-              <TouchableOpacity
-                style={[s.retryBtn, isSaving && s.retryBtnDisabled]}
-                onPress={() => result && saveDecision(result)}
-                disabled={isSaving}
-              >
-                <Text style={s.retryBtnText}>{isSaving ? 'Retrying…' : 'Retry'}</Text>
+          {/* Hero */}
+          <View style={s.hero}>
+            <View style={s.heroTopRow}>
+              <TouchableOpacity onPress={() => router.back()} style={s.heroBackBtn}>
+                <Ionicons name="arrow-back" size={22} color={Colors.onDark} />
               </TouchableOpacity>
+              <View style={[s.savedPill, saveError && s.savedPillError]}>
+                <Ionicons name={saveError ? 'warning-outline' : 'save-outline'} size={15} color={Colors.onDarkSoft} />
+                <Text style={s.savedPillText}>{savedPill}</Text>
+              </View>
             </View>
-          )}
 
-          {/* Recommendation card */}
-          <View style={s.recommendCard}>
-            <View style={s.recommendBadge}>
-              <Ionicons name="checkmark-circle" size={18} color="#5A9A6E" />
-              <Text style={s.recommendBadgeText}>RECOMMENDED</Text>
+            <Text style={s.answerEyebrow}>{copy.answerEyebrow}</Text>
+            <Text style={s.verdict}>{copy.verdict(optionNames[result.recommendedOption])}</Text>
+            <View style={s.deltaRow}>
+              <Text style={s.deltaValue}>+₱{Math.abs(result.scores[0] - result.scores[1]).toLocaleString()}</Text>
+              <Text style={s.deltaUnit}>{copy.perHectare}</Text>
             </View>
-            <Text style={s.recommendName}>
-              {optionNames[result.recommendedOption]}
+            <Text style={s.verdictDetail}>
+              {copy.verdictDetail(optionNames[result.recommendedOption], optionNames[1 - result.recommendedOption])}
             </Text>
-            <Text style={s.recommendScore}>
-              ₱{result.scores[result.recommendedOption].toLocaleString()}/ha expected return
-            </Text>
-            <Text style={s.recommendSummary}>{result.summary}</Text>
           </View>
 
-          {/* Score comparison */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>Expected Value Comparison</Text>
-            {optionNames.map((name: string, i: number) => {
-              const isWinner = i === result!.recommendedOption;
-              const maxScore = Math.max(...result!.scores);
-              const pct = maxScore > 0 ? Math.max(result!.scores[i] / maxScore, 0) : 0;
-              return (
-                <View key={i} style={[s.scoreRow, isWinner && s.scoreRowWinner]}>
-                  <View style={s.scoreTop}>
-                    <Text style={[s.scoreName, isWinner && s.scoreNameWinner]}>{name}</Text>
-                    <Text style={[s.scoreValue, isWinner && s.scoreValueWinner]}>
-                      ₱{result!.scores[i].toLocaleString()}
-                    </Text>
-                  </View>
-                  <View style={s.scoreBarBg}>
-                    <View
-                      style={[
-                        s.scoreBarFill,
-                        { width: `${Math.round(pct * 100)}%` },
-                        isWinner ? s.scoreBarWinner : s.scoreBarLoser,
-                      ]}
-                    />
-                  </View>
-                </View>
-              );
-            })}
-          </View>
+          <View style={s.body}>
+            {saveError && (
+              <View style={s.saveErrorBanner}>
+                <Ionicons name="warning-outline" size={16} color={Colors.danger} />
+                <Text style={s.saveErrorText}>{copy.saveErrorBanner}</Text>
+                <TouchableOpacity
+                  style={[s.retryBtn, isSaving && s.retryBtnDisabled]}
+                  onPress={() => result && saveDecision(result)}
+                  disabled={isSaving}
+                >
+                  <Text style={s.retryBtnText}>{isSaving ? copy.retrying : copy.retry}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
-          {/* Net return breakdown table */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>Net Return by Climate Scenario</Text>
-            <View style={s.table}>
-              {/* Table header */}
-              <View style={s.tableRow}>
-                <Text style={[s.tableCell, s.tableHeader, { flex: 1.4 }]}>Climate</Text>
-                {optionNames.map((n: string, i: number) => (
-                  <Text key={i} style={[s.tableCell, s.tableHeader]} numberOfLines={1}>{n}</Text>
+            {/* Expected earnings bars */}
+            <View style={s.card}>
+              <Text style={s.cardTitle}>{copy.earningsHeading}</Text>
+              {optionNames.map((name, i) => {
+                const isWinner = i === result.recommendedOption;
+                const maxScore = Math.max(...result.scores, 1);
+                const pct = Math.max(result.scores[i] / maxScore, 0);
+                return (
+                  <View key={i} style={s.earningsRow}>
+                    <View style={s.earningsTop}>
+                      <Text style={[s.earningsName, isWinner && s.earningsNameWinner]}>{name}</Text>
+                      <Text style={[s.earningsValue, isWinner && s.earningsValueWinner]}>₱{result.scores[i].toLocaleString()}</Text>
+                    </View>
+                    <View style={s.earningsBarBg}>
+                      <View style={[s.earningsBarFill, { width: `${Math.round(pct * 100)}%` }, isWinner ? s.earningsBarWinner : s.earningsBarLoser]} />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Keep in mind */}
+            <View style={s.card}>
+              <Text style={s.cardTitle}>{copy.keepInMindHeading}</Text>
+              <Text style={s.keepInMindBody}>
+                {copy.keepInMindBody(favorCount, CLIMATE_LABELS.length, optionNames[result.recommendedOption], optionNames[1 - result.recommendedOption])}
+              </Text>
+              <View style={s.favorRow}>
+                {CLIMATE_LABELS.map((cl, i) => (
+                  <View key={cl} style={s.favorItem}>
+                    <View style={[s.favorIconWrap, favorFlags[i] ? s.favorIconWrapYes : s.favorIconWrapNo]}>
+                      <Ionicons name={favorFlags[i] ? 'checkmark' : 'close'} size={17} color={favorFlags[i] ? Colors.accent : Colors.danger} />
+                    </View>
+                    <Text style={s.favorLabel}>{cl}</Text>
+                  </View>
                 ))}
               </View>
-              {CLIMATE_LABELS.map((cl, ci) => (
-                <View key={cl} style={[s.tableRow, ci % 2 === 0 && s.tableRowAlt]}>
-                  <View style={[s.tableCell, s.climateLabelCell, { flex: 1.4 }]}>
-                    <View style={[s.climateDot, { backgroundColor: CLIMATE_COLORS[ci] }]} />
-                    <Text style={s.climateCellText}>{cl}</Text>
-                  </View>
-                  {optionNames.map((_: string, oi: number) => {
-                    const row = result!.breakdown.find(
-                      b => b.optionIndex === oi && b.climateLabel === cl
-                    );
-                    const val = row?.netReturn ?? 0;
-                    return (
-                      <Text
-                        key={oi}
-                        style={[
-                          s.tableCell, s.tableCellValue,
-                          val >= 0 ? s.positiveVal : s.negativeVal,
-                        ]}
-                      >
-                        {val >= 0 ? '+' : ''}₱{val.toLocaleString()}
-                      </Text>
-                    );
-                  })}
-                </View>
-              ))}
             </View>
-          </View>
 
-          {/* Climate used */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>Climate Probabilities Used</Text>
-            <View style={s.climateRow}>
-              {['V. Dry', 'Middle', 'V. Wet'].map((label, i) => (
-                <View key={i} style={s.climatePill}>
-                  <Text style={s.climatePillLabel}>{label}</Text>
-                  <Text style={s.climatePillValue}>{climate[i]}%</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* Actions */}
-          <View style={s.actions}>
-            <TouchableOpacity style={s.startOverBtn} onPress={startOver} activeOpacity={0.8}>
-              <Ionicons name="refresh-outline" size={16} color="#0A3B28" />
-              <Text style={s.startOverText}>New Analysis</Text>
+            {/* Detail table disclosure */}
+            <TouchableOpacity style={s.disclosureRow} onPress={() => setShowDetail(v => !v)} activeOpacity={0.7}>
+              <Ionicons name="grid-outline" size={20} color={Colors.accentSoft} />
+              <Text style={s.disclosureText}>{copy.detailTable}</Text>
+              <Ionicons name={showDetail ? 'chevron-up' : 'chevron-down'} size={19} color={Colors.inkFaint} />
             </TouchableOpacity>
-          </View>
 
-          <View style={{ height: 40 }} />
+            {showDetail && (
+              <View style={s.table}>
+                <View style={s.tableRow}>
+                  <Text style={[s.tableCell, s.tableHeader, { flex: 1.4 }]}>Climate</Text>
+                  {optionNames.map((n, i) => (
+                    <Text key={i} style={[s.tableCell, s.tableHeader]} numberOfLines={1}>{n}</Text>
+                  ))}
+                </View>
+                {CLIMATE_LABELS.map((cl, ci) => (
+                  <View key={cl} style={[s.tableRow, ci % 2 === 0 && s.tableRowAlt]}>
+                    <View style={[s.tableCell, s.climateLabelCell, { flex: 1.4 }]}>
+                      <Text style={s.climateCellText}>{cl}</Text>
+                    </View>
+                    {optionNames.map((_, oi) => {
+                      const row = result.breakdown.find(b => b.optionIndex === oi && b.climateLabel === cl);
+                      const val = row?.netReturn ?? 0;
+                      return (
+                        <Text key={oi} style={[s.tableCell, s.tableCellValue, val >= 0 ? s.positiveVal : s.negativeVal]}>
+                          {val >= 0 ? '+' : ''}₱{val.toLocaleString()}
+                        </Text>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Actions */}
+            <View style={s.actions}>
+              <TouchableOpacity style={s.newComparisonBtn} onPress={startOver} activeOpacity={0.8}>
+                <Ionicons name="refresh-outline" size={16} color={Colors.ink} />
+                <Text style={s.newComparisonText}>{copy.newComparison}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.shareBtn} onPress={handleShare} activeOpacity={0.8}>
+                <Ionicons name="share-outline" size={20} color={Colors.ink} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ height: 40 }} />
+          </View>
         </ScrollView>
       )}
     </SafeAreaView>
@@ -428,10 +398,10 @@ export default function ResultScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F0E8' },
+  safe: { flex: 1, backgroundColor: Colors.bg },
 
   banner: {
-    backgroundColor: '#0A3B28',
+    backgroundColor: Colors.dark,
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,
@@ -441,105 +411,94 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center', justifyContent: 'center',
   },
-  bannerTitle: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
+  bannerTitle: { fontSize: 17, fontWeight: '700', color: Colors.onDark },
 
-  loadingWrap: {
-    flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14,
-  },
-  loadingText: { fontSize: 14, color: '#6B7B6E' },
+  loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 },
+  loadingText: { fontSize: 14, color: Colors.inkSoft },
 
-  scroll: { padding: 20 },
+  scroll: { paddingBottom: 0 },
+
+  // Hero
+  hero: { backgroundColor: Colors.dark, paddingTop: 50, paddingHorizontal: 22, paddingBottom: 26, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 },
+  heroBackBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
+  savedPill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  savedPillError: { backgroundColor: 'rgba(192,57,43,0.25)' },
+  savedPillText: { fontSize: 12, fontWeight: '600', color: Colors.onDarkSoft },
+  answerEyebrow: { fontSize: 12, fontWeight: '700', letterSpacing: 1.2, color: Colors.onDarkFaint, marginBottom: 10 },
+  verdict: { fontSize: 32, fontWeight: '800', color: Colors.onDark, lineHeight: 38, letterSpacing: -0.6 },
+  deltaRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 18, marginBottom: 6 },
+  deltaValue: { fontSize: 40, fontWeight: '800', color: Colors.onDarkSoft, lineHeight: 40 },
+  deltaUnit: { fontSize: 14, color: Colors.onDarkFaint, paddingBottom: 6 },
+  verdictDetail: { fontSize: 15, color: '#C8DFD0', lineHeight: 21 },
+
+  body: { padding: 20, paddingTop: 20 },
 
   saveErrorBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#FBEAEA', borderRadius: 10,
+    backgroundColor: Colors.dangerBg, borderRadius: 10,
     padding: 10, marginBottom: 14,
   },
-  saveErrorText: { fontSize: 12, fontWeight: '600', color: '#C0392B', flex: 1 },
-  retryBtn: {
-    paddingHorizontal: 10, paddingVertical: 5,
-    borderRadius: 8, backgroundColor: '#C0392B',
-  },
+  saveErrorText: { fontSize: 12, fontWeight: '600', color: Colors.danger, flex: 1 },
+  retryBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: Colors.danger },
   retryBtnDisabled: { opacity: 0.6 },
-  retryBtnText: { fontSize: 11, fontWeight: '700', color: '#FFFFFF' },
+  retryBtnText: { fontSize: 11, fontWeight: '700', color: Colors.onDark },
 
-  recommendCard: {
-    backgroundColor: '#0A3B28', borderRadius: 20,
-    padding: 22, marginBottom: 20,
-  },
-  recommendBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    marginBottom: 10,
-  },
-  recommendBadgeText: {
-    fontSize: 11, fontWeight: '800', color: '#5A9A6E', letterSpacing: 1.2,
-  },
-  recommendName: {
-    fontSize: 26, fontWeight: '800', color: '#FFFFFF', marginBottom: 4,
-  },
-  recommendScore: {
-    fontSize: 14, color: '#A8D4B4', marginBottom: 12,
-  },
-  recommendSummary: {
-    fontSize: 13, color: '#C8DFD0', lineHeight: 19,
-  },
+  card: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, marginBottom: 14 },
+  cardTitle: { fontSize: 14, fontWeight: '800', color: Colors.ink, marginBottom: 14 },
 
-  section: { marginBottom: 20 },
-  sectionTitle: {
-    fontSize: 13, fontWeight: '700', color: '#0A3B28',
-    letterSpacing: 0.3, marginBottom: 10,
-  },
+  earningsRow: { marginBottom: 14 },
+  earningsTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 7 },
+  earningsName: { fontSize: 15, fontWeight: '600', color: Colors.inkSoft },
+  earningsNameWinner: { color: Colors.ink, fontWeight: '800' },
+  earningsValue: { fontSize: 15, fontWeight: '700', color: Colors.inkSoft },
+  earningsValueWinner: { color: Colors.ink },
+  earningsBarBg: { height: 12, backgroundColor: Colors.divider, borderRadius: 6, overflow: 'hidden' },
+  earningsBarFill: { height: '100%', borderRadius: 6 },
+  earningsBarWinner: { backgroundColor: Colors.accent },
+  earningsBarLoser: { backgroundColor: '#C5BFB3' },
 
-  scoreRow: {
-    backgroundColor: '#FFFFFF', borderRadius: 14,
-    padding: 14, marginBottom: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
-  },
-  scoreRowWinner: { borderWidth: 2, borderColor: '#5A9A6E' },
-  scoreTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  scoreName: { fontSize: 14, fontWeight: '600', color: '#6B7B6E' },
-  scoreNameWinner: { color: '#0A3B28', fontWeight: '800' },
-  scoreValue: { fontSize: 14, fontWeight: '700', color: '#6B7B6E' },
-  scoreValueWinner: { color: '#0A3B28' },
-  scoreBarBg: {
-    height: 8, backgroundColor: '#F0EBE0', borderRadius: 4, overflow: 'hidden',
-  },
-  scoreBarFill: { height: '100%', borderRadius: 4 },
-  scoreBarWinner: { backgroundColor: '#5A9A6E' },
-  scoreBarLoser: { backgroundColor: '#C5BFB3' },
+  keepInMindBody: { fontSize: 14, color: '#5C6B60', lineHeight: 20, marginBottom: 14 },
+  favorRow: { flexDirection: 'row', gap: 6 },
+  favorItem: { flex: 1, alignItems: 'center' },
+  favorIconWrap: { width: '100%', height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  favorIconWrapYes: { backgroundColor: Colors.accentTint },
+  favorIconWrapNo: { backgroundColor: Colors.dangerBg },
+  favorLabel: { fontSize: 10, color: Colors.inkFaint, marginTop: 5 },
 
-  table: {
-    backgroundColor: '#FFFFFF', borderRadius: 14, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+  disclosureRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: Colors.surface, borderRadius: 18, padding: 16, paddingHorizontal: 18,
+    marginBottom: 14,
   },
+  disclosureText: { flex: 1, fontSize: 15, fontWeight: '700', color: Colors.ink },
+
+  table: { backgroundColor: Colors.surface, borderRadius: 14, overflow: 'hidden', marginBottom: 14 },
   tableRow: { flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 12 },
   tableRowAlt: { backgroundColor: '#F8F5F0' },
-  tableCell: { flex: 1, fontSize: 12, color: '#0A3B28', textAlign: 'center' },
-  tableHeader: { fontWeight: '700', color: '#8A8070', fontSize: 11, letterSpacing: 0.3 },
-  climateLabelCell: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'flex-start' },
-  climateDot: { width: 8, height: 8, borderRadius: 4 },
-  climateCellText: { fontSize: 12, fontWeight: '600', color: '#0A3B28' },
+  tableCell: { flex: 1, fontSize: 12, color: Colors.ink, textAlign: 'center' },
+  tableHeader: { fontWeight: '700', color: Colors.inkFaint, fontSize: 11, letterSpacing: 0.3 },
+  climateLabelCell: { justifyContent: 'center' },
+  climateCellText: { fontSize: 12, fontWeight: '600', color: Colors.ink, textAlign: 'left' },
   tableCellValue: { fontWeight: '700' },
-  positiveVal: { color: '#2E7D52' },
-  negativeVal: { color: '#C0392B' },
+  positiveVal: { color: Colors.accent },
+  negativeVal: { color: Colors.danger },
 
-  climateRow: { flexDirection: 'row', gap: 10 },
-  climatePill: {
-    flex: 1, backgroundColor: '#FFFFFF', borderRadius: 12,
-    paddingVertical: 12, alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+  actions: { flexDirection: 'row', gap: 10 },
+  newComparisonBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, backgroundColor: Colors.surface, borderRadius: 16,
+    height: 56, borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
-  climatePillLabel: { fontSize: 10, fontWeight: '700', color: '#8A8070', letterSpacing: 0.5, marginBottom: 4 },
-  climatePillValue: { fontSize: 18, fontWeight: '800', color: '#0A3B28' },
-
-  actions: { gap: 10 },
+  newComparisonText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
+  shareBtn: {
+    width: 56, height: 56, borderRadius: 16, backgroundColor: Colors.surface,
+    borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center',
+  },
   startOverBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, backgroundColor: '#FFFFFF', borderRadius: 14,
-    paddingVertical: 14, borderWidth: 1.5, borderColor: '#E0D9CE',
+    gap: 8, backgroundColor: Colors.surface, borderRadius: 14,
+    paddingVertical: 14, borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
-  startOverText: { fontSize: 15, fontWeight: '700', color: '#0A3B28' },
+  startOverText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
 });

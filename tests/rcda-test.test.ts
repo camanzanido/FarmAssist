@@ -1,43 +1,25 @@
-/**
- * Unit tests for the RCDA calculation engine (src/rcda).
- *
- * The primary fixture below is the worked example from the original RCDA
- * Excel workbook: two crops (cabbage vs. atsal), 5 collected climate
- * scenarios (Driest, Below Average, Average, Above Average, Wettest), and
- * a climate forecast of Driest 90% / Mid 5% / Wettest 5%.
- *
- * See the bottom of this file ("end-to-end pipeline") for an important
- * caveat: the full pipeline currently does NOT reproduce the Excel
- * workbook's expected result for this fixture.
- */
 
+import { cltlgy } from '../src/rcda/constants';
 import {
   expandClimateScenarios,
   expandScenario5to7,
   getDifference,
   getDifferenceGraph,
-  getcltlgyRevised,
   getIncome,
   getProfit,
   getProfitByDecile,
   getRegretPlease,
   getYield,
+  getcltlgyRevised,
   xAxisRevisedClimatology,
 } from '../src/rcda/financials';
-import { cltlgy } from '../src/rcda/constants';
-import { lookUp, percentRank } from '../src/rcda/interpolations';
 import {
-  getCrossOver,
-  incrementProfit,
-  tercileToPointDistribution,
-  terciles,
-} from '../src/rcda/model';
+  getCrossOverAverages,
+  getRevisedProfitWalk,
+  lookUp,
+  percentRank,
+} from '../src/rcda/interpolations';
 
-// ---------------------------------------------------------------------------
-// Fixture: worked example from the RCDA Excel workbook
-// ---------------------------------------------------------------------------
-// Rows are climate scenarios [Driest, Below Average, Average, Above Average,
-// Wettest]; columns are [cabbage, atsal].
 const EXAMPLE_YIELD = [
   [0.0, 0.0],
   [3000.0, 8000.0],
@@ -62,14 +44,15 @@ const EXAMPLE_ADD_COST = [
 const EXAMPLE_PRICE: [number, number] = [70, 40]; // [cabbage, atsal]
 const EXAMPLE_CLIMATE = [90, 5, 5]; // [Driest %, Mid %, Wettest %]
 
-// 5 scenarios expanded to the model's 7-point climatology
-// (Driest, Very Dry, Below Avg, Average, Above Avg, Very Good, Wettest).
 const EXAMPLE_YIELD_7 = expandClimateScenarios(EXAMPLE_YIELD);
 const EXAMPLE_COST_7 = expandClimateScenarios(EXAMPLE_COST);
 const EXAMPLE_ADD_COST_7 = expandClimateScenarios(EXAMPLE_ADD_COST);
+console.log("Cost: ", EXAMPLE_COST_7);
+console.log("Add Cost: ", EXAMPLE_ADD_COST_7);
 
 describe('financials: expandClimateScenarios / expandScenario5to7', () => {
   it('duplicates the driest row into "very dry" and the wettest row into "very good"', () => {
+    console.log("Expanded Yield", EXAMPLE_YIELD_7);
     expect(EXAMPLE_YIELD_7).toEqual([
       [0.0, 0.0],
       [0.0, 0.0],
@@ -96,6 +79,7 @@ describe('financials: expandClimateScenarios / expandScenario5to7', () => {
 describe('financials: getYield', () => {
   it('interpolates Very Dry from Driest/Below-Average and Very Good from Above-Average/Wettest', () => {
     const result = getYield(EXAMPLE_YIELD_7);
+    console.log("Yield:", result);
     expect(result[0]).toEqual([0, 0]); // Driest: unchanged
     expect(result[1][0]).toBeCloseTo(900, 6); // Very Dry cabbage: 0 + (3000-0)/30*9
     expect(result[1][1]).toBeCloseTo(2400, 6); // Very Dry atsal: 0 + (8000-0)/30*9
@@ -116,6 +100,7 @@ describe('financials: getIncome', () => {
   it('multiplies each yield row by the two crop prices', () => {
     const yield7 = getYield(EXAMPLE_YIELD_7);
     const income = getIncome(yield7, EXAMPLE_PRICE[0], EXAMPLE_PRICE[1]);
+    console.log("Income: ",  income);
     expect(income[0]).toEqual([0, 0]);
     expect(income[2]).toEqual([210000, 320000]); // 3000*70, 8000*40
     expect(income[3]).toEqual([560000, 400000]); // 8000*70, 10000*40
@@ -133,6 +118,8 @@ describe('financials: getProfit', () => {
     const yield7 = getYield(EXAMPLE_YIELD_7);
     const income = getIncome(yield7, EXAMPLE_PRICE[0], EXAMPLE_PRICE[1]);
     const profit = getProfit(income, EXAMPLE_COST_7, EXAMPLE_ADD_COST_7);
+
+    console.log("profit: ", profit);
 
     expect(profit[0]).toEqual([-20000, -30000]); // no income yet, loss = -cost (floor)
     expect(profit[1]).toEqual([43000, 66000]);
@@ -272,81 +259,35 @@ describe('interpolations: percentRank', () => {
   });
 });
 
-describe('model: terciles / tercileToPointDistribution', () => {
-  it('produces three 52-point series that always sum to 100', () => {
-    const [t1, t2, t3] = terciles();
-    expect(t1).toHaveLength(52);
-    expect(t2).toHaveLength(52);
-    expect(t3).toHaveLength(52);
-    for (let i = 0; i < 52; i++) {
-      expect(t1[i] + t2[i] + t3[i]).toBeCloseTo(100, 6);
-    }
-  });
-
-  it('starts at the documented climatology split (33/34/33, then widening)', () => {
-    const [t1, t2, t3] = terciles();
-    expect([t1[0], t1[1], t1[2], t1[3]]).toEqual([33, 33, 90, 90]);
-    expect([t2[0], t2[1]]).toEqual([34, 34]);
-    expect([t3[0], t3[1]]).toEqual([33, 33]);
-  });
-
-  it('tercileToPointDistribution returns one row per fixed climatology point (7), 52 columns each', () => {
-    const dist = tercileToPointDistribution();
-    expect(dist).toHaveLength(cltlgy.length);
-    dist.forEach(row => expect(row).toHaveLength(52));
-    // Row 0 is defined as "always 1" (the driest anchor point).
-    expect(dist[0].every(v => v === 1)).toBe(true);
-    // Last row is defined as "always 100" (the wettest anchor point).
-    expect(dist[dist.length - 1].every(v => v === 100)).toBe(true);
-  });
-});
-
-describe('model: end-to-end pipeline (incrementProfit + getCrossOver)', () => {
-  // This mirrors the wiring in app/(decision)/result.tsx's computeResult():
-  // transpose the crop-major input into scenario-major rows, expand 5->7
-  // scenarios, then run yield -> income -> profit -> incrementProfit -> getCrossOver.
-  const crops = [['cabbage'], ['atsal']];
-
+describe('interpolations: getRevisedProfitWalk / getCrossOverAverages', () => {
   const yield7 = getYield(EXAMPLE_YIELD_7);
   const income = getIncome(yield7, EXAMPLE_PRICE[0], EXAMPLE_PRICE[1]);
   const profit = getProfit(income, EXAMPLE_COST_7, EXAMPLE_ADD_COST_7);
-  const tercilePoints = tercileToPointDistribution();
 
-  const interpolationData = incrementProfit(
-    tercilePoints,
-    yield7,
-    EXAMPLE_PRICE[0],
-    EXAMPLE_PRICE[1],
-    EXAMPLE_COST_7,
-    EXAMPLE_ADD_COST_7,
-    profit,
-    crops
-  );
-  const crossOver = getCrossOver(crops, interpolationData);
-
-  it('recommends atsal for this fixture, matching the Excel workbook\'s pick', () => {
-    // Excel expects: cabbage 105,221 (94%) vs atsal 112,262 (MAX).
-    // The current TS pipeline agrees on WHICH crop wins...
-    expect(crossOver[2][0]).toBe('atsal');
-    expect(crossOver[1][1]).toBeLessThan(crossOver[2][1]);
+  it('starts the walk at the Driest scenario\'s profit (Excel F91/G91 = L6/M6)', () => {
+    const walk = getRevisedProfitWalk(profit, EXAMPLE_CLIMATE);
+    expect(walk[0]).toEqual([-20000, -30000]);
   });
 
-  it('[KNOWN DISCREPANCY] does not currently reproduce the Excel workbook\'s magnitudes', () => {
-    // ...but NOT on the size of the expected return. The Excel workbook
-    // expects roughly cabbage=105,221 / atsal=112,262 (diff ~P7,041.64).
-    // The current pipeline instead produces:
-    const cabbageAvg = crossOver[1][1] as number;
-    const atsalAvg = crossOver[2][1] as number;
-    expect(cabbageAvg).toBeCloseTo(27.27, 1);
-    expect(atsalAvg).toBeCloseTo(1068.12, 1);
+  it('matches Excel F92/G92 for percentile 2 (LOOKUP into the first revised segment)', () => {
+    const walk = getRevisedProfitWalk(profit, EXAMPLE_CLIMATE);
+    expect(walk[1][0]).toBeCloseTo(-17602.076124567473, 4);
+    expect(walk[1][1]).toBeCloseTo(-26346.020761245676, 4);
+  });
 
-    // Root cause: incrementProfit()/tercileToPointDistribution() never
-    // receive the user's climate forecast (Driest/Mid/Wettest %). They only
-    // use the fixed default split baked into terciles() (33/34/33), so
-    // EXAMPLE_CLIMATE = [90, 5, 5] has zero effect on this result. The
-    // climate-aware path (getcltlgyRevised -> interpolation7Points in
-    // src/rcda/interpolations.ts) exists but is never called from
-    // app/(decision)/result.tsx. This test exists to document today's
-    // actual behavior and should be revisited once that wiring is fixed.
+  it('returns [] unless given exactly 7 profit rows and a valid climate forecast', () => {
+    expect(getRevisedProfitWalk([[1, 1]], EXAMPLE_CLIMATE)).toEqual([]);
+    expect(getRevisedProfitWalk(profit, null as unknown as number[])).toEqual([]);
+  });
+
+  it('reproduces the Excel workbook\'s exact crossover averages (F193/G193)', () => {
+    const walk = getRevisedProfitWalk(profit, EXAMPLE_CLIMATE);
+    const [cabbageAvg, atsalAvg] = getCrossOverAverages(walk);
+    expect(cabbageAvg).toBeCloseTo(105220.57033248087, 4);
+    expect(atsalAvg).toBeCloseTo(112262.21483375966, 4);
+    // Excel's K35 (93.7% -> "94%") and L36 (P7,041.64) fall out of these:
+    expect(cabbageAvg / atsalAvg).toBeCloseTo(0.93727502604766699, 6);
+    expect(atsalAvg - cabbageAvg).toBeCloseTo(7041.6445012787881, 4);
   });
 });
+

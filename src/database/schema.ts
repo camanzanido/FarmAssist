@@ -129,4 +129,16 @@ export const AppSchema = new Schema({
     generated_at: column.text,
     researcher_id: column.text,
   }),
+
+  sync_errors: new Table(
+    {
+      table_name: column.text,
+      operation: column.text,
+      error_code: column.text,
+      error_message: column.text,
+      record_id: column.text,
+      occurred_at: column.text,
+    },
+    { localOnly: true, indexes: { occurredAt: ['occurred_at'] } }
+  ),
 });

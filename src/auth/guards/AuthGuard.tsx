@@ -1,5 +1,3 @@
-// auth/guards/AuthGuard.tsx
-// Redirects to sign-in if no user at all (not even offline)
 import React from 'react';
 import { useAuth } from '../AuthContext';
 

@@ -76,11 +76,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function boot() {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      // getSession() reads the persisted session from AsyncStorage (no network
-      // round trip), so it's safe to check first. Scoping the local profile
-      // lookup to that session's user id — instead of "whichever row happens
-      // to be first in the local users table" — is what actually determines
-      // whether anyone is signed in; a cached row alone doesn't mean that.
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         await loadUserProfile(session.user.id);

@@ -16,6 +16,10 @@ export async function getLocationsByUser(userId: string): Promise<Location[]> {
   );
 }
 
+export async function getAllLocations(): Promise<Location[]> {
+  return db.getAll<Location>('SELECT * FROM locations ORDER BY city ASC');
+}
+
 export async function getLocation(locationId: string): Promise<Location | null> {
   const result = await db.getOptional<Location>(
     'SELECT * FROM locations WHERE id = ?',

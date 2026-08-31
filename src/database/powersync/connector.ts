@@ -5,6 +5,7 @@ import {
   UpdateType
 } from '@powersync/react-native';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { logSyncError } from '../repositories/syncErrors';
 
 // Postgres error codes that should not be retried
 const FATAL_RESPONSE_CODES = [
@@ -78,6 +79,19 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
       ) {
         // Fatal error — discard transaction instead of blocking the queue
         console.error('Fatal upload error - discarding transaction:', lastOp, ex);
+        if (lastOp) {
+          // Record it before discarding, so it stays visible even though
+          // console.error alone won't be seen on a device build. Logging
+          // failure must never block the discard — that would turn one bad
+          // row back into a queue-blocking retry loop.
+          await logSyncError({
+            table_name: lastOp.table,
+            operation: String(lastOp.op),
+            error_code: ex.code,
+            error_message: ex.message ?? String(ex),
+            record_id: lastOp.id,
+          }).catch((logErr) => console.error('Failed to record sync error:', logErr));
+        }
         await transaction.complete();
       } else {
         // Retryable error (network, temp server error) — throw to retry later

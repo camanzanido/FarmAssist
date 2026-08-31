@@ -1,6 +1,7 @@
-// app/(inputs)/DecisionInputFlow.tsx
 import StepIndicator from '@/src/components/decision/steps-indicator';
-import { CLIMATES, DECISION_LABELS, DecisionType, FIELD_CONFIG, FieldGroup, PLACEHOLDERS } from '@/src/constants';
+import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
+import { ClimateColors, Colors } from '@/src/constants/colors';
+import { climateCopy, dataEntryCopy, namingCopy } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -11,25 +12,26 @@ function emptyFive(): string[] {
   return ['', '', '', '', ''];
 }
 
+const CLIMATE_COLOR_LIST = [
+  ClimateColors.driest,
+  ClimateColors.below_ave,
+  ClimateColors.average,
+  ClimateColors.above_ave,
+  ClimateColors.wettest,
+];
+
 export default function DecisionInputFlow() {
   const router = useRouter();
   const { decisionType } = useLocalSearchParams<{ decisionType: DecisionType }>();
 
   useEffect(() => {
-    // Fallback – should not happen if navigated correctly. Navigating here
-    // is a side effect, so it has to run in an effect rather than during
-    // render (calling it inline would also skip hooks below on this first
-    // render but not on later ones, which breaks React's rules of hooks).
     if (!decisionType) router.back();
   }, [decisionType]);
 
-  // ---------- Naming state ----------
   const [names, setNames] = useState<string[]>(['', '']);
   const placeholders = decisionType ? PLACEHOLDERS[decisionType] : undefined;
   const namesValid = names[0].trim().length > 0 && names[1].trim().length > 0;
 
-  // ---------- Data state for both options ----------
-  // Each option: yield[5], cost[5], addCost[5], price (string)
   const [optionData, setOptionData] = useState([
     { yield: emptyFive(), cost: emptyFive(), addCost: emptyFive(), price: '' },
     { yield: emptyFive(), cost: emptyFive(), addCost: emptyFive(), price: '' },
@@ -46,6 +48,15 @@ export default function DecisionInputFlow() {
 
   const isWeatherValid = dVal + wVal <= 100 && (driest !== '' && wettest !== '');
 
+  const adjustDriest = (delta: number) => {
+    const next = Math.max(0, dVal + delta);
+    if (next + wVal <= 100) setDriest(String(next));
+  };
+  const adjustWettest = (delta: number) => {
+    const next = Math.max(0, wVal + delta);
+    if (dVal + next <= 100) setWettest(String(next));
+  };
+
   // ---------- Internal step ----------
   type Step = 'naming' | 'data-0' | 'data-1' | 'weather';
   const [step, setStep] = useState<Step>('naming');
@@ -53,18 +64,9 @@ export default function DecisionInputFlow() {
   const currentOptionIdx = step === 'data-0' ? 0 : 1;
   const currentOptionData = optionData[currentOptionIdx];
 
-  // Non-empty isn't enough — "abc" passes an empty-string check but becomes
-  // NaN once result.tsx does Number(...) on it, silently corrupting the
-  // RCDA calculation with no error shown anywhere.
-  const isValidNumber = (v: string) => {
-    const trimmed = v.trim();
-    if (trimmed === '') return false;
-    const n = Number(trimmed);
-    return Number.isFinite(n);
-  };
-  // Only flags fields the user has actually typed something invalid into —
-  // an empty field is "incomplete", not "invalid", so it doesn't turn red
-  // before the user has had a chance to type.
+  const NUMBER_PATTERN = /^\d+(\.\d+)?$/;
+  const isValidNumber = (v: string) => NUMBER_PATTERN.test(v.trim());
+
   const isFieldInvalid = (v: string) => v.trim() !== '' && !isValidNumber(v);
 
   const isDataValid = () => {
@@ -83,7 +85,13 @@ export default function DecisionInputFlow() {
     currentOptionData.addCost.some(isFieldInvalid) ||
     isFieldInvalid(currentOptionData.price);
 
-  const updateCurrentOptionField = (group: FieldGroup, index: number, value: string) => {
+  const filledScenarioCount = CLIMATES.filter((_, i) =>
+    isValidNumber(currentOptionData.yield[i]) &&
+    isValidNumber(currentOptionData.cost[i]) &&
+    isValidNumber(currentOptionData.addCost[i])
+  ).length;
+
+  const updateCurrentOptionField = (group: 'yield' | 'cost' | 'addCost', index: number, value: string) => {
     setOptionData(prev => {
       const updated = [...prev];
       const newGroup = [...updated[currentOptionIdx][group]];
@@ -108,7 +116,7 @@ export default function DecisionInputFlow() {
     } else if (step === 'data-0') {
       if (isDataValid()) setStep('data-1');
     } else if (step === 'data-1') {
-      if (isDataValid()) setStep('weather'); // Go to climate input instead of results
+      if (isDataValid()) setStep('weather');
     } else if (step === 'weather') {
       // Final navigation to results
       router.push({
@@ -146,49 +154,49 @@ export default function DecisionInputFlow() {
 
   const { current, total } = getStepNumber();
 
-  // All hooks above must run unconditionally on every render, so this guard
-  // (for the effect above's router.back() to take effect) has to come after
-  // them rather than as an early return at the top of the component.
   if (!decisionType) return null;
 
   // ---------- Render naming step ----------
   if (step === 'naming') {
+    const decisionLabel = DECISION_LABELS[decisionType];
     return (
       <SafeAreaView style={s.safe}>
-        <StatusBar barStyle="dark-content" backgroundColor="#F5F0E8" />
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={s.container}>
             <View style={s.header}>
               <TouchableOpacity onPress={goBack} style={s.backBtn}>
-                <Ionicons name="arrow-back" size={22} color="#0A3B28" />
+                <Ionicons name="arrow-back" size={22} color={Colors.ink} />
               </TouchableOpacity>
-              <StepIndicator current={current} total={total} />
+              <StepIndicator current={current} total={total} context={decisionLabel} />
             </View>
 
             <View style={s.titleBlock}>
-              {/* <Text style={s.stepLabel}>STEP 1 OF 3</Text> */}
-              <Text style={s.title}>Name your{'\n'}two options</Text>
-              <Text style={s.subtitle}>
-                For <Text style={s.bold}>{DECISION_LABELS[decisionType]}</Text>, give each option a short name.
-              </Text>
+              <Text style={s.title}>{namingCopy.titleFor(decisionLabel)}</Text>
+              <Text style={s.subtitle}>{namingCopy.subtitle(decisionLabel)}</Text>
             </View>
 
-            <View style={s.inputGroup}>
+            <View style={s.namingGroup}>
               {[0, 1].map(i => (
-                <View key={i} style={s.inputWrap}>
-                  <View style={s.inputLabel}>
-                    <View style={s.badge}><Text style={s.badgeText}>Option {i + 1}</Text></View>
+                <View key={i} style={s.namingCard}>
+                  <View style={s.badge}>
+                    <Text style={s.badgeText}>{i === 0 ? namingCopy.firstOption : namingCopy.secondOption}</Text>
                   </View>
                   <TextInput
-                    style={s.input}
+                    style={s.namingInput}
                     placeholder={placeholders?.[i]}
-                    placeholderTextColor="#B0A898"
+                    placeholderTextColor={Colors.placeholder}
                     value={names[i]}
                     onChangeText={v => setNames(prev => { const updated = [...prev]; updated[i] = v; return updated; })}
                     returnKeyType="next"
                   />
                 </View>
               ))}
+            </View>
+
+            <View style={s.helperRow}>
+              <Ionicons name="information-circle-outline" size={19} color={Colors.inkFaint} />
+              <Text style={s.helperText}>{namingCopy.helper}</Text>
             </View>
 
             <View style={s.footer}>
@@ -198,9 +206,10 @@ export default function DecisionInputFlow() {
                 disabled={!namesValid}
                 activeOpacity={0.8}
               >
-                <Text style={s.nextBtnText}>Continue to Data Entry</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                <Text style={s.nextBtnText}>{namingCopy.continue}</Text>
+                <Ionicons name="arrow-forward" size={18} color={Colors.onDark} />
               </TouchableOpacity>
+              {!namesValid && <Text style={s.hintText}>{namingCopy.continueDisabledHint}</Text>}
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -212,83 +221,111 @@ export default function DecisionInputFlow() {
   else if (step === 'weather') {
     return (
       <SafeAreaView style={s.safe}>
-        <StatusBar barStyle="dark-content" backgroundColor="#F5F0E8" />
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={s.container}>
             <View style={s.header}>
               <TouchableOpacity onPress={() => setStep('data-1')} style={s.backBtn}>
-                <Ionicons name="arrow-back" size={22} color="#0A3B28" />
+                <Ionicons name="arrow-back" size={22} color={Colors.ink} />
               </TouchableOpacity>
               <StepIndicator current={4} total={5} />
             </View>
 
             <View style={s.titleBlock}>
-              <Text style={s.title}>Climate{'\n'}Probabilities</Text>
-              <Text style={s.subtitle}>
-                How likely is each scenario? The total must be 100%.
-              </Text>
+              <Text style={s.title}>{climateCopy.title}</Text>
+              <Text style={s.subtitle}>{climateCopy.subtitle}</Text>
             </View>
 
-            <View style={s.weatherCard}>
-              {/* Driest Input */}
-              <View style={s.weatherRow}>
-                <View style={s.weatherInfo}>
-                  <Text style={s.weatherLabel}>Driest Years</Text>
-                  <Text style={s.weatherSubLabel}>Low rainfall frequency</Text>
+            <View style={s.climateCard}>
+              <View style={s.climateBar}>
+                <View style={[s.climateBarSeg, { width: `${dVal}%`, backgroundColor: ClimateColors.driest }]}>
+                  {dVal >= 12 && (
+                    <>
+                      <Text style={s.climateBarPct}>{dVal}%</Text>
+                      <Text style={s.climateBarLabel}>Dry</Text>
+                    </>
+                  )}
                 </View>
-                <View style={s.weatherInputWrap}>
-                  <TextInput
-                    style={s.weatherInput}
-                    keyboardType="numeric"
-                    value={driest}
-                    onChangeText={(v) => {
-                      if (parseInt(v) + wVal <= 100 || v === '') setDriest(v);
-                    }}
-                    maxLength={3}
-                  />
-                  <Text style={s.percentSymbol}>%</Text>
+                <View style={[s.climateBarSeg, { width: `${mid}%`, backgroundColor: '#C9BE9E' }]}>
+                  {mid >= 12 && (
+                    <>
+                      <Text style={[s.climateBarPct, { color: '#43391F' }]}>{mid}%</Text>
+                      <Text style={[s.climateBarLabel, { color: '#43391F', opacity: 0.85 }]}>Average</Text>
+                    </>
+                  )}
+                </View>
+                <View style={[s.climateBarSeg, { width: `${wVal}%`, backgroundColor: ClimateColors.above_ave }]}>
+                  {wVal >= 12 && (
+                    <>
+                      <Text style={s.climateBarPct}>{wVal}%</Text>
+                      <Text style={s.climateBarLabel}>Wet</Text>
+                    </>
+                  )}
                 </View>
               </View>
 
+              {/* Dry Years */}
+              <View style={s.climateRow}>
+                <View style={s.climateRowInfo}>
+                  <View style={[s.climateDot, { backgroundColor: ClimateColors.driest }]} />
+                  <View>
+                    <Text style={s.climateRowLabel}>{climateCopy.dryYears}</Text>
+                    <Text style={s.climateRowSub}>{climateCopy.dryYearsSub}</Text>
+                  </View>
+                </View>
+                <View style={s.stepperRow}>
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustDriest(-1)}>
+                    <Ionicons name="remove" size={19} color={Colors.ink} />
+                  </TouchableOpacity>
+                  <Text style={s.stepperValue}>{dVal}</Text>
+                  <TouchableOpacity style={[s.stepperBtn, s.stepperBtnAdd]} onPress={() => adjustDriest(1)}>
+                    <Ionicons name="add" size={19} color={Colors.ink} />
+                  </TouchableOpacity>
+                </View>
+              </View>
               <View style={s.divider} />
 
-              {/* Mid (Automatic) */}
-              <View style={s.weatherRow}>
-                <View style={s.weatherInfo}>
-                  <Text style={s.weatherLabel}>Normal/Mid Years</Text>
-                  <Text style={s.weatherSubLabel}>Calculated automatically</Text>
+              {/* Average (auto) */}
+              <View style={s.climateRow}>
+                <View style={s.climateRowInfo}>
+                  <View style={[s.climateDot, { backgroundColor: '#C9BE9E' }]} />
+                  <View>
+                    <Text style={s.climateRowLabel}>{climateCopy.averageYears}</Text>
+                    <Text style={s.climateRowSub}>{climateCopy.averageYearsSub}</Text>
+                  </View>
                 </View>
-                <View style={[s.weatherInputWrap, { backgroundColor: '#E8E2D6' }]}>
-                  <Text style={s.autoValue}>{mid}</Text>
-                  <Text style={s.percentSymbol}>%</Text>
-                </View>
+                <Text style={s.autoValue}>{mid}</Text>
               </View>
-
               <View style={s.divider} />
 
-            {/* Wettest Input */}
-              <View style={s.weatherRow}>
-                <View style={s.weatherInfo}>
-                  <Text style={s.weatherLabel}>Wettest Years</Text>
-                  <Text style={s.weatherSubLabel}>High rainfall frequency</Text>
+              {/* Wet Years */}
+              <View style={s.climateRow}>
+                <View style={s.climateRowInfo}>
+                  <View style={[s.climateDot, { backgroundColor: ClimateColors.above_ave }]} />
+                  <View>
+                    <Text style={s.climateRowLabel}>{climateCopy.wetYears}</Text>
+                    <Text style={s.climateRowSub}>{climateCopy.wetYearsSub}</Text>
+                  </View>
                 </View>
-                <View style={s.weatherInputWrap}>
-                  <TextInput
-                    style={s.weatherInput}
-                    keyboardType="numeric"
-                    value={wettest}
-                    onChangeText={(v) => {
-                      if (parseInt(v) + dVal <= 100 || v === '') setWettest(v);
-                    }}
-                    maxLength={3}
-                  />
-                  <Text style={s.percentSymbol}>%</Text>
+                <View style={s.stepperRow}>
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustWettest(-1)}>
+                    <Ionicons name="remove" size={19} color={Colors.ink} />
+                  </TouchableOpacity>
+                  <Text style={s.stepperValue}>{wVal}</Text>
+                  <TouchableOpacity style={[s.stepperBtn, s.stepperBtnAdd]} onPress={() => adjustWettest(1)}>
+                    <Ionicons name="add" size={19} color={Colors.ink} />
+                  </TouchableOpacity>
                 </View>
               </View>
-          </View>
+            </View>
+
+            <View style={s.offlineNoteRow}>
+              <Ionicons name="cloud-offline-outline" size={19} color={Colors.inkFaint} />
+              <Text style={s.offlineNoteText}>{climateCopy.offlineNote}</Text>
+            </View>
 
             {dVal + wVal > 100 && (
-              <Text style={s.errorText}>Total cannot exceed 100%</Text>
+              <Text style={s.errorText}>{climateCopy.errorOver100}</Text>
             )}
 
             <View style={s.footer}>
@@ -296,8 +333,8 @@ export default function DecisionInputFlow() {
                 style={[s.nextBtn, !isWeatherValid && s.nextBtnDisabled]}
                 onPress={handleNext}
                 disabled={!isWeatherValid}>
-                <Text style={s.nextBtnText}>Calculate Results</Text>
-                <Ionicons name="analytics" size={18} color="#FFFFFF" />
+                <Text style={s.nextBtnText}>{climateCopy.submit}</Text>
+                <Ionicons name="analytics" size={18} color={Colors.onDark} />
               </TouchableOpacity>
             </View>
           </View>
@@ -306,82 +343,101 @@ export default function DecisionInputFlow() {
     );
   }
 
-  // ---------- Render data entry step (for either option 0 or 1) ----------
+  // ---------- Render data entry step (for either option 0 or 1), grouped by climate scenario ----------
   const optionName = names[currentOptionIdx];
   const isSecondOption = step === 'data-1';
-  const nextButtonText = isSecondOption ? 'Continue to climate' : `Continue to ${names[1]}`;
+  const nextButtonText = isSecondOption ? dataEntryCopy.continueToClimate : dataEntryCopy.continueToOption(names[1]);
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F0E8" />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={s.container}>
           <View style={s.header}>
             <TouchableOpacity onPress={goBack} style={s.backBtn}>
-              <Ionicons name="arrow-back" size={22} color="#0A3B28" />
+              <Ionicons name="arrow-back" size={22} color={Colors.ink} />
             </TouchableOpacity>
-            <StepIndicator current={current} total={total} />
+            <StepIndicator current={current} total={total} context={optionName || undefined} />
           </View>
 
           <View style={s.titleBlock}>
-            {/* <Text style={s.stepLabel}>
-              STEP {current + 1} OF 3 · OPTION {currentOptionIdx + 1} OF 2
-            </Text> */}
             <Text style={s.title} numberOfLines={1}>{optionName}</Text>
             <Text style={s.subtitle}>Enter values for each climate scenario.</Text>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
             {/* Price Block - Full Width Input */}
-            <View style={s.fieldBlock}>
-              <View style={s.fieldLabelRow}>
-                <Ionicons name="pricetag-outline" size={14} color="#5A9A6E" />
-                <Text style={s.fieldLabel}>Price</Text>
-                <Text style={s.fieldUnit}>(₱/kg)</Text>
+            <View style={s.priceBlock}>
+              <Ionicons name="pricetag-outline" size={20} color={Colors.accentSoft} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.priceLabel}>{dataEntryCopy.price}</Text>
+                <Text style={s.priceUnit}>{dataEntryCopy.priceUnit}</Text>
               </View>
-              <TextInput
-                style={[s.fullWidthInput, isFieldInvalid(currentOptionData.price) && s.fieldInvalid]}
-                keyboardType="numeric"
-                value={currentOptionData.price}
-                onChangeText={updateCurrentOptionPrice}
-                placeholder="e.g. 18.00"
-                placeholderTextColor="#C0B8AC"
-              />
+              <View style={[s.priceInputWrap, isFieldInvalid(currentOptionData.price) && s.fieldInvalidBorder]}>
+                <Text style={s.priceSymbol}>₱</Text>
+                <TextInput
+                  style={s.priceInput}
+                  keyboardType="numeric"
+                  value={currentOptionData.price}
+                  onChangeText={updateCurrentOptionPrice}
+                  placeholder="18.00"
+                  placeholderTextColor={Colors.placeholder}
+                />
+              </View>
             </View>
 
-            {/* Dynamic Fields (Yield, Cost, etc.) */}
-            {FIELD_CONFIG.map(({ key, label, unit, icon }) => (
-              <View key={key} style={s.fieldBlock}>
-                <View style={s.fieldLabelRow}>
-                  <Ionicons name={icon} size={14} color="#5A9A6E" />
-                  <Text style={s.fieldLabel}>{label}</Text>
-                  <Text style={s.fieldUnit}>({unit})</Text>
-                </View>
+            <Text style={s.scenariosHeading}>{dataEntryCopy.scenariosHeading}</Text>
 
-                <View style={s.gridRow}>
-                  {CLIMATES.map((climateName, i) => (
-                    <View key={i} style={s.gridColumn}>
-                      <Text style={s.columnLabel}>{climateName}</Text>
-                      <TextInput
-                        style={[s.cell, isFieldInvalid(currentOptionData[key][i]) && s.fieldInvalid]}
-                        keyboardType="numeric"
-                        value={currentOptionData[key][i]}
-                        onChangeText={v => updateCurrentOptionField(key, i, v)}
-                        placeholder="0"
-                        placeholderTextColor="#C0B8AC"
-                      />
-                    </View>
-                  ))}
+            {CLIMATES.map((climateName, i) => (
+              <View key={climateName} style={[s.scenarioCard, { borderLeftColor: CLIMATE_COLOR_LIST[i] }]}>
+                <View style={s.scenarioHeader}>
+                  <Text style={s.scenarioName}>{climateName}</Text>
+                </View>
+                <View style={s.scenarioFields}>
+                  <View style={s.scenarioField}>
+                    <Text style={s.scenarioFieldLabel}>{dataEntryCopy.yield} <Text style={s.scenarioFieldUnit}>{dataEntryCopy.yieldUnit}</Text></Text>
+                    <TextInput
+                      style={[s.scenarioInput, isFieldInvalid(currentOptionData.yield[i]) && s.fieldInvalidBorder]}
+                      keyboardType="numeric"
+                      value={currentOptionData.yield[i]}
+                      onChangeText={v => updateCurrentOptionField('yield', i, v)}
+                      placeholder="0"
+                      placeholderTextColor={Colors.placeholder}
+                    />
+                  </View>
+                  <View style={s.scenarioField}>
+                    <Text style={s.scenarioFieldLabel}>{dataEntryCopy.cost} <Text style={s.scenarioFieldUnit}>{dataEntryCopy.costUnit}</Text></Text>
+                    <TextInput
+                      style={[s.scenarioInput, isFieldInvalid(currentOptionData.cost[i]) && s.fieldInvalidBorder]}
+                      keyboardType="numeric"
+                      value={currentOptionData.cost[i]}
+                      onChangeText={v => updateCurrentOptionField('cost', i, v)}
+                      placeholder="0"
+                      placeholderTextColor={Colors.placeholder}
+                    />
+                  </View>
+                  <View style={s.scenarioField}>
+                    <Text style={s.scenarioFieldLabel}>{dataEntryCopy.addCost} <Text style={s.scenarioFieldUnit}>{dataEntryCopy.addCostUnit}</Text></Text>
+                    <TextInput
+                      style={[s.scenarioInput, isFieldInvalid(currentOptionData.addCost[i]) && s.fieldInvalidBorder]}
+                      keyboardType="numeric"
+                      value={currentOptionData.addCost[i]}
+                      onChangeText={v => updateCurrentOptionField('addCost', i, v)}
+                      placeholder="0"
+                      placeholderTextColor={Colors.placeholder}
+                    />
+                  </View>
                 </View>
               </View>
             ))}
 
-            <View style={{ height: 120 }} />
+            <View style={{ height: 110 }} />
           </ScrollView>
           <View style={s.footer}>
-            {hasInvalidEntry && (
-              <Text style={s.errorText}>Enter numbers only.</Text>
-            )}
+            <View style={s.footerMeta}>
+              <Text style={s.footerMetaText}>{dataEntryCopy.filledCount(filledScenarioCount)}</Text>
+              {hasInvalidEntry && <Text style={s.errorTextInline}>{dataEntryCopy.errorNumbersOnly}</Text>}
+            </View>
             <TouchableOpacity
               style={[s.nextBtn, !isDataValid() && s.nextBtnDisabled]}
               onPress={handleNext}
@@ -389,7 +445,7 @@ export default function DecisionInputFlow() {
               activeOpacity={0.8}
             >
               <Text style={s.nextBtnText}>{nextButtonText}</Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+              <Ionicons name="arrow-forward" size={18} color={Colors.onDark} />
             </TouchableOpacity>
           </View>
         </View>
@@ -400,122 +456,84 @@ export default function DecisionInputFlow() {
 
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F0E8' },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   container: { flex: 1, paddingHorizontal: 24, paddingTop: 12 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#E8E2D6', alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 24 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
 
   titleBlock: { marginBottom: 20 },
-  title: { fontSize: 24, fontWeight: '800', color: '#0A3B28', marginBottom: 4 },
-  subtitle: { fontSize: 13, color: '#6B7B6E' },
-  bold: { fontWeight: '700', color: '#0A3B28' },
+  title: { fontSize: 24, fontWeight: '800', color: Colors.ink, marginBottom: 4 },
+  subtitle: { fontSize: 13, color: Colors.inkSoft },
+  bold: { fontWeight: '700', color: Colors.ink },
 
-  inputGroup: { gap: 16 },
-  inputWrap: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },
-  inputLabel: { marginBottom: 8 },
-  badge: { alignSelf: 'flex-start', backgroundColor: '#EAF2EC', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '700', color: '#0A3B28', letterSpacing: 0.5 },
-  input: { fontSize: 16, fontWeight: '600', color: '#0A3B28', paddingVertical: 4, borderBottomWidth: 1.5, borderBottomColor: '#E0D9CE' },
+  // Naming step
+  namingGroup: { gap: 12 },
+  namingCard: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },
+  badge: { alignSelf: 'flex-start', backgroundColor: Colors.accentTint, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 12 },
+  badgeText: { fontSize: 13, fontWeight: '700', color: Colors.ink, letterSpacing: 0.4 },
+  namingInput: { fontSize: 19, fontWeight: '700', color: Colors.ink, paddingVertical: 8, borderBottomWidth: 2, borderBottomColor: Colors.ink },
+  helperRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 18, paddingHorizontal: 4 },
+  helperText: { flex: 1, fontSize: 13, color: Colors.inkFaint, lineHeight: 18 },
 
+  // Data entry step
   scroll: { paddingBottom: 16 },
-  climateHeaderRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 4, gap: 6 },
-  climateHeader: { flex: 1, fontSize: 10, fontWeight: '700', color: '#5A9A6E', textAlign: 'center', letterSpacing: 0.3 },
+  priceBlock: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: Colors.surface, borderRadius: 16, padding: 15,
+    marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 5, elevation: 1,
+  },
+  priceLabel: { fontSize: 15, fontWeight: '700', color: Colors.ink },
+  priceUnit: { fontSize: 12, color: Colors.inkFaint },
+  priceInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.bg, borderWidth: 1.5, borderColor: Colors.ink, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 },
+  priceSymbol: { fontSize: 15, color: Colors.inkFaint },
+  priceInput: { fontSize: 18, fontWeight: '800', color: Colors.ink, minWidth: 64 },
 
-  fieldBlock: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 5, elevation: 1 },
-  //fieldLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 },
-  //fieldLabel: { fontSize: 13, fontWeight: '700', color: '#0A3B28' },
-  //fieldUnit: { fontSize: 11, color: '#8A8070' },
-  inputRow: { flexDirection: 'row', gap: 6 },
-  //cell: { flex: 1, backgroundColor: '#F5F0E8', borderRadius: 8, paddingVertical: 8, textAlign: 'center', fontSize: 13, fontWeight: '600', color: '#0A3B28', borderWidth: 1.5, borderColor: '#E0D9CE' },
-  priceBlock: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 5, elevation: 1, marginBottom: 10 },
-  priceLeft: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
-  priceInput: { flex: 1, backgroundColor: '#F5F0E8', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12, fontSize: 15, fontWeight: '600', color: '#0A3B28', borderWidth: 1.5, borderColor: '#E0D9CE', textAlign: 'right' },
+  scenariosHeading: { fontSize: 13, fontWeight: '700', letterSpacing: 0.6, color: Colors.inkFaint, marginBottom: 10, marginLeft: 2 },
+
+  scenarioCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 15, marginBottom: 10, borderLeftWidth: 5 },
+  scenarioHeader: { marginBottom: 12 },
+  scenarioName: { fontSize: 16, fontWeight: '800', color: Colors.ink },
+  scenarioFields: { flexDirection: 'row', gap: 8 },
+  scenarioField: { flex: 1 },
+  scenarioFieldLabel: { fontSize: 11, fontWeight: '600', color: Colors.inkSoft, marginBottom: 5 },
+  scenarioFieldUnit: { color: '#A39A8B' },
+  scenarioInput: {
+    backgroundColor: Colors.bg, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 9,
+    paddingVertical: 11, textAlign: 'center', fontSize: 15, fontWeight: '700', color: Colors.ink,
+  },
+  fieldInvalidBorder: { borderColor: Colors.danger, borderWidth: 1.5 },
+
   footer: { position: 'absolute', bottom: 28, left: 24, right: 24 },
-  nextBtn: { backgroundColor: '#0A3B28', borderRadius: 14, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  nextBtnDisabled: { backgroundColor: '#B0C4B8' },
-  nextBtnText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  footerMeta: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 9 },
+  footerMetaText: { fontSize: 12, color: Colors.inkFaint },
+  errorTextInline: { fontSize: 12, color: Colors.danger, fontWeight: '600' },
+  nextBtn: { backgroundColor: Colors.ink, borderRadius: 14, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  nextBtnDisabled: { backgroundColor: Colors.disabled },
+  nextBtnText: { fontSize: 15, fontWeight: '700', color: Colors.onDark },
+  hintText: { textAlign: 'center', fontSize: 12, color: Colors.inkFaint, marginTop: 9 },
 
-  // fieldBlock: {
-  //   backgroundColor: '#FFFFFF',
-  //   borderRadius: 12,
-  //   padding: 16,
-  //   marginBottom: 16,
-  //   shadowColor: '#000',
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowOpacity: 0.05,
-  //   shadowRadius: 8,
-  //   elevation: 2
-  // },
+  errorText: { color: Colors.danger, fontSize: 12, textAlign: 'center', marginTop: 12, fontWeight: '600' },
 
-  fieldLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 12
-  },
+  // Climate step
+  climateCard: { backgroundColor: Colors.surface, borderRadius: 20, padding: 20, marginBottom: 16 },
+  climateBar: { flexDirection: 'row', height: 64, borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
+  climateBarSeg: { alignItems: 'center', justifyContent: 'center' },
+  climateBarPct: { fontSize: 20, fontWeight: '800', color: Colors.onDark },
+  climateBarLabel: { fontSize: 11, fontWeight: '600', color: Colors.onDark, opacity: 0.9 },
 
-  fieldLabel: { fontSize: 14, fontWeight: '700', color: '#0A3B28', textTransform: 'capitalize' },
-  fieldUnit: { fontSize: 11, color: '#8A8070' },
+  climateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12 },
+  climateRowInfo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  climateDot: { width: 12, height: 12, borderRadius: 3 },
+  climateRowLabel: { fontSize: 16, fontWeight: '700', color: Colors.ink },
+  climateRowSub: { fontSize: 12, color: Colors.inkFaint },
+  divider: { height: 1, backgroundColor: Colors.divider },
 
-  // Price input spans the full width of the card
-  fullWidthInput: {
-    backgroundColor: '#F5F0E8',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0A3B28',
-    borderWidth: 1,
-    borderColor: '#E0D9CE',
-  },
+  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  stepperBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.divider, alignItems: 'center', justifyContent: 'center' },
+  stepperBtnAdd: { backgroundColor: Colors.accentTint },
+  stepperValue: { fontSize: 20, fontWeight: '800', color: Colors.ink, minWidth: 40, textAlign: 'center' },
+  autoValue: { fontSize: 20, fontWeight: '800', color: Colors.accentSoft, backgroundColor: Colors.divider, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 16 },
 
-  // Grid layout for Climate scenarios
-  gridRow: {
-    flexDirection: 'row',
-    gap: 8
-  },
-
-  gridColumn: {
-    flex: 1,
-    alignItems: 'center'
-  },
-
-  columnLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#6B7B6E',
-    marginBottom: 6,
-    textAlign: 'center'
-  },
-
-  cell: {
-    width: '100%',
-    backgroundColor: '#F5F0E8',
-    borderRadius: 6,
-    paddingVertical: 10,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0A3B28',
-    borderWidth: 1,
-    borderColor: '#E0D9CE'
-  },
-
-  fieldInvalid: {
-    borderColor: '#D9534F',
-    borderWidth: 1.5,
-  },
-
-  weatherCard: { backgroundColor: '#FFFFFF', borderRadius: 20,  padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,  shadowRadius: 10,  elevation: 3, },
-  weatherRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, },
-  weatherInfo: { flex: 1 },
-  weatherLabel: { fontSize: 16, fontWeight: '700', color: '#0A3B28' },
-  weatherSubLabel: { fontSize: 12, color: '#8A8070' },
-  weatherInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F5F0E8', borderRadius: 10, paddingHorizontal: 12, width: 80, height: 45,},
-  weatherInput: { flex: 1, fontSize: 18, fontWeight: '700', color: '#0A3B28', textAlign: 'center',},
-  autoValue: {flex: 1, fontSize: 18, fontWeight: '700', color: '#5A9A6E', textAlign: 'center',},
-  percentSymbol: { fontSize: 14, fontWeight: '600', color: '#8A8070', marginLeft: 2 },
-  divider: { height: 1, backgroundColor: '#F0EBE0', marginVertical: 4 },
-  errorText: { color: '#D9534F', fontSize: 12, textAlign: 'center', marginTop: 12, fontWeight: '600' },
+  offlineNoteRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingHorizontal: 4 },
+  offlineNoteText: { flex: 1, fontSize: 13, color: Colors.inkFaint, lineHeight: 18 },
 });

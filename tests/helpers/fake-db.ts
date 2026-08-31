@@ -1,15 +1,3 @@
-/**
- * A lightweight stand-in for src/database/powersync/powersync.ts's `db`
- * export, backed by sql.js (SQLite compiled to WASM) instead of the real
- * @powersync/op-sqlite native binding.
- *
- * The real `db` only runs inside a React Native app (native SQLite via
- * op-sqlite). Repository tests run under plain Node/Jest, so this fake
- * implements the same execute/getAll/getOptional/writeTransaction surface
- * against a real, ephemeral SQLite database — giving genuine integration
- * coverage (real SQL, real transactions/rollback) for the repository layer
- * without needing a device/emulator.
- */
 import initSqlJs, { Database } from 'sql.js';
 
 export interface FakeTx {

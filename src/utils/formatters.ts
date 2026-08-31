@@ -1,6 +1,3 @@
-/**
- * Transposes a 2D array (swaps rows and columns)
- */
 export const transpose2DList = <T>(data: T[][]): T[][] => {
   if (data.length === 0 || data[0].length === 0) return [];
 
@@ -15,9 +12,6 @@ export const transpose2DList = <T>(data: T[][]): T[][] => {
   return transposed;
 };
 
-/**
- * Interface for the parsed crossover result
- */
 export interface CrossoverSummary {
   crossOverPercentile: number;
   firstCropName: string;
@@ -33,9 +27,6 @@ export interface CrossoverSummary {
   optimalDiffAve: number;
 }
 
-/**
- * Formats a number as Philippine Peso
- */
 export const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat('en-PH', {
     style: 'currency',
@@ -43,9 +34,6 @@ export const formatCurrency = (value: number): string => {
   }).format(value);
 };
 
-/**
- * Simple number parser with fallback
- */
 export const parseNum = (value: string | number): number => {
   if (typeof value === 'number') return value;
   const parsed = parseFloat(value.replace(/,/g, ''));

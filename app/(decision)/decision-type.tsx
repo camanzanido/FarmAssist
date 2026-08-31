@@ -1,6 +1,7 @@
-// app/(decision)/decision-type.tsx
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { DECISIONS, DecisionType } from '@/src/constants';
+import { Colors } from '@/src/constants/colors';
+import { decisionTypeCopy as copy } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -25,21 +26,20 @@ export default function DecisionTypeScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F0E8" />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <View style={s.container}>
         {/* Header */}
         <View style={s.header}>
           <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#0A3B28" />
+            <Ionicons name="arrow-back" size={22} color={Colors.ink} />
           </TouchableOpacity>
-          <StepIndicator current={0} total={6} />
+          <StepIndicator current={0} total={5} />
         </View>
 
         {/* Title */}
         <View style={s.titleBlock}>
-          {/* <Text style={s.stepLabel}>STEP 1 OF 4</Text> */}
-          <Text style={s.title}>What decision{'\n'}are you making?</Text>
-          <Text style={s.subtitle}>Select the type of agricultural decision to analyze.</Text>
+          <Text style={s.title}>{copy.title}</Text>
+          <Text style={s.subtitle}>{copy.subtitle}</Text>
         </View>
 
         {/* Cards */}
@@ -52,13 +52,13 @@ export default function DecisionTypeScreen() {
               onPress={() => handleNext(d.id)}
             >
               <View style={s.iconWrap}>
-                <Ionicons name={d.icon} size={24} color="#0A3B28" />
+                <Ionicons name={d.icon} size={24} color={Colors.ink} />
               </View>
               <View style={s.cardText}>
                 <Text style={s.cardLabel}>{d.label}</Text>
                 <Text style={s.cardDesc}>{d.description}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#0A3B28" style={{ opacity: 0.35 }} />
+              <Ionicons name="chevron-forward" size={18} color={Colors.ink} style={{ opacity: 0.35 }} />
             </TouchableOpacity>
           ))}
         </View>
@@ -69,34 +69,34 @@ export default function DecisionTypeScreen() {
 
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F0E8' },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   container: { flex: 1, paddingHorizontal: 24, paddingTop: 12 },
   header: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between', marginBottom: 36,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    marginBottom: 30,
   },
   backBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#E8E2D6', alignItems: 'center', justifyContent: 'center',
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: Colors.border, alignItems: 'center', justifyContent: 'center',
   },
 
-  titleBlock: { marginBottom: 28 },
-  title: { fontSize: 28, fontWeight: '800', color: '#0A3B28', lineHeight: 34, marginBottom: 8 },
-  subtitle: { fontSize: 13, color: '#6B7B6E', lineHeight: 19 },
+  titleBlock: { marginBottom: 26 },
+  title: { fontSize: 29, fontWeight: '800', color: Colors.ink, lineHeight: 35, letterSpacing: -0.5, marginBottom: 8 },
+  subtitle: { fontSize: 15, color: Colors.inkSoft, lineHeight: 21 },
 
   cards: { gap: 12 },
   card: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#FFFFFF', borderRadius: 16,
+    backgroundColor: Colors.surface, borderRadius: 18,
     padding: 18, gap: 14,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
   },
   iconWrap: {
-    width: 46, height: 46, borderRadius: 12,
-    backgroundColor: '#EAF2EC', alignItems: 'center', justifyContent: 'center',
+    width: 48, height: 48, borderRadius: 14,
+    backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center',
   },
   cardText: { flex: 1 },
-  cardLabel: { fontSize: 15, fontWeight: '700', color: '#0A3B28', marginBottom: 3 },
-  cardDesc: { fontSize: 12, color: '#6B7B6E', lineHeight: 17 },
+  cardLabel: { fontSize: 17, fontWeight: '800', color: Colors.ink, marginBottom: 3 },
+  cardDesc: { fontSize: 13, color: Colors.inkSoft, lineHeight: 18 },
 });

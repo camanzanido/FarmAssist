@@ -1,86 +1,136 @@
+import { Colors } from '@/src/constants/colors';
+import { authCopy as copy } from '@/src/constants/copy';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Alert, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn, isLoading } = useAuth();
   const router = useRouter();
-
-  const insets = useSafeAreaInsets();
 
   async function handleLogin() {
     try {
       await signIn(email, password);
-      // RouteGuard will automatically redirect to (tabs)
     } catch (e: any) {
       Alert.alert('Login Failed', e.message);
     }
   }
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
-      {/* Close Button */}
-     <TouchableOpacity
-        onPress={() => router.back()}
-        style={{
-          position: 'absolute',
-          top: insets.top > 0 ? insets.top : 16, // Use the inset if it exists
-          right: 16,
-          zIndex: 10
-        }}
-      >
-        <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#333' }}>✕</Text>
-      </TouchableOpacity>
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
+      <View style={s.container}>
+        <TouchableOpacity onPress={() => router.back()} style={s.closeBtn}>
+          <Ionicons name="close" size={22} color={Colors.onDark} />
+        </TouchableOpacity>
 
-      <Text style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 32 }}>
-        FarmAssist
-      </Text>
+        <View style={s.brandIcon}>
+          <Ionicons name="leaf" size={28} color={Colors.dark} />
+        </View>
+        <Text style={s.brand}>{copy.brand}</Text>
+        <Text style={s.subtitle}>{copy.loginSubtitle}</Text>
 
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        style={{
-          borderWidth: 1, borderColor: '#ddd',
-          borderRadius: 8, padding: 12, marginBottom: 12
-        }}
-      />
+        <View style={s.field}>
+          <Text style={s.label}>{copy.email}</Text>
+          <TextInput
+            style={s.input}
+            placeholder="you@email.com"
+            placeholderTextColor="rgba(255,255,255,0.35)"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+        </View>
 
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={{
-          borderWidth: 1, borderColor: '#ddd',
-          borderRadius: 8, padding: 12, marginBottom: 20
-        }}
-      />
+        <View style={s.field}>
+          <Text style={s.label}>{copy.password}</Text>
+          <View style={s.passwordRow}>
+            <TextInput
+              style={s.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              placeholderTextColor="rgba(255,255,255,0.35)"
+            />
+            <TouchableOpacity onPress={() => setShowPassword(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={21} color={Colors.onDarkFaint} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      <TouchableOpacity
-        onPress={handleLogin}
-        disabled={isLoading}
-        style={{
-          backgroundColor: '#007AFF',
-          padding: 14, borderRadius: 8, marginBottom: 12
-        }}
-      >
-        <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>
-          {isLoading ? 'Logging in...' : 'Login'}
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleLogin} disabled={isLoading} style={[s.signInBtn, isLoading && s.signInBtnDisabled]} activeOpacity={0.85}>
+          <Text style={s.signInBtnText}>{isLoading ? copy.signingIn : copy.signIn}</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-        <Text style={{ textAlign: 'center', color: '#007AFF' }}>
-          Don't have an account? Register
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity onPress={() => router.push('/(auth)/register')} style={s.noAccountRow}>
+          <Text style={s.noAccountText}>
+            {copy.noAccount} <Text style={s.noAccountLink}>{copy.createOne}</Text>
+          </Text>
+        </TouchableOpacity>
+
+        <View style={s.bottomBlock}>
+          <View style={s.orRow}>
+            <View style={s.orLine} />
+            <Text style={s.orText}>or</Text>
+            <View style={s.orLine} />
+          </View>
+          <TouchableOpacity onPress={() => router.back()} style={s.offlineBtn} activeOpacity={0.8}>
+            <Ionicons name="phone-portrait-outline" size={19} color={Colors.onDarkSoft} />
+            <Text style={s.offlineBtnText}>{copy.continueOffline}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.dark },
+  container: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
+  closeBtn: {
+    alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center',
+    marginBottom: 24,
+  },
+  brandIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  brand: { fontSize: 32, fontWeight: '800', color: Colors.onDark, letterSpacing: -0.6, marginBottom: 6 },
+  subtitle: { fontSize: 15, color: Colors.onDarkFaint, lineHeight: 21, marginBottom: 30 },
+
+  field: { marginBottom: 18 },
+  label: { fontSize: 13, fontWeight: '700', color: Colors.onDarkFaint, marginBottom: 8 },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 14, height: 56, paddingHorizontal: 16, fontSize: 16, color: Colors.onDark,
+  },
+  passwordRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 14, height: 56, paddingHorizontal: 16,
+  },
+  passwordInput: { flex: 1, fontSize: 16, color: Colors.onDark },
+
+  signInBtn: { backgroundColor: Colors.accentTintStrong, borderRadius: 16, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
+  signInBtnDisabled: { opacity: 0.6 },
+  signInBtnText: { fontSize: 17, fontWeight: '800', color: Colors.dark },
+
+  noAccountRow: { alignItems: 'center' },
+  noAccountText: { fontSize: 15, color: Colors.onDarkFaint },
+  noAccountLink: { color: Colors.onDark, fontWeight: '700' },
+
+  bottomBlock: { marginTop: 'auto', marginBottom: 30 },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
+  orLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.15)' },
+  orText: { fontSize: 12, color: Colors.onDarkMuted },
+  offlineBtn: {
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.25)', borderRadius: 16, height: 56,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9,
+  },
+  offlineBtnText: { fontSize: 15, fontWeight: '700', color: Colors.onDarkSoft },
+});

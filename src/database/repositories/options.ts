@@ -77,8 +77,6 @@ const CLIMATE_KEYS = [
   'driest', 'very_dry', 'below_avg', 'average', 'above_avg', 'very_good', 'wettest',
 ] as const;
 
-// Inverse of optionToComputeParams: pack 7-value yield/cost/addCost arrays
-// (see expandScenario5to7 in src/rcda/financials.ts) into the named DB columns.
 export function buildOptionClimateFields(
   yield7: number[],
   cost7: number[],

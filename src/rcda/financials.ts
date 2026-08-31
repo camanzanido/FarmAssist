@@ -1,10 +1,5 @@
 import { climatology, cltlgy } from './constants';
 
-/**
- * Expands the 5 user-facing climate scenarios (V.Dry, Dry, Average, Wet, V.Wet)
- * into the 7-scenario RCDA climatology (driest, very_dry, below_avg, average,
- * above_avg, very_good, wettest) the model's functions require.
- */
 export function expandClimateScenarios(rows: number[][]): number[][] {
   if (rows.length !== 5) return [];
   const [driest, belowAvg, average, aboveAvg, wettest] = rows;
@@ -19,18 +14,10 @@ export function expandClimateScenarios(rows: number[][]): number[][] {
   ];
 }
 
-/**
- * Same expansion as expandClimateScenarios, for a single option's flat
- * 5-value scenario array (used when snapshotting an option for storage,
- * rather than the transposed two-option matrices used mid-computation).
- */
 export function expandScenario5to7(values: number[]): number[] {
   return expandClimateScenarios(values.map((v) => [v])).map((row) => row[0]);
 }
 
-/**
- * Calculates adjusted yield values based on linear interpolation
- */
 export function getYield(yieldData: number[][]): number[][] {
   if (yieldData.length !== 7) return [];
 
@@ -51,17 +38,11 @@ export function getYield(yieldData: number[][]): number[][] {
   ];
 }
 
-/**
- * Calculates income by multiplying yield with crop prices
- */
 export function getIncome(yieldData: number[][], crop1Price: number, crop2Price: number): number[][] {
   if (yieldData.length !== 7) return [];
   return yieldData.map(row => [row[0] * crop1Price, row[1] * crop2Price]);
 }
 
-/**
- * Calculates profit ensuring it doesn't drop below the negative cost (loss floor)
- */
 export function getProfit(income: number[][], cost: number[][], addCost: number[][]): number[][] {
   if (income.length !== cost.length || cost.length !== addCost.length) return [];
 
@@ -71,17 +52,11 @@ export function getProfit(income: number[][], cost: number[][], addCost: number[
   ]);
 }
 
-/**
- * Gets the raw difference between the two crops' profits
- */
 export function getDifference(profit: number[][]): number[] {
   if (profit.length !== 7) return [];
   return profit.map(p => p[1] - p[0]);
 }
 
-/**
- * Revises climatology based on input climate probabilities
- */
 export function getcltlgyRevised(climate: number[] | null): number[] {
   if (!climate) return [];
   return [
@@ -95,9 +70,6 @@ export function getcltlgyRevised(climate: number[] | null): number[] {
   ];
 }
 
-/**
- * Combines climatology and profit data for decile reporting
- */
 export function getProfitByDecile(cltlgyRevised: number[], profit: number[][]): number[][] {
   if (cltlgyRevised.length !== profit.length && profit.length !== 7) return [];
   return profit.map((p, i) => [cltlgy[i], cltlgyRevised[i], p[0], p[1]]);
@@ -116,9 +88,6 @@ export const xAxisClimatology: number[] = [
   (climatology["Wetest"] / 2) - 1,
 ];
 
-/**
- * Generates X-axis points for the revised climatology bar charts
- */
 export function xAxisRevisedClimatology(revisedClmtlgy: number[]): number[] {
   if (revisedClmtlgy.length !== 3) return [];
   return [
@@ -134,16 +103,10 @@ export function xAxisRevisedClimatology(revisedClmtlgy: number[]): number[] {
   ];
 }
 
-/**
- * Calculates regret based on the difference between the chosen crop and the optimal crop
- */
 export function getRegretPlease(profit: number[][], isFirstCrop: boolean): number[] {
   return profit.map(p => isFirstCrop ? p[0] - p[1] : p[1] - p[0]);
 }
 
-/**
- * Formats data specifically for a difference graph (e.g., used in Chart.js or Victory)
- */
 export function getDifferenceGraph(climate: number[], difference: number[]): number[][] {
   if (climate.length !== 7 || difference.length !== climate.length) return [];
   return climate.map((c, i) => [cltlgy[i], difference[i], c, difference[i]]);

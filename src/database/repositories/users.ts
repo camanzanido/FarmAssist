@@ -26,9 +26,11 @@ export async function getCurrentUserProfile(): Promise<User | null> {
   return getUser(authUser.id);
 }
 
+export async function getAllUsers(): Promise<User[]> {
+  return db.getAll<User>('SELECT * FROM users ORDER BY created_at DESC');
+}
+
 export async function upsertUser(user: Omit<User, 'created_at'>): Promise<void> {
-  // PowerSync exposes each table as a SQLite view (with INSTEAD OF triggers),
-  // and views don't support native UPSERT — so check-then-insert-or-update instead.
   await db.writeTransaction(async (tx) => {
     const existing = await tx.getOptional<{ id: string }>(
       'SELECT id FROM users WHERE id = ?',
