@@ -1,5 +1,7 @@
+import { DropdownField } from '@/src/components/ui/dropdown-field';
 import { Colors } from '@/src/constants/colors';
 import { authCopy as copy } from '@/src/constants/copy';
+import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locations';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -84,6 +86,12 @@ export default function RegisterScreen() {
   }
 
   const errors = getFieldErrors();
+  const citiesForProvince = province ? PH_PROVINCES_TO_CITIES[province] ?? [] : [];
+
+  function handleProvinceSelect(nextProvince: string) {
+    setProvince(nextProvince);
+    setCity('');
+  }
 
   async function handleRegister() {
     setTouched(true);
@@ -137,8 +145,26 @@ export default function RegisterScreen() {
 
           <Field label={copy.fullName} value={name} onChangeText={setName} error={errors.name} touched={touched} />
           <Field label={copy.username} value={username} onChangeText={setUsername} error={errors.username} touched={touched} autoCapitalize="none" />
-          <Field label={copy.cityLabel} value={city} onChangeText={setCity} error={errors.city} touched={touched} />
-          <Field label={copy.provinceLabel} value={province} onChangeText={setProvince} error={errors.province} touched={touched} />
+          <DropdownField
+            label={copy.provinceLabel}
+            value={province}
+            options={PH_PROVINCES}
+            onSelect={handleProvinceSelect}
+            error={errors.province}
+            touched={touched}
+            placeholder="Select province"
+          />
+          <DropdownField
+            label={copy.cityLabel}
+            value={city}
+            options={citiesForProvince}
+            onSelect={setCity}
+            error={errors.city}
+            touched={touched}
+            placeholder="Select city / municipality"
+            disabled={!province}
+            disabledHint="Select a province first"
+          />
           <Field label={copy.email} value={email} onChangeText={setEmail} error={errors.email} touched={touched} autoCapitalize="none" keyboardType="email-address" />
           <Field label={copy.password} value={password} onChangeText={setPassword} error={errors.password} touched={touched} secureTextEntry />
           <Field label={copy.confirmPassword} value={confirmPassword} onChangeText={setConfirmPassword} error={errors.confirmPassword} touched={touched} secureTextEntry />
