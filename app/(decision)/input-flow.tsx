@@ -57,6 +57,19 @@ export default function DecisionInputFlow() {
     if (dVal + next <= 100) setWettest(String(next));
   };
 
+  const handleDriestInput = (v: string) => {
+    const cleaned = v.replace(/[^0-9]/g, '');
+    if (cleaned === '') { setDriest(''); return; }
+    setDriest(String(Math.min(100, parseInt(cleaned, 10))));
+  };
+  const handleWettestInput = (v: string) => {
+    const cleaned = v.replace(/[^0-9]/g, '');
+    if (cleaned === '') { setWettest(''); return; }
+    setWettest(String(Math.min(100, parseInt(cleaned, 10))));
+  };
+  const handleDriestBlur = () => { if (driest === '') setDriest('0'); };
+  const handleWettestBlur = () => { if (wettest === '') setWettest('0'); };
+
   // ---------- Internal step ----------
   type Step = 'naming' | 'data-0' | 'data-1' | 'weather';
   const [step, setStep] = useState<Step>('naming');
@@ -277,7 +290,15 @@ export default function DecisionInputFlow() {
                   <TouchableOpacity style={s.stepperBtn} onPress={() => adjustDriest(-1)}>
                     <Ionicons name="remove" size={19} color={Colors.ink} />
                   </TouchableOpacity>
-                  <Text style={s.stepperValue}>{dVal}</Text>
+                  <TextInput
+                    style={s.stepperInput}
+                    keyboardType="number-pad"
+                    maxLength={3}
+                    value={driest}
+                    onChangeText={handleDriestInput}
+                    onBlur={handleDriestBlur}
+                    selectTextOnFocus
+                  />
                   <TouchableOpacity style={[s.stepperBtn, s.stepperBtnAdd]} onPress={() => adjustDriest(1)}>
                     <Ionicons name="add" size={19} color={Colors.ink} />
                   </TouchableOpacity>
@@ -311,7 +332,15 @@ export default function DecisionInputFlow() {
                   <TouchableOpacity style={s.stepperBtn} onPress={() => adjustWettest(-1)}>
                     <Ionicons name="remove" size={19} color={Colors.ink} />
                   </TouchableOpacity>
-                  <Text style={s.stepperValue}>{wVal}</Text>
+                  <TextInput
+                    style={s.stepperInput}
+                    keyboardType="number-pad"
+                    maxLength={3}
+                    value={wettest}
+                    onChangeText={handleWettestInput}
+                    onBlur={handleWettestBlur}
+                    selectTextOnFocus
+                  />
                   <TouchableOpacity style={[s.stepperBtn, s.stepperBtnAdd]} onPress={() => adjustWettest(1)}>
                     <Ionicons name="add" size={19} color={Colors.ink} />
                   </TouchableOpacity>
@@ -532,6 +561,11 @@ const s = StyleSheet.create({
   stepperBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.divider, alignItems: 'center', justifyContent: 'center' },
   stepperBtnAdd: { backgroundColor: Colors.accentTint },
   stepperValue: { fontSize: 20, fontWeight: '800', color: Colors.ink, minWidth: 40, textAlign: 'center' },
+  stepperInput: {
+    fontSize: 20, fontWeight: '800', color: Colors.ink, minWidth: 48, textAlign: 'center',
+    paddingVertical: 6, paddingHorizontal: 4, backgroundColor: Colors.bg,
+    borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 8,
+  },
   autoValue: { fontSize: 20, fontWeight: '800', color: Colors.accentSoft, backgroundColor: Colors.divider, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 16 },
 
   offlineNoteRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingHorizontal: 4 },

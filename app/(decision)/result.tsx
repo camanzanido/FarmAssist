@@ -4,7 +4,8 @@ import { resultCopy as copy } from '@/src/constants/copy';
 import { createDecision } from '@/src/database/repositories/decisions';
 import { getLocationsByUser } from '@/src/database/repositories/locations';
 import { buildOptionClimateFields, Option } from '@/src/database/repositories/options';
-import { expandClimateScenarios, expandScenario5to7, getIncome, getProfit, getYield } from '@/src/rcda/financials';
+import { cltlgy } from '@/src/rcda/constants';
+import { expandClimateScenarios, expandScenario5to7, getcltlgyRevised, getIncome, getProfit, getYield } from '@/src/rcda/financials';
 import { getCrossOverAverages, getRevisedProfitWalk } from '@/src/rcda/interpolations';
 import { transpose2DList } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,9 +53,37 @@ function computeResult(params: {
   const income = getIncome(yield2, params.price[0], params.price[1]);
   const profit = getProfit(income, transposedCost, transposedAddCost);
 
+  if (__DEV__) {
+    const [driest, mid, wettest] = params.climate;
+    console.log('[RCDA] ---- inputs ----');
+    console.log('[RCDA] optionNames:', params.optionNames);
+    console.log('[RCDA] price:', params.price);
+    console.log('[RCDA] climate [driest, mid, wettest]:', driest, mid, wettest);
+    console.log('[RCDA] raw yield (per option, 5 scenarios):', params.yield);
+    console.log('[RCDA] raw cost (per option, 5 scenarios):', params.cost);
+    console.log('[RCDA] raw addCost (per option, 5 scenarios):', params.addCost);
+
+    console.log('[RCDA] ---- 7-point interpolation (cltlgy = [1,10,33,50,67,90,100]) ----');
+    cltlgy.forEach((pct, i) => {
+      console.log(
+        `[RCDA] pct=${pct}\tyield=[${yield2[i][0].toFixed(2)}, ${yield2[i][1].toFixed(2)}]`
+        + `\tincome=[${income[i][0].toFixed(2)}, ${income[i][1].toFixed(2)}]`
+        + `\tprofit=[${profit[i][0].toFixed(2)}, ${profit[i][1].toFixed(2)}]`
+      );
+    });
+    console.log('[RCDA] cltlgyRevised (climate-adjusted percentiles):', getcltlgyRevised(params.climate));
+  }
+
   // Walk profit across the 100 percentiles implied by the user's climate forecast
   const profitWalk = getRevisedProfitWalk(profit, params.climate);
   const [optAve1, optAve2] = getCrossOverAverages(profitWalk);
+
+  if (__DEV__) {
+    console.log('[RCDA] ---- summary ----');
+    console.log('[RCDA] profitWalk point count:', profitWalk.length);
+    console.log('[RCDA] LT averages [option0, option1]:', optAve1, optAve2);
+    console.log('[RCDA] recommendedOption:', optAve1 >= optAve2 ? 0 : 1);
+  }
 
   // Determine which option won based on the averages
   const recommendedOption = optAve1 >= optAve2 ? 0 : 1;
