@@ -135,7 +135,7 @@ export default function DecisionInputFlow() {
       router.push({
         pathname: '/result',
         params: {
-          decisionType: JSON.stringify(decisionType),
+          decisionType: decisionType,
           optionNames: JSON.stringify(names.map(n => n.trim())),
           yieldData: JSON.stringify(optionData.map(o => o.yield)),
           costData: JSON.stringify(optionData.map(o => o.cost)),

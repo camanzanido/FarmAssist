@@ -7,11 +7,11 @@ import {
 import { SupabaseClient } from '@supabase/supabase-js';
 import { logSyncError } from '../repositories/syncErrors';
 
-// Postgres error codes that should not be retried
 const FATAL_RESPONSE_CODES = [
-  new RegExp('^22...$'), // Data Exception (type mismatch etc.)
-  new RegExp('^23...$'), // Integrity Constraint Violation (NOT NULL, FOREIGN KEY, UNIQUE)
-  new RegExp('^42501$')  // Insufficient Privilege (RLS violation)
+  new RegExp('^22...$'),     // Postgres Data Exception (type mismatch etc.)
+  new RegExp('^23...$'),     // Postgres Integrity Constraint Violation (NOT NULL, FOREIGN KEY, UNIQUE)
+  new RegExp('^PGRST1\\d\\d$'), // PostgREST malformed request (bad column/type in payload)
+  new RegExp('^PGRST2\\d\\d$'), // PostgREST schema cache miss (unknown table/column/relationship)
 ];
 
 export class SupabaseConnector implements PowerSyncBackendConnector {
@@ -80,10 +80,7 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
         // Fatal error — discard transaction instead of blocking the queue
         console.error('Fatal upload error - discarding transaction:', lastOp, ex);
         if (lastOp) {
-          // Record it before discarding, so it stays visible even though
-          // console.error alone won't be seen on a device build. Logging
-          // failure must never block the discard — that would turn one bad
-          // row back into a queue-blocking retry loop.
+
           await logSyncError({
             table_name: lastOp.table,
             operation: String(lastOp.op),
