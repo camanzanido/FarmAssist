@@ -35,7 +35,7 @@ export const DECISIONS = [
   {
     id: 'protect' as DecisionType,
     icon: 'flask-outline' as const,
-    label: 'Protect or Not P rotect',
+    label: 'Protect or Not Protect',
     description: 'Evaluate if protecting an input (pesticide, fertilizer) is worth the cost.',
   },
 ];

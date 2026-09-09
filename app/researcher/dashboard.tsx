@@ -1,36 +1,34 @@
 import { DECISION_LABELS, DecisionType } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
-import { getAllDecisions, type Decision } from '@/src/database/repositories/decisions';
-import { getAllUsers, type User } from '@/src/database/repositories/users';
-import { useSyncStatus } from '@/src/hooks/use-sync-status';
+import { type Decision } from '@/src/database/repositories/decisions';
+import { fetchAllDecisions, fetchAllUsers } from '@/src/database/repositories/researcher';
+import { type User } from '@/src/database/repositories/users';
 import { formatCurrency } from '@/src/utils/formatters';
 import { median, monthKeyOf, monthsBack } from '@/src/utils/researcherStats';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-function formatSyncTime(date: Date | null): string {
-  if (!date) return 'not yet synced';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) +
-    ', ' + date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-}
 
 export default function ResearcherDashboardScreen() {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const sync = useSyncStatus();
+  const [error, setError] = useState(false);
+  const hasLoadedOnce = useRef(false);
 
   const load = useCallback(async () => {
-    setIsLoading(true);
+    if (!hasLoadedOnce.current) setIsLoading(true);
     try {
-      const [d, u] = await Promise.all([getAllDecisions(), getAllUsers()]);
+      const [d, u] = await Promise.all([fetchAllDecisions(), fetchAllUsers()]);
       setDecisions(d);
       setUsers(u);
+      setError(false);
+      hasLoadedOnce.current = true;
     } catch (err) {
       console.error('Failed to load overview data:', err);
+      if (!hasLoadedOnce.current) setError(true);
     } finally {
       setIsLoading(false);
     }
@@ -78,6 +76,14 @@ export default function ResearcherDashboardScreen() {
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
       {isLoading ? (
         <View style={s.centerWrap}><ActivityIndicator size="large" color={C.accent} /></View>
+      ) : error ? (
+        <View style={s.centerWrap}>
+          <Ionicons name="cloud-offline-outline" size={28} color={C.textFaint} />
+          <Text style={s.errorText}>Couldn't load the overview. Check your connection.</Text>
+          <TouchableOpacity style={s.retryBtn} onPress={load} activeOpacity={0.8}>
+            <Text style={s.retryBtnText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
           <View style={s.header}>
@@ -86,16 +92,6 @@ export default function ResearcherDashboardScreen() {
               <Text style={s.title}>Overview</Text>
             </View>
           </View>
-
-          {!sync.connected && (
-            <View style={s.offlineRow}>
-              <Ionicons name="cloud-offline-outline" size={17} color={C.amber} />
-              <Text style={s.offlineText}>
-                Showing data as of <Text style={s.offlineStrong}>{formatSyncTime(sync.lastSyncedAt)}</Text>
-                {sync.pendingCount > 0 ? ` · ${sync.pendingCount} records pending upload` : ''}
-              </Text>
-            </View>
-          )}
 
           <View style={s.statRow}>
             <View style={s.statCard}>
@@ -178,9 +174,9 @@ const s = StyleSheet.create({
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: C.textFaint, marginBottom: 5 },
   title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
 
-  offlineRow: { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amberBorder, borderRadius: 11, padding: 11, marginBottom: 18 },
-  offlineText: { flex: 1, fontSize: 12.5, color: C.amberText, lineHeight: 17 },
-  offlineStrong: { color: '#F0DDB0', fontWeight: '700' },
+  errorText: { fontSize: 13.5, color: C.textSoft, textAlign: 'center', marginTop: 10, marginBottom: 16, paddingHorizontal: 30 },
+  retryBtn: { backgroundColor: C.card, borderRadius: 11, paddingHorizontal: 20, paddingVertical: 11 },
+  retryBtnText: { fontSize: 13.5, fontWeight: '700', color: C.text },
 
   statRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
   statCard: { flex: 1, backgroundColor: C.card, borderRadius: 16, padding: 16 },

@@ -1,6 +1,5 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { ResearcherColors as C } from '@/src/constants/colors';
-import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -14,7 +13,6 @@ function initials(name: string): string {
 
 export default function ResearcherProfileScreen() {
   const { user, signOut } = useAuth();
-  const sync = useSyncStatus();
 
   function handleLogout() {
     Alert.alert('Log out?', 'You will need to sign in again to access researcher tools.', [
@@ -50,15 +48,10 @@ export default function ResearcherProfileScreen() {
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Email</Text>
             <Text style={s.rowValue}>{user.email}</Text>
           </View>
-          <View style={[s.row, s.rowBorder]}>
+          <View style={s.row}>
             <Ionicons name="shield-checkmark-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Account type</Text>
             <Text style={s.rowValue}>Researcher</Text>
-          </View>
-          <View style={s.row}>
-            <Ionicons name="cloud-outline" size={19} color={C.textSoft} />
-            <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Sync status</Text>
-            <Text style={s.rowValue}>{sync.connected ? 'Connected' : 'Offline'}</Text>
           </View>
         </View>
 

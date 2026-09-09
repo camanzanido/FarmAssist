@@ -113,10 +113,6 @@ export default function ProfileScreen() {
               <Text style={s.statLabel}>{copy.statsDecisions}</Text>
             </View>
             <View style={s.statCard}>
-              <Text style={s.statValue}>{locations.length}</Text>
-              <Text style={s.statLabel}>Locations</Text>
-            </View>
-            <View style={s.statCard}>
               <Text style={[s.statValue, { color: Colors.amber }]}>{pendingCount}</Text>
               <Text style={s.statLabel}>Pending</Text>
             </View>
@@ -155,16 +151,14 @@ export default function ProfileScreen() {
 
           {locations.length > 0 && (
             <>
-              <Text style={s.sectionHeading}>MY LOCATIONS</Text>
+              <Text style={s.sectionHeading}>MY LOCATION</Text>
               <View style={s.listCard}>
-                {locations.map((loc, i) => (
-                  <View key={loc.id} style={[s.listRow, i < locations.length - 1 && s.listRowBorder]}>
-                    <View style={s.listRowIconWrap}>
-                      <Ionicons name="location-outline" size={19} color={Colors.ink} />
-                    </View>
-                    <Text style={s.listRowLabel}>{loc.city}, {loc.province}</Text>
+                <View style={s.listRow}>
+                  <View style={s.listRowIconWrap}>
+                    <Ionicons name="location-outline" size={19} color={Colors.ink} />
                   </View>
-                ))}
+                  <Text style={s.listRowLabel}>{locations[0].city}, {locations[0].province}</Text>
+                </View>
               </View>
             </>
           )}

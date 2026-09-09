@@ -1,9 +1,10 @@
 import { UserType } from '@/src/auth/types';
 import { ResearcherColors as C } from '@/src/constants/colors';
-import { getAllUsers, updateUser, type User } from '@/src/database/repositories/users';
+import { fetchAllUsers, updateUserRemote } from '@/src/database/repositories/researcher';
+import { type User } from '@/src/database/repositories/users';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,18 +19,25 @@ function initials(name: string): string {
 export default function ResearcherUsersScreen() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [selected, setSelected] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const hasLoadedOnce = useRef(false);
 
   const load = useCallback(async () => {
-    setIsLoading(true);
+    if (!hasLoadedOnce.current) setIsLoading(true);
     try {
-      const rows = await getAllUsers();
+      const rows = await fetchAllUsers();
       setUsers(rows);
+      setError(false);
+      hasLoadedOnce.current = true;
     } catch (err) {
       console.error('Failed to load users:', err);
+      // Only surface the error screen on the first load — a failed
+      // background refresh should leave whatever data is already shown.
+      if (!hasLoadedOnce.current) setError(true);
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +64,7 @@ export default function ResearcherUsersScreen() {
     if (!selected) return;
     setIsSaving(true);
     try {
-      await updateUser(selected.id, { user_type: role });
+      await updateUserRemote(selected.id, { user_type: role });
       setSelected({ ...selected, user_type: role });
       setUsers(prev => prev.map(u => u.id === selected.id ? { ...u, user_type: role } : u));
     } catch (err) {
@@ -72,7 +80,7 @@ export default function ResearcherUsersScreen() {
     const nextStatus = selected.status === 'active' ? 'inactive' : 'active';
     setIsSaving(true);
     try {
-      await updateUser(selected.id, { status: nextStatus });
+      await updateUserRemote(selected.id, { status: nextStatus });
       setSelected({ ...selected, status: nextStatus });
       setUsers(prev => prev.map(u => u.id === selected.id ? { ...u, status: nextStatus } : u));
     } catch (err) {
@@ -88,6 +96,14 @@ export default function ResearcherUsersScreen() {
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
       {isLoading ? (
         <View style={s.centerWrap}><ActivityIndicator size="large" color={C.accent} /></View>
+      ) : error ? (
+        <View style={s.centerWrap}>
+          <Ionicons name="cloud-offline-outline" size={28} color={C.textFaint} />
+          <Text style={s.errorText}>Couldn't load users. Check your connection.</Text>
+          <TouchableOpacity style={s.retryBtn} onPress={load} activeOpacity={0.8}>
+            <Text style={s.retryBtnText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
           <Text style={s.title}>Users</Text>
@@ -203,6 +219,10 @@ const s = StyleSheet.create({
   content: { padding: 20, paddingTop: 12, paddingBottom: 20 },
 
   title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4, marginBottom: 16 },
+
+  errorText: { fontSize: 13.5, color: C.textSoft, textAlign: 'center', marginTop: 10, marginBottom: 16, paddingHorizontal: 30 },
+  retryBtn: { backgroundColor: C.card, borderRadius: 11, paddingHorizontal: 20, paddingVertical: 11 },
+  retryBtnText: { fontSize: 13.5, fontWeight: '700', color: C.text },
 
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14 },
   searchInput: { flex: 1, fontSize: 15, color: C.text },

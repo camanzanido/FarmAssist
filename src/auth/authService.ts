@@ -3,6 +3,7 @@ import { SupabaseConnector } from '../database/powersync/connector';
 import { db } from '../database/powersync/powersync';
 import { claimLocalDecisions } from '../database/repositories/decisions';
 import { createLocation, getLocationsByUser } from '../database/repositories/locations';
+import { createLocationRemote, upsertUserRemote } from '../database/repositories/researcher';
 import { upsertUser } from '../database/repositories/users';
 import { supabase } from '../database/supabase/supabase';
 import { UserType } from './types';
@@ -52,29 +53,33 @@ export async function signUp(params: {
   if (!data.user) throw new Error('Sign up failed — no user returned');
 
   console.log("Successfully created auth account.");
-  // Write profile to local DB immediately (works offline after this)
-  await upsertUser({
+
+  const profile = {
     id: data.user.id,
     name: params.name,
     username: params.username,
     email: params.email,
     status: 'active',
     user_type: params.user_type,
-  });
+  };
 
-  console.log("Successfully insert auth account locally.")
-
-  await createLocation({
-    city: params.city,
-    province: params.province,
-    user_id: data.user.id,
-  });
+  if (params.user_type === 'researcher') {
+    // Researchers work online-only and never connect to PowerSync, so write
+    // straight to Supabase instead of queuing through the local store.
+    await upsertUserRemote(profile);
+    await createLocationRemote({ city: params.city, province: params.province, user_id: data.user.id });
+  } else {
+    // Write profile to local DB immediately (works offline after this)
+    await upsertUser(profile);
+    await createLocation({ city: params.city, province: params.province, user_id: data.user.id });
+  }
 
   // Claim any decisions made locally before this account existed
   await claimIfEligible(data.user.id, params.user_type);
 
-  // Start syncing if session was returned (email confirmation off)
-  if (data.session) {
+  // Start syncing if session was returned (email confirmation off) — skip for
+  // researchers, who work online-only and don't use the local PowerSync mirror
+  if (data.session && params.user_type !== 'researcher') {
     await connectSync();
   }
 
@@ -101,21 +106,29 @@ export async function signIn(email: string, password: string) {
   if (!existingProfile) {
     const meta = data.user.user_metadata;
     userType = meta.user_type ?? 'farmer';
-    await upsertUser({
+    const profile = {
       id: data.user.id,
       name: meta.name ?? '',
       username: meta.username ?? '',
       email: data.user.email ?? '',
       status: 'active',
       user_type: userType,
-    });
+    };
+    if (userType === 'researcher') {
+      await upsertUserRemote(profile);
+    } else {
+      await upsertUser(profile);
+    }
   }
 
   // Claim any decisions made locally before this sign-in
   await claimIfEligible(data.user.id, userType);
 
-  // Start syncing — PowerSync will pull all rows the user has RLS access to
-  await connectSync();
+  // Start syncing — PowerSync will pull all rows the user has RLS access to.
+  // Researchers work online-only and never connect to PowerSync.
+  if (userType !== 'researcher') {
+    await connectSync();
+  }
 
   return data;
 }
@@ -130,10 +143,14 @@ export async function signOut() {
 export async function restoreSession(): Promise<boolean> {
   const { data } = await supabase.auth.getSession();
 
-  if (data.session) {
+  if (!data.session) return false; // offline-only mode
+
+  // Researchers work online-only and never connect to PowerSync — their
+  // role is available directly from auth metadata, no local lookup needed.
+  const userType = data.session.user.user_metadata?.user_type;
+  if (userType !== 'researcher') {
     await connectSync();
-    return true; // online + syncing
   }
 
-  return false; // offline-only mode
+  return true; // authenticated (farmers: online + syncing)
 }

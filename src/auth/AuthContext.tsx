@@ -59,19 +59,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const loadUserProfile = useCallback(async (userId: string) => {
-    const profile = await db.getOptional<AuthUser>(
+    let profile = await db.getOptional<AuthUser>(
       'SELECT * FROM users WHERE id = ?',
       [userId]
     );
+
+    if (!profile) {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      if (!error && data) profile = data as AuthUser;
+    }
+
     if (profile) {
-      console.log(profile);
       dispatch({ type: 'SET_USER', payload: profile });
     } else {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, []);
 
-  // Boot: try to restore session, fall back to offline mode
+  // try to restore session, fall back to offline mode
   useEffect(() => {
     async function boot() {
       dispatch({ type: 'SET_LOADING', payload: true });
