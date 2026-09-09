@@ -62,7 +62,7 @@ export const resultCopy = {
       ? `${winner} earns more in every climate scenario used here.`
       : `In ${favorCount} of ${total} climate scenarios, ${winner} earns more. In the rest, ${loser} does better.`,
   detailTable: 'Detailed table',
-  newComparison: 'New comparison',
+  newComparison: 'Go home',
   share: 'Share',
   loading: 'Computing decision…',
   paramsError: "We couldn't load this decision. Please start a new analysis.",

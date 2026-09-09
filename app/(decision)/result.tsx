@@ -410,7 +410,7 @@ export default function ResultScreen() {
             {/* Actions */}
             <View style={s.actions}>
               <TouchableOpacity style={s.newComparisonBtn} onPress={startOver} activeOpacity={0.8}>
-                <Ionicons name="refresh-outline" size={16} color={Colors.ink} />
+                <Ionicons name="home-outline" size={16} color={Colors.ink} />
                 <Text style={s.newComparisonText}>{copy.newComparison}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={s.shareBtn} onPress={handleShare} activeOpacity={0.8}>
