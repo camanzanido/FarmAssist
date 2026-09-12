@@ -1,11 +1,12 @@
 import { UserType } from '@/src/auth/types';
+import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { fetchAllUsers, updateUserRemote } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
+import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type RoleFilter = 'all' | UserType;
@@ -16,34 +17,14 @@ function initials(name: string): string {
   return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
 }
 
+const EMPTY: User[] = [];
+
 export default function ResearcherUsersScreen() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { data: users, isLoading, error, reload } = useResearcherFetch(fetchAllUsers, EMPTY);
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [selected, setSelected] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const hasLoadedOnce = useRef(false);
-
-  const load = useCallback(async () => {
-    if (!hasLoadedOnce.current) setIsLoading(true);
-    try {
-      const rows = await fetchAllUsers();
-      setUsers(rows);
-      setError(false);
-      hasLoadedOnce.current = true;
-    } catch (err) {
-      console.error('Failed to load users:', err);
-      // Only surface the error screen on the first load — a failed
-      // background refresh should leave whatever data is already shown.
-      if (!hasLoadedOnce.current) setError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const counts = useMemo(() => ({
     all: users.length,
@@ -66,7 +47,7 @@ export default function ResearcherUsersScreen() {
     try {
       await updateUserRemote(selected.id, { user_type: role });
       setSelected({ ...selected, user_type: role });
-      setUsers(prev => prev.map(u => u.id === selected.id ? { ...u, user_type: role } : u));
+      reload();
     } catch (err) {
       console.error('Failed to change role:', err);
       Alert.alert('Could not update role', 'Please try again.');
@@ -82,7 +63,7 @@ export default function ResearcherUsersScreen() {
     try {
       await updateUserRemote(selected.id, { status: nextStatus });
       setSelected({ ...selected, status: nextStatus });
-      setUsers(prev => prev.map(u => u.id === selected.id ? { ...u, status: nextStatus } : u));
+      reload();
     } catch (err) {
       console.error('Failed to change status:', err);
       Alert.alert('Could not update status', 'Please try again.');
@@ -94,17 +75,12 @@ export default function ResearcherUsersScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-      {isLoading ? (
-        <View style={s.centerWrap}><ActivityIndicator size="large" color={C.accent} /></View>
-      ) : error ? (
-        <View style={s.centerWrap}>
-          <Ionicons name="cloud-offline-outline" size={28} color={C.textFaint} />
-          <Text style={s.errorText}>Couldn't load users. Check your connection.</Text>
-          <TouchableOpacity style={s.retryBtn} onPress={load} activeOpacity={0.8}>
-            <Text style={s.retryBtnText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
+      <ResearcherAsyncState
+        isLoading={isLoading}
+        error={error}
+        onRetry={reload}
+        errorMessage="Couldn't load users. Check your connection."
+      >
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
           <Text style={s.title}>Users</Text>
 
@@ -208,21 +184,16 @@ export default function ResearcherUsersScreen() {
 
           <View style={{ height: 20 }} />
         </ScrollView>
-      )}
+      </ResearcherAsyncState>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 20, paddingTop: 12, paddingBottom: 20 },
 
   title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4, marginBottom: 16 },
-
-  errorText: { fontSize: 13.5, color: C.textSoft, textAlign: 'center', marginTop: 10, marginBottom: 16, paddingHorizontal: 30 },
-  retryBtn: { backgroundColor: C.card, borderRadius: 11, paddingHorizontal: 20, paddingVertical: 11 },
-  retryBtnText: { fontSize: 13.5, fontWeight: '700', color: C.text },
 
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14 },
   searchInput: { flex: 1, fontSize: 15, color: C.text },

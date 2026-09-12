@@ -1,3 +1,4 @@
+import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { ExportSheet } from '@/src/components/researcher/export-sheet';
 import { DECISIONS, DecisionType } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
@@ -5,11 +6,11 @@ import { type Decision } from '@/src/database/repositories/decisions';
 import { type Location } from '@/src/database/repositories/locations';
 import { fetchAllDecisions, fetchAllLocations, fetchAllUsers } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
+import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { median, monthKeyOf, monthsBack } from '@/src/utils/researcherStats';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TYPE_COLORS: Record<DecisionType, string> = {
@@ -20,36 +21,21 @@ const TYPE_COLORS: Record<DecisionType, string> = {
 
 type Range = 'season' | 'year' | 'all';
 
+const EMPTY = { decisions: [] as Decision[], users: [] as User[], locations: [] as Location[] };
+
 export default function ResearcherReportsScreen() {
-  const [decisions, setDecisions] = useState<Decision[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [range, setRange] = useState<Range>('season');
   const [exportOpen, setExportOpen] = useState(false);
-  const hasLoadedOnce = useRef(false);
 
-  const load = useCallback(async () => {
-    if (!hasLoadedOnce.current) setIsLoading(true);
-    try {
-      const [d, u, l] = await Promise.all([fetchAllDecisions(), fetchAllUsers(), fetchAllLocations()]);
-      setDecisions(d);
-      setUsers(u);
-      setLocations(l);
-      setError(false);
-      hasLoadedOnce.current = true;
-    } catch (err) {
-      console.error('Failed to load reports data:', err);
-      // Only surface the error screen on the first load — a failed
-      // background refresh should leave whatever data is already shown.
-      if (!hasLoadedOnce.current) setError(true);
-    } finally {
-      setIsLoading(false);
-    }
+  const fetchReportsData = useCallback(async () => {
+    const [decisions, users, locations] = await Promise.all([
+      fetchAllDecisions(),
+      fetchAllUsers(),
+      fetchAllLocations(),
+    ]);
+    return { decisions, users, locations };
   }, []);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  const { data: { decisions, users, locations }, isLoading, error, reload } = useResearcherFetch(fetchReportsData, EMPTY);
 
   const rangeFiltered = useMemo(() => {
     if (range === 'all') return decisions;
@@ -95,17 +81,12 @@ export default function ResearcherReportsScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-      {isLoading ? (
-        <View style={s.centerWrap}><ActivityIndicator size="large" color={C.accent} /></View>
-      ) : error ? (
-        <View style={s.centerWrap}>
-          <Ionicons name="cloud-offline-outline" size={28} color={C.textFaint} />
-          <Text style={s.errorText}>Couldn't load reports. Check your connection.</Text>
-          <TouchableOpacity style={s.retryBtn} onPress={load} activeOpacity={0.8}>
-            <Text style={s.retryBtnText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
+      <ResearcherAsyncState
+        isLoading={isLoading}
+        error={error}
+        onRetry={reload}
+        errorMessage="Couldn't load reports. Check your connection."
+      >
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
           <Text style={s.title}>Reports</Text>
 
@@ -188,7 +169,7 @@ export default function ResearcherReportsScreen() {
 
           <View style={{ height: 20 }} />
         </ScrollView>
-      )}
+      </ResearcherAsyncState>
 
       <ExportSheet
         visible={exportOpen}
@@ -203,14 +184,9 @@ export default function ResearcherReportsScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 20, paddingTop: 12, paddingBottom: 20 },
 
   title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4, marginBottom: 14 },
-
-  errorText: { fontSize: 13.5, color: C.textSoft, textAlign: 'center', marginTop: 10, marginBottom: 16, paddingHorizontal: 30 },
-  retryBtn: { backgroundColor: C.card, borderRadius: 11, paddingHorizontal: 20, paddingVertical: 11 },
-  retryBtnText: { fontSize: 13.5, fontWeight: '700', color: C.text },
 
   rangeRow: { flexDirection: 'row', gap: 7, marginBottom: 18 },
   rangeChip: { backgroundColor: C.card, borderRadius: 999, paddingHorizontal: 13, paddingVertical: 7 },

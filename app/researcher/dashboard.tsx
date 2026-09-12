@@ -1,40 +1,24 @@
+import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { DECISION_LABELS, DecisionType } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { type Decision } from '@/src/database/repositories/decisions';
 import { fetchAllDecisions, fetchAllUsers } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
+import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { formatCurrency } from '@/src/utils/formatters';
 import { median, monthKeyOf, monthsBack } from '@/src/utils/researcherStats';
-import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const EMPTY = { decisions: [] as Decision[], users: [] as User[] };
+
 export default function ResearcherDashboardScreen() {
-  const [decisions, setDecisions] = useState<Decision[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const hasLoadedOnce = useRef(false);
-
-  const load = useCallback(async () => {
-    if (!hasLoadedOnce.current) setIsLoading(true);
-    try {
-      const [d, u] = await Promise.all([fetchAllDecisions(), fetchAllUsers()]);
-      setDecisions(d);
-      setUsers(u);
-      setError(false);
-      hasLoadedOnce.current = true;
-    } catch (err) {
-      console.error('Failed to load overview data:', err);
-      if (!hasLoadedOnce.current) setError(true);
-    } finally {
-      setIsLoading(false);
-    }
+  const fetchOverview = useCallback(async () => {
+    const [decisions, users] = await Promise.all([fetchAllDecisions(), fetchAllUsers()]);
+    return { decisions, users };
   }, []);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  const { data: { decisions, users }, isLoading, error, reload } = useResearcherFetch(fetchOverview, EMPTY);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -74,17 +58,12 @@ export default function ResearcherDashboardScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-      {isLoading ? (
-        <View style={s.centerWrap}><ActivityIndicator size="large" color={C.accent} /></View>
-      ) : error ? (
-        <View style={s.centerWrap}>
-          <Ionicons name="cloud-offline-outline" size={28} color={C.textFaint} />
-          <Text style={s.errorText}>Couldn't load the overview. Check your connection.</Text>
-          <TouchableOpacity style={s.retryBtn} onPress={load} activeOpacity={0.8}>
-            <Text style={s.retryBtnText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
+      <ResearcherAsyncState
+        isLoading={isLoading}
+        error={error}
+        onRetry={reload}
+        errorMessage="Couldn't load the overview. Check your connection."
+      >
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
           <View style={s.header}>
             <View>
@@ -160,14 +139,13 @@ export default function ResearcherDashboardScreen() {
 
           <View style={{ height: 20 }} />
         </ScrollView>
-      )}
+      </ResearcherAsyncState>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 20, paddingTop: 12, paddingBottom: 20 },
 
   header: { marginBottom: 18 },

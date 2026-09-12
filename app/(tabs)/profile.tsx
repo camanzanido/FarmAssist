@@ -37,6 +37,7 @@ export default function ProfileScreen() {
   const [pendingCount, setPendingCount] = useState(0);
   const [locations, setLocations] = useState<Location[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -49,8 +50,10 @@ export default function ProfileScreen() {
       setDecisionCount(decisions.length);
       setLocations(locs);
       setPendingCount((batch?.crud ?? []).filter(e => e.table === 'decisions').length);
+      setLoadError(false);
     } catch (err) {
       console.error('Failed to load profile data:', err);
+      setLoadError(true);
     }
   }, [user]);
 
@@ -106,6 +109,19 @@ export default function ProfileScreen() {
               <Text style={s.username}>@{user.username}</Text>
             </View>
           </View>
+
+          {loadError && (
+            <View style={s.loadErrorCard}>
+              <View style={s.offlineTitleRow}>
+                <Ionicons name="warning-outline" size={18} color={Colors.danger} />
+                <Text style={s.loadErrorTitle}>{copy.loadErrorTitle}</Text>
+              </View>
+              <Text style={s.loadErrorBody}>{copy.loadErrorBody}</Text>
+              <TouchableOpacity style={s.errorDismissBtn} onPress={load} activeOpacity={0.8}>
+                <Text style={s.errorDismissBtnText}>{copy.retry}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={s.statsRow}>
             <View style={s.statCard}>
@@ -216,6 +232,10 @@ const s = StyleSheet.create({
   errorBody: { fontSize: 13.5, color: '#8A3A30', lineHeight: 19, marginBottom: 12 },
   errorDismissBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface, borderWidth: 1, borderColor: '#EFC6C0', borderRadius: 11, height: 40 },
   errorDismissBtnText: { fontSize: 13, fontWeight: '700', color: Colors.danger },
+
+  loadErrorCard: { backgroundColor: Colors.dangerBg, borderWidth: 1, borderColor: '#EFC6C0', borderRadius: 16, padding: 16, marginBottom: 20 },
+  loadErrorTitle: { fontSize: 15, fontWeight: '800', color: Colors.danger },
+  loadErrorBody: { fontSize: 13.5, color: '#8A3A30', lineHeight: 19, marginBottom: 12 },
 
   sectionHeading: { fontSize: 12, fontWeight: '700', letterSpacing: 0.9, color: Colors.inkFaint, marginBottom: 10 },
   listCard: { backgroundColor: Colors.surface, borderRadius: 16, overflow: 'hidden', marginBottom: 20 },

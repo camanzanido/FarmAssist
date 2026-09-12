@@ -31,17 +31,21 @@ export default function HomeScreen() {
   const userId = user?.id ?? '';
 
   const [lastDecision, setLastDecision] = useState<Decision | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     if (!userId) {
       setLastDecision(null);
+      setLoadError(false);
       return;
     }
     try {
       const rows = await getDecisionsByUser(userId);
       setLastDecision(rows[0] ?? null);
+      setLoadError(false);
     } catch (err) {
       console.error('Failed to load last decision:', err);
+      setLoadError(true);
     }
   }, [userId]);
 
@@ -75,6 +79,16 @@ export default function HomeScreen() {
 
         <Text style={s.heading}>{copy.heading}</Text>
         <Text style={s.subtitle}>{copy.subtitle}</Text>
+
+        {loadError && (
+          <View style={s.loadErrorBanner}>
+            <Ionicons name="warning-outline" size={16} color={Colors.danger} />
+            <Text style={s.loadErrorText}>{copy.loadErrorTitle}</Text>
+            <TouchableOpacity onPress={load} hitSlop={8}>
+              <Text style={s.loadErrorRetry}>{copy.retry}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={s.decisionList}>
           {DECISIONS.map(d => (
@@ -124,6 +138,10 @@ const s = StyleSheet.create({
 
   heading: { fontSize: 32, fontWeight: '800', color: Colors.onDark, lineHeight: 38, letterSpacing: -0.6, marginBottom: 8 },
   subtitle: { fontSize: 14, color: Colors.onDarkFaint, marginBottom: 24 },
+
+  loadErrorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.onDarkCard, borderRadius: 12, padding: 12, marginBottom: 18 },
+  loadErrorText: { flex: 1, fontSize: 12.5, fontWeight: '600', color: Colors.onDarkSoft },
+  loadErrorRetry: { fontSize: 12.5, fontWeight: '700', color: Colors.onDark },
 
   decisionList: { gap: 11, marginBottom: 24 },
   decisionRow: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14 },

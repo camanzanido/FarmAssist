@@ -1,13 +1,14 @@
+import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { cityCoordinateKey, ensureCoordinates, type CityCoordinate } from '@/src/database/repositories/cityCoordinates';
 import { type Decision } from '@/src/database/repositories/decisions';
 import { type Location } from '@/src/database/repositories/locations';
 import { fetchAllDecisions, fetchAllLocations } from '@/src/database/repositories/researcher';
+import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { formatCurrency } from '@/src/utils/formatters';
 import { median } from '@/src/utils/researcherStats';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
@@ -74,36 +75,19 @@ function buildMapHtml(pins: {
 </html>`;
 }
 
+const EMPTY = { decisions: [] as Decision[], locations: [] as Location[] };
+
 export default function ResearcherMapScreen() {
-  const [decisions, setDecisions] = useState<Decision[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
+  const fetchMapData = useCallback(async () => {
+    const [decisions, locations] = await Promise.all([fetchAllDecisions(), fetchAllLocations()]);
+    return { decisions, locations };
+  }, []);
+  const { data: { decisions, locations }, isLoading, error, reload } = useResearcherFetch(fetchMapData, EMPTY);
+
   const [coords, setCoords] = useState<Map<string, CityCoordinate>>(new Map());
-  const [isLoading, setIsLoading] = useState(true);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodeFailed, setGeocodeFailed] = useState(false);
-  const [error, setError] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const hasLoadedOnce = useRef(false);
-
-  const load = useCallback(async () => {
-    if (!hasLoadedOnce.current) setIsLoading(true);
-    try {
-      const [d, l] = await Promise.all([fetchAllDecisions(), fetchAllLocations()]);
-      setDecisions(d);
-      setLocations(l);
-      setError(false);
-      hasLoadedOnce.current = true;
-    } catch (err) {
-      console.error('Failed to load map data:', err);
-      // Only surface the error screen on the first load — a failed
-      // background refresh should leave whatever data is already shown.
-      if (!hasLoadedOnce.current) setError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const byCity = useMemo(() => {
     const locById = new Map(locations.map(l => [l.id, l]));
@@ -173,17 +157,12 @@ export default function ResearcherMapScreen() {
   return (
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
-      {isLoading ? (
-        <View style={s.centerWrap}><ActivityIndicator size="large" color={C.accent} /></View>
-      ) : error ? (
-        <View style={s.centerWrap}>
-          <Ionicons name="cloud-offline-outline" size={28} color={C.textFaint} />
-          <Text style={s.errorText}>Couldn't load the map. Check your connection.</Text>
-          <TouchableOpacity style={s.retryBtn} onPress={load} activeOpacity={0.8}>
-            <Text style={s.retryBtnText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
+      <ResearcherAsyncState
+        isLoading={isLoading}
+        error={error}
+        onRetry={reload}
+        errorMessage="Couldn't load the map. Check your connection."
+      >
         <>
           <View style={s.header}>
             <View style={s.searchRow}>
@@ -256,17 +235,13 @@ export default function ResearcherMapScreen() {
             ))}
           </ScrollView>
         </>
-      )}
+      </ResearcherAsyncState>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  errorText: { fontSize: 13.5, color: C.textSoft, textAlign: 'center', marginTop: 10, marginBottom: 16, paddingHorizontal: 30 },
-  retryBtn: { backgroundColor: C.card, borderRadius: 11, paddingHorizontal: 20, paddingVertical: 11 },
-  retryBtnText: { fontSize: 13.5, fontWeight: '700', color: C.text },
 
   header: { backgroundColor: '#0C3324', paddingTop: 52, paddingHorizontal: 20, paddingBottom: 16 },
   searchRow: {

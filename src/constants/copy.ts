@@ -79,6 +79,8 @@ export const homeCopy = {
   subtitle: "Pick a question. We'll answer it using your climate data.",
   lastDecisionHeading: 'LAST DECISION',
   weatherPlaceholder: 'Weather data unavailable',
+  loadErrorTitle: "Couldn't load your recent decision.",
+  retry: 'Retry',
 };
 
 export const historyCopy = {
@@ -100,6 +102,9 @@ export const historyCopy = {
 
 export const profileCopy = {
   statsDecisions: 'Decisions',
+  loadErrorTitle: "Couldn't load your stats.",
+  loadErrorBody: 'Some information on this screen may be out of date.',
+  retry: 'Retry',
   offlineTitle: 'No internet right now',
   offlineBody: (pending: number, lastSync: string) =>
     `${pending} decision${pending === 1 ? '' : 's'} will send once you're back online. Last sync: ${lastSync}.`,
