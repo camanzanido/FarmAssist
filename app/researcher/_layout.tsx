@@ -30,13 +30,6 @@ export default function ResearcherLayout() {
           }}
         />
         <Tabs.Screen
-          name="reports"
-          options={{
-            title: 'Reports',
-            tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} size={23} color={color} />,
-          }}
-        />
-        <Tabs.Screen
           name="decisions"
           options={{
             title: 'Decisions',
