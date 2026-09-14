@@ -52,3 +52,8 @@ export async function createLocationRemote(data: Omit<Location, 'id'>): Promise<
   if (error) throw error;
   return row.id;
 }
+
+export async function deleteDecisionRemote(decisionId: string): Promise<void> {
+  const { error } = await supabase.from('decisions').delete().eq('id', decisionId);
+  if (error) throw error;
+}
