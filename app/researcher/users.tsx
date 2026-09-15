@@ -1,9 +1,12 @@
+import { useAuth } from '@/src/auth/AuthContext';
 import { UserType } from '@/src/auth/types';
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
+import { EmptyState } from '@/src/components/researcher/empty-state';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { fetchAllUsers, updateUserRemote } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
+import { getActionErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -21,10 +24,12 @@ const EMPTY: User[] = [];
 
 export default function ResearcherUsersScreen() {
   const { data: users, isLoading, error, reload } = useResearcherFetch(fetchAllUsers, EMPTY);
+  const { user: currentUser } = useAuth();
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [selected, setSelected] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const isSelf = !!selected && selected.id === currentUser?.id;
 
   const counts = useMemo(() => ({
     all: users.length,
@@ -41,7 +46,7 @@ export default function ResearcherUsersScreen() {
     });
   }, [users, query, roleFilter]);
 
-  const setRole = async (role: UserType) => {
+  const applyRoleChange = async (role: UserType) => {
     if (!selected) return;
     setIsSaving(true);
     try {
@@ -50,15 +55,26 @@ export default function ResearcherUsersScreen() {
       reload();
     } catch (err) {
       console.error('Failed to change role:', err);
-      Alert.alert('Could not update role', 'Please try again.');
+      Alert.alert('Could not update role', getActionErrorMessage(err, 'Please try again.'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const toggleActive = async () => {
+  const setRole = (role: UserType) => {
+    if (!selected || isSelf || role === selected.user_type) return;
+    Alert.alert(
+      `Change role to ${role === 'researcher' ? 'Researcher' : 'Farmer'}?`,
+      `${selected.name} will ${role === 'researcher' ? 'gain' : 'lose'} researcher access.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Confirm', onPress: () => applyRoleChange(role) },
+      ]
+    );
+  };
+
+  const applyStatusChange = async (nextStatus: 'active' | 'inactive') => {
     if (!selected) return;
-    const nextStatus = selected.status === 'active' ? 'inactive' : 'active';
     setIsSaving(true);
     try {
       await updateUserRemote(selected.id, { status: nextStatus });
@@ -66,10 +82,29 @@ export default function ResearcherUsersScreen() {
       reload();
     } catch (err) {
       console.error('Failed to change status:', err);
-      Alert.alert('Could not update status', 'Please try again.');
+      Alert.alert('Could not update status', getActionErrorMessage(err, 'Please try again.'));
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const toggleActive = () => {
+    if (!selected || isSelf) return;
+    const nextStatus = selected.status === 'active' ? 'inactive' : 'active';
+    Alert.alert(
+      nextStatus === 'inactive' ? 'Deactivate this account?' : 'Reactivate this account?',
+      nextStatus === 'inactive'
+        ? `${selected.name} won't be able to sign in until reactivated.`
+        : `${selected.name} will be able to sign in again.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: nextStatus === 'inactive' ? 'Deactivate' : 'Reactivate',
+          style: nextStatus === 'inactive' ? 'destructive' : 'default',
+          onPress: () => applyStatusChange(nextStatus),
+        },
+      ]
+    );
   };
 
   return (
@@ -136,7 +171,11 @@ export default function ResearcherUsersScreen() {
           })}
 
           {filtered.length === 0 && (
-            <Text style={s.emptyText}>No users match this search.</Text>
+            <EmptyState
+              icon={users.length === 0 ? 'people-outline' : 'search-outline'}
+              title={users.length === 0 ? 'No users yet.' : 'No users match this search.'}
+              subtitle={users.length === 0 ? undefined : 'Try a different name, username, or role filter.'}
+            />
           )}
 
           {selected && (
@@ -156,29 +195,35 @@ export default function ResearcherUsersScreen() {
                 <TouchableOpacity
                   style={[s.roleBtn, selected.user_type === 'farmer' && s.roleBtnActive]}
                   onPress={() => setRole('farmer')}
-                  disabled={isSaving}
+                  disabled={isSaving || isSelf}
                 >
                   <Text style={[s.roleBtnText, selected.user_type === 'farmer' && s.roleBtnTextActive]}>Farmer</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[s.roleBtn, selected.user_type === 'researcher' && s.roleBtnActive]}
                   onPress={() => setRole('researcher')}
-                  disabled={isSaving}
+                  disabled={isSaving || isSelf}
                 >
                   <Text style={[s.roleBtnText, selected.user_type === 'researcher' && s.roleBtnTextActive]}>Researcher</Text>
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={s.deactivateBtn} onPress={toggleActive} disabled={isSaving}>
+              <TouchableOpacity
+                style={[s.deactivateBtn, isSelf && s.deactivateBtnDisabled]}
+                onPress={toggleActive}
+                disabled={isSaving || isSelf}
+              >
                 <Ionicons
                   name={selected.status === 'active' ? 'person-remove-outline' : 'person-add-outline'}
                   size={17}
-                  color={C.danger}
+                  color={isSelf ? C.textFaint : C.danger}
                 />
-                <Text style={s.deactivateText}>
+                <Text style={[s.deactivateText, isSelf && s.deactivateTextDisabled]}>
                   {selected.status === 'active' ? 'Deactivate account' : 'Reactivate account'}
                 </Text>
               </TouchableOpacity>
+
+              {isSelf && <Text style={s.selfHint}>You can&apos;t change your own role or account status.</Text>}
             </View>
           )}
 
@@ -218,7 +263,6 @@ const s = StyleSheet.create({
   roleTagText: { fontSize: 10.5, fontWeight: '700', color: C.textSoft },
   roleTagTextResearcher: { color: C.accentDeepText },
 
-  emptyText: { textAlign: 'center', fontSize: 13, color: C.textFaint, marginTop: 20 },
 
   detailCard: { backgroundColor: C.card, borderRadius: 18, padding: 18, marginTop: 12 },
   detailHeader: { flexDirection: 'row', alignItems: 'center', gap: 13, marginBottom: 18 },
@@ -235,5 +279,8 @@ const s = StyleSheet.create({
   roleBtnTextActive: { color: C.accentDeepText },
 
   deactivateBtn: { flexDirection: 'row', gap: 8, height: 46, borderRadius: 11, borderWidth: 1, borderColor: 'rgba(224,133,133,0.4)', alignItems: 'center', justifyContent: 'center' },
+  deactivateBtnDisabled: { borderColor: 'rgba(255,255,255,0.15)' },
   deactivateText: { fontSize: 14, fontWeight: '700', color: C.danger },
+  deactivateTextDisabled: { color: C.textFaint },
+  selfHint: { fontSize: 12, color: C.textFaint, textAlign: 'center', marginTop: 10 },
 });

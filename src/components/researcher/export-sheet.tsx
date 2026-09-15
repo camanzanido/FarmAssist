@@ -3,9 +3,10 @@ import type { Decision } from '@/src/database/repositories/decisions';
 import type { Location } from '@/src/database/repositories/locations';
 import type { User } from '@/src/database/repositories/users';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
+import { getActionErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Modal, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Format = 'excel' | 'pdf';
 
@@ -63,6 +64,7 @@ export function ExportSheet({
       onClose();
     } catch (err) {
       console.error('Export share failed:', err);
+      Alert.alert('Export failed', getActionErrorMessage(err, "Couldn't share the export. Please try again."));
     }
   };
 

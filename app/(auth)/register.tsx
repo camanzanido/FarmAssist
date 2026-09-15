@@ -2,6 +2,7 @@ import { DropdownField } from '@/src/components/ui/dropdown-field';
 import { Colors } from '@/src/constants/colors';
 import { authCopy as copy } from '@/src/constants/copy';
 import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locations';
+import { getAuthErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -109,7 +110,7 @@ export default function RegisterScreen() {
       });
       router.back();
     } catch (e: any) {
-      Alert.alert('Registration Failed', e.message);
+      Alert.alert('Registration Failed', getAuthErrorMessage(e, 'Something went wrong. Please try again.'));
     }
   }
 

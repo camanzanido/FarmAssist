@@ -1,4 +1,5 @@
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
+import { EmptyState } from '@/src/components/researcher/empty-state';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { type Decision } from '@/src/database/repositories/decisions';
@@ -6,6 +7,7 @@ import { type Location } from '@/src/database/repositories/locations';
 import { deleteDecisionRemote, fetchAllDecisions, fetchAllLocations, fetchAllUsers } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
+import { getActionErrorMessage } from '@/src/utils/errors';
 import { formatCurrency } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -71,7 +73,7 @@ export default function ResearcherDecisionsScreen() {
               reload();
             } catch (err) {
               console.error('Failed to delete decision:', err);
-              Alert.alert('Could not remove decision', 'Please try again.');
+              Alert.alert('Could not remove decision', getActionErrorMessage(err, 'Please try again.'));
             } finally {
               setDeletingId(null);
             }
@@ -126,9 +128,11 @@ export default function ResearcherDecisionsScreen() {
           </View>
 
           {filtered.length === 0 ? (
-            <Text style={s.emptyText}>
-              {decisions.length === 0 ? 'No decisions recorded yet.' : 'No decisions match this search.'}
-            </Text>
+            <EmptyState
+              icon={decisions.length === 0 ? 'document-text-outline' : 'search-outline'}
+              title={decisions.length === 0 ? 'No decisions recorded yet.' : 'No decisions match this search.'}
+              subtitle={decisions.length === 0 ? undefined : 'Try a different search term or type filter.'}
+            />
           ) : (
             filtered.map(d => {
               const farmer = usersById.get(d.user_id);
@@ -183,7 +187,6 @@ const s = StyleSheet.create({
   filterChipText: { fontSize: 12.5, fontWeight: '600', color: C.textSoft },
   filterChipTextActive: { color: C.accentDeepText, fontWeight: '700' },
 
-  emptyText: { textAlign: 'center', fontSize: 13, color: C.textFaint, marginTop: 20 },
 
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14, marginBottom: 9 },
   rowResult: { fontSize: 15.5, fontWeight: '700', color: C.text },

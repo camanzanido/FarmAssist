@@ -1,4 +1,5 @@
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
+import { EmptyState } from '@/src/components/researcher/empty-state';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { cityCoordinateKey, ensureCoordinates, type CityCoordinate } from '@/src/database/repositories/cityCoordinates';
 import { type Decision } from '@/src/database/repositories/decisions';
@@ -212,9 +213,11 @@ export default function ResearcherMapScreen() {
 
           <ScrollView contentContainerStyle={s.list} showsVerticalScrollIndicator={false}>
             {filteredByCity.length === 0 ? (
-              <Text style={s.emptyText}>
-                {byCity.length === 0 ? 'No locations with decisions yet.' : 'No municipalities match your search.'}
-              </Text>
+              <EmptyState
+                icon={byCity.length === 0 ? 'map-outline' : 'search-outline'}
+                title={byCity.length === 0 ? 'No locations with decisions yet.' : 'No municipalities match your search.'}
+                subtitle={byCity.length === 0 ? undefined : 'Try a different city or province.'}
+              />
             ) : filteredByCity.map(row => (
               <View key={cityCoordinateKey(row.city, row.province)} style={s.cityCard}>
                 <View style={s.cityHeader}>
@@ -269,7 +272,6 @@ const s = StyleSheet.create({
   mapNoticeText: { flex: 1, fontSize: 12, color: C.textFaint, lineHeight: 16 },
 
   list: { padding: 20, gap: 10 },
-  emptyText: { textAlign: 'center', fontSize: 13, color: C.textFaint, marginTop: 20 },
 
   cityCard: { backgroundColor: C.card, borderRadius: 16, padding: 16, marginBottom: 10 },
   cityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 },

@@ -1,5 +1,6 @@
 import { Colors } from '@/src/constants/colors';
 import { authCopy as copy } from '@/src/constants/copy';
+import { getAuthErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -7,18 +8,39 @@ import { Alert, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type FieldErrors = Partial<Record<'email' | 'password', string>>;
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [touched, setTouched] = useState(false);
   const { signIn, isLoading } = useAuth();
   const router = useRouter();
 
+  function getFieldErrors(): FieldErrors {
+    const errors: FieldErrors = {};
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) errors.email = 'Email is required';
+    else if (!EMAIL_REGEX.test(trimmedEmail)) errors.email = 'Enter a valid email address';
+
+    if (!password) errors.password = 'Password is required';
+
+    return errors;
+  }
+
+  const errors = getFieldErrors();
+
   async function handleLogin() {
+    setTouched(true);
+    if (Object.keys(errors).length > 0) return;
+
     try {
-      await signIn(email, password);
+      await signIn(email.trim(), password);
     } catch (e: any) {
-      Alert.alert('Login Failed', e.message);
+      Alert.alert('Login Failed', getAuthErrorMessage(e, 'Something went wrong. Please try again.'));
     }
   }
 
@@ -39,7 +61,7 @@ export default function LoginScreen() {
         <View style={s.field}>
           <Text style={s.label}>{copy.email}</Text>
           <TextInput
-            style={s.input}
+            style={[s.input, touched && errors.email && s.inputError]}
             placeholder="you@email.com"
             placeholderTextColor="rgba(255,255,255,0.35)"
             value={email}
@@ -47,11 +69,12 @@ export default function LoginScreen() {
             autoCapitalize="none"
             keyboardType="email-address"
           />
+          {touched && errors.email && <Text style={s.errorText}>{errors.email}</Text>}
         </View>
 
         <View style={s.field}>
           <Text style={s.label}>{copy.password}</Text>
-          <View style={s.passwordRow}>
+          <View style={[s.passwordRow, touched && errors.password && s.inputError]}>
             <TextInput
               style={s.passwordInput}
               value={password}
@@ -63,6 +86,7 @@ export default function LoginScreen() {
               <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={21} color={Colors.onDarkFaint} />
             </TouchableOpacity>
           </View>
+          {touched && errors.password && <Text style={s.errorText}>{errors.password}</Text>}
         </View>
 
         <TouchableOpacity onPress={handleLogin} disabled={isLoading} style={[s.signInBtn, isLoading && s.signInBtnDisabled]} activeOpacity={0.85}>
@@ -115,6 +139,8 @@ const s = StyleSheet.create({
     borderRadius: 14, height: 56, paddingHorizontal: 16,
   },
   passwordInput: { flex: 1, fontSize: 16, color: Colors.onDark },
+  inputError: { borderColor: Colors.danger },
+  errorText: { color: Colors.danger, fontSize: 12, marginTop: 6 },
 
   signInBtn: { backgroundColor: Colors.accentTintStrong, borderRadius: 16, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
   signInBtnDisabled: { opacity: 0.6 },
