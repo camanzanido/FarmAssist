@@ -13,6 +13,11 @@ export const namingCopy = {
   helper: 'Followed by questions about yield, cost, and price for each option.',
   continue: 'Continue to Data Entry',
   continueDisabledHint: 'Fill in both names first',
+  duplicateNames: 'Give each option a different name.',
+  discardTitle: 'Discard this comparison?',
+  discardBody: "The names you've entered won't be saved.",
+  discardCancel: 'Keep editing',
+  discardConfirm: 'Discard',
 };
 
 export const dataEntryCopy = {
@@ -30,6 +35,7 @@ export const dataEntryCopy = {
   continueToOption: (nextName: string) => `Continue to ${nextName}`,
   continueToClimate: 'Continue to climate',
   errorNumbersOnly: 'Enter numbers only.',
+  errorPriceMustBePositive: 'Selling price must be greater than 0.',
 };
 
 export const climateCopy = {
@@ -114,6 +120,9 @@ export const profileCopy = {
     `${count} change${count === 1 ? '' : 's'} failed to save to the cloud and won't be retried automatically. This usually means the same account or record already exists there.`,
   syncErrorDismiss: 'Dismiss',
   logOut: 'Log out',
+  logoutConfirmTitle: 'Log out?',
+  logoutConfirmBody: "You'll need to sign in again to sync decisions or access predefined inputs.",
+  logoutCancel: 'Cancel',
   signedOutTitle: 'Welcome to FarmAssist',
   signedOutSubtitle: 'Sign in or create an account to sync your decisions and access more features.',
   signIn: 'Sign In',

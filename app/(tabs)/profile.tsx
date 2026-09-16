@@ -12,7 +12,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { db } from '@/src/database/powersync/powersync';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function initials(name: string): string {
@@ -59,8 +59,11 @@ export default function ProfileScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  async function handleLogout() {
-    await signOut();
+  function handleLogout() {
+    Alert.alert(copy.logoutConfirmTitle, copy.logoutConfirmBody, [
+      { text: copy.logoutCancel, style: 'cancel' },
+      { text: copy.logOut, style: 'destructive', onPress: () => signOut() },
+    ]);
   }
 
   async function handleSyncNow() {

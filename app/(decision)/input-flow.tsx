@@ -3,9 +3,9 @@ import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/con
 import { ClimateColors, Colors } from '@/src/constants/colors';
 import { climateCopy, dataEntryCopy, namingCopy } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, BackHandler, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function emptyFive(): string[] {
@@ -30,7 +30,9 @@ export default function DecisionInputFlow() {
 
   const [names, setNames] = useState<string[]>(['', '']);
   const placeholders = decisionType ? PLACEHOLDERS[decisionType] : undefined;
-  const namesValid = names[0].trim().length > 0 && names[1].trim().length > 0;
+  const namesFilled = names[0].trim().length > 0 && names[1].trim().length > 0;
+  const namesDuplicate = namesFilled && names[0].trim().toLowerCase() === names[1].trim().toLowerCase();
+  const namesValid = namesFilled && !namesDuplicate;
 
   const [optionData, setOptionData] = useState([
     { yield: emptyFive(), cost: emptyFive(), addCost: emptyFive(), price: '' },
@@ -79,8 +81,10 @@ export default function DecisionInputFlow() {
 
   const NUMBER_PATTERN = /^\d+(\.\d+)?$/;
   const isValidNumber = (v: string) => NUMBER_PATTERN.test(v.trim());
+  const isValidPrice = (v: string) => isValidNumber(v) && Number(v) > 0;
 
   const isFieldInvalid = (v: string) => v.trim() !== '' && !isValidNumber(v);
+  const isPriceFieldInvalid = (v: string) => v.trim() !== '' && !isValidPrice(v);
 
   const isDataValid = () => {
     const data = currentOptionData;
@@ -88,7 +92,7 @@ export default function DecisionInputFlow() {
       data.yield.every(isValidNumber) &&
       data.cost.every(isValidNumber) &&
       data.addCost.every(isValidNumber) &&
-      isValidNumber(data.price)
+      isValidPrice(data.price)
     );
   };
 
@@ -97,6 +101,9 @@ export default function DecisionInputFlow() {
     currentOptionData.cost.some(isFieldInvalid) ||
     currentOptionData.addCost.some(isFieldInvalid) ||
     isFieldInvalid(currentOptionData.price);
+
+  const hasPriceError = isPriceFieldInvalid(currentOptionData.price)
+    || (isValidNumber(currentOptionData.price) && !isValidPrice(currentOptionData.price));
 
   const filledScenarioCount = CLIMATES.filter((_, i) =>
     isValidNumber(currentOptionData.yield[i]) &&
@@ -147,12 +154,35 @@ export default function DecisionInputFlow() {
     }
   };
 
+  const exitFlow = () => {
+    const hasEnteredNames = names[0].trim().length > 0 || names[1].trim().length > 0;
+    if (!hasEnteredNames) {
+      router.back();
+      return;
+    }
+    Alert.alert(namingCopy.discardTitle, namingCopy.discardBody, [
+      { text: namingCopy.discardCancel, style: 'cancel' },
+      { text: namingCopy.discardConfirm, style: 'destructive', onPress: () => router.back() },
+    ]);
+  };
+
   const goBack = () => {
     if (step === 'data-0') setStep('naming');
     else if (step === 'data-1') setStep('data-0');
     else if (step === 'weather') setStep('data-1');
-    else router.back();
+    else exitFlow();
   };
+
+  const goBackRef = useRef(goBack);
+  goBackRef.current = goBack;
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      goBackRef.current();
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
 
   // Helper to get step number (1-3) for indicator
   const getStepNumber = (): { current: number; total: number } => {
@@ -173,6 +203,8 @@ export default function DecisionInputFlow() {
   if (step === 'naming') {
     const decisionLabel = DECISION_LABELS[decisionType];
     return (
+      <>
+      <Stack.Screen options={{ gestureEnabled: false }} />
       <SafeAreaView style={s.safe}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -191,7 +223,7 @@ export default function DecisionInputFlow() {
 
             <View style={s.namingGroup}>
               {[0, 1].map(i => (
-                <View key={i} style={s.namingCard}>
+                <View key={i} style={[s.namingCard, namesDuplicate && s.namingCardInvalid]}>
                   <View style={s.badge}>
                     <Text style={s.badgeText}>{i === 0 ? namingCopy.firstOption : namingCopy.secondOption}</Text>
                   </View>
@@ -206,6 +238,7 @@ export default function DecisionInputFlow() {
                 </View>
               ))}
             </View>
+            {namesDuplicate && <Text style={s.errorText}>{namingCopy.duplicateNames}</Text>}
 
             <View style={s.helperRow}>
               <Ionicons name="information-circle-outline" size={19} color={Colors.inkFaint} />
@@ -222,17 +255,20 @@ export default function DecisionInputFlow() {
                 <Text style={s.nextBtnText}>{namingCopy.continue}</Text>
                 <Ionicons name="arrow-forward" size={18} color={Colors.onDark} />
               </TouchableOpacity>
-              {!namesValid && <Text style={s.hintText}>{namingCopy.continueDisabledHint}</Text>}
+              {!namesValid && !namesDuplicate && <Text style={s.hintText}>{namingCopy.continueDisabledHint}</Text>}
             </View>
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      </>
     );
   }
 
   // ---------- Render Weather Step ----------
   else if (step === 'weather') {
     return (
+      <>
+      <Stack.Screen options={{ gestureEnabled: false }} />
       <SafeAreaView style={s.safe}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -369,6 +405,7 @@ export default function DecisionInputFlow() {
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      </>
     );
   }
 
@@ -378,6 +415,8 @@ export default function DecisionInputFlow() {
   const nextButtonText = isSecondOption ? dataEntryCopy.continueToClimate : dataEntryCopy.continueToOption(names[1]);
 
   return (
+    <>
+    <Stack.Screen options={{ gestureEnabled: false }} />
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -402,7 +441,7 @@ export default function DecisionInputFlow() {
                 <Text style={s.priceLabel}>{dataEntryCopy.price}</Text>
                 <Text style={s.priceUnit}>{dataEntryCopy.priceUnit}</Text>
               </View>
-              <View style={[s.priceInputWrap, isFieldInvalid(currentOptionData.price) && s.fieldInvalidBorder]}>
+              <View style={[s.priceInputWrap, hasPriceError && s.fieldInvalidBorder]}>
                 <Text style={s.priceSymbol}>₱</Text>
                 <TextInput
                   style={s.priceInput}
@@ -414,6 +453,7 @@ export default function DecisionInputFlow() {
                 />
               </View>
             </View>
+            {hasPriceError && <Text style={s.priceErrorText}>{dataEntryCopy.errorPriceMustBePositive}</Text>}
 
             <Text style={s.scenariosHeading}>{dataEntryCopy.scenariosHeading}</Text>
 
@@ -480,6 +520,7 @@ export default function DecisionInputFlow() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </>
   );
 }
 
@@ -497,7 +538,8 @@ const s = StyleSheet.create({
 
   // Naming step
   namingGroup: { gap: 12 },
-  namingCard: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },
+  namingCard: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 1, borderWidth: 1.5, borderColor: 'transparent' },
+  namingCardInvalid: { borderColor: Colors.danger },
   badge: { alignSelf: 'flex-start', backgroundColor: Colors.accentTint, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 12 },
   badgeText: { fontSize: 13, fontWeight: '700', color: Colors.ink, letterSpacing: 0.4 },
   namingInput: { fontSize: 19, fontWeight: '700', color: Colors.ink, paddingVertical: 8, borderBottomWidth: 2, borderBottomColor: Colors.ink },
@@ -516,6 +558,7 @@ const s = StyleSheet.create({
   priceInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.bg, borderWidth: 1.5, borderColor: Colors.ink, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 },
   priceSymbol: { fontSize: 15, color: Colors.inkFaint },
   priceInput: { fontSize: 18, fontWeight: '800', color: Colors.ink, minWidth: 64 },
+  priceErrorText: { fontSize: 12, color: Colors.danger, fontWeight: '600', marginTop: -8, marginBottom: 12, marginLeft: 4 },
 
   scenariosHeading: { fontSize: 13, fontWeight: '700', letterSpacing: 0.6, color: Colors.inkFaint, marginBottom: 10, marginLeft: 2 },
 
