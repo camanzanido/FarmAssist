@@ -24,6 +24,7 @@ interface AuthContextValue extends AuthState {
     province: string;
   }) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   isResearcher: boolean;
   isFarmer: boolean;
 }
@@ -151,6 +152,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loadUserProfile]);
 
+  const refreshProfile = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) await loadUserProfile(session.user.id);
+  }, [loadUserProfile]);
+
   const handleSignOut = useCallback(async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
@@ -168,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn: handleSignIn,
         signUp: handleSignUp,
         signOut: handleSignOut,
+        refreshProfile,
         isResearcher: state.user?.user_type === 'researcher',
         isFarmer: state.user?.user_type === 'farmer',
       }}

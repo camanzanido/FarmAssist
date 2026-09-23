@@ -39,11 +39,13 @@ export default function ResearcherUsersScreen() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return users.filter(u => {
-      if (roleFilter !== 'all' && u.user_type !== roleFilter) return false;
-      if (!q) return true;
-      return u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
-    });
+    return users
+      .filter(u => {
+        if (roleFilter !== 'all' && u.user_type !== roleFilter) return false;
+        if (!q) return true;
+        return u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
+      })
+      .sort((a, b) => Number(b.status === 'pending') - Number(a.status === 'pending'));
   }, [users, query, roleFilter]);
 
   const applyRoleChange = async (role: UserType) => {
@@ -91,15 +93,21 @@ export default function ResearcherUsersScreen() {
   const toggleActive = () => {
     if (!selected || isSelf) return;
     const nextStatus = selected.status === 'active' ? 'inactive' : 'active';
+
+    const isApproval = selected.status === 'pending';
     Alert.alert(
-      nextStatus === 'inactive' ? 'Deactivate this account?' : 'Reactivate this account?',
+      nextStatus === 'inactive'
+        ? 'Deactivate this account?'
+        : isApproval ? 'Approve this account?' : 'Reactivate this account?',
       nextStatus === 'inactive'
         ? `${selected.name} won't be able to sign in until reactivated.`
-        : `${selected.name} will be able to sign in again.`,
+        : isApproval
+          ? `${selected.name} will gain full ${selected.user_type === 'researcher' ? 'researcher ' : ''}access.`
+          : `${selected.name} will be able to sign in again.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: nextStatus === 'inactive' ? 'Deactivate' : 'Reactivate',
+          text: nextStatus === 'inactive' ? 'Deactivate' : isApproval ? 'Approve' : 'Reactivate',
           style: nextStatus === 'inactive' ? 'destructive' : 'default',
           onPress: () => applyStatusChange(nextStatus),
         },
@@ -143,6 +151,7 @@ export default function ResearcherUsersScreen() {
           </View>
 
           {filtered.map(u => {
+            const isPending = u.status === 'pending';
             const isInactive = u.status !== 'active';
             const isSelected = selected?.id === u.id;
             return (
@@ -158,12 +167,12 @@ export default function ResearcherUsersScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={s.userName}>{u.name}</Text>
                   <Text style={s.userMeta}>
-                    @{u.username}{isInactive ? ` · deactivated` : ''}
+                    @{u.username}{isPending ? ' · awaiting approval' : isInactive ? ' · deactivated' : ''}
                   </Text>
                 </View>
-                <View style={[s.roleTag, u.user_type === 'researcher' && s.roleTagResearcher]}>
-                  <Text style={[s.roleTagText, u.user_type === 'researcher' && s.roleTagTextResearcher]}>
-                    {u.user_type === 'researcher' ? 'RESEARCHER' : isInactive ? 'OFF' : 'FARMER'}
+                <View style={[s.roleTag, u.user_type === 'researcher' && s.roleTagResearcher, isPending && s.roleTagPending]}>
+                  <Text style={[s.roleTagText, u.user_type === 'researcher' && s.roleTagTextResearcher, isPending && s.roleTagTextPending]}>
+                    {isPending ? 'PENDING' : u.user_type === 'researcher' ? 'RESEARCHER' : isInactive ? 'OFF' : 'FARMER'}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -216,10 +225,16 @@ export default function ResearcherUsersScreen() {
                 <Ionicons
                   name={selected.status === 'active' ? 'person-remove-outline' : 'person-add-outline'}
                   size={17}
-                  color={isSelf ? C.textFaint : C.danger}
+                  color={isSelf ? C.textFaint : selected.status === 'active' ? C.danger : C.accent}
                 />
-                <Text style={[s.deactivateText, isSelf && s.deactivateTextDisabled]}>
-                  {selected.status === 'active' ? 'Deactivate account' : 'Reactivate account'}
+                <Text style={[
+                  s.deactivateText,
+                  selected.status !== 'active' && s.approveText,
+                  isSelf && s.deactivateTextDisabled,
+                ]}>
+                  {selected.status === 'active'
+                    ? 'Deactivate account'
+                    : selected.status === 'pending' ? 'Approve account' : 'Reactivate account'}
                 </Text>
               </TouchableOpacity>
 
@@ -262,6 +277,8 @@ const s = StyleSheet.create({
   roleTagResearcher: { backgroundColor: C.accentStrong, borderColor: C.accentStrong },
   roleTagText: { fontSize: 10.5, fontWeight: '700', color: C.textSoft },
   roleTagTextResearcher: { color: C.accentDeepText },
+  roleTagPending: { backgroundColor: C.amberBg, borderColor: C.amberBorder },
+  roleTagTextPending: { color: C.amber },
 
 
   detailCard: { backgroundColor: C.card, borderRadius: 18, padding: 18, marginTop: 12 },
@@ -281,6 +298,7 @@ const s = StyleSheet.create({
   deactivateBtn: { flexDirection: 'row', gap: 8, height: 46, borderRadius: 11, borderWidth: 1, borderColor: 'rgba(224,133,133,0.4)', alignItems: 'center', justifyContent: 'center' },
   deactivateBtnDisabled: { borderColor: 'rgba(255,255,255,0.15)' },
   deactivateText: { fontSize: 14, fontWeight: '700', color: C.danger },
+  approveText: { color: C.accent },
   deactivateTextDisabled: { color: C.textFaint },
   selfHint: { fontSize: 12, color: C.textFaint, textAlign: 'center', marginTop: 10 },
 });

@@ -1,15 +1,15 @@
 // app/(tabs)/profile.tsx
-import { connectSync } from '@/src/auth/authService';
 import { useAuth } from '@/src/auth/AuthContext';
+import { connectSync } from '@/src/auth/authService';
 import { Colors } from '@/src/constants/colors';
 import { profileCopy as copy } from '@/src/constants/copy';
-import { getDecisionsByUser } from '@/src/database/repositories/decisions';
+import { db } from '@/src/database/powersync/powersync';
+import { getDecisionsByUser, getStagedDecisionIds } from '@/src/database/repositories/decisions';
 import { getLocationsByUser, type Location } from '@/src/database/repositories/locations';
 import { clearSyncErrors } from '@/src/database/repositories/syncErrors';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { db } from '@/src/database/powersync/powersync';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -42,14 +42,19 @@ export default function ProfileScreen() {
   const load = useCallback(async () => {
     if (!user) return;
     try {
-      const [decisions, locs, batch] = await Promise.all([
+      const [decisions, locs, batch, stagedIds] = await Promise.all([
         getDecisionsByUser(user.id),
         getLocationsByUser(user.id),
         db.getCrudBatch(1000),
+        getStagedDecisionIds(),
       ]);
       setDecisionCount(decisions.length);
       setLocations(locs);
-      setPendingCount((batch?.crud ?? []).filter(e => e.table === 'decisions').length);
+
+      const queuedIds = (batch?.crud ?? [])
+        .filter(e => e.table === 'decisions')
+        .map(e => e.id);
+      setPendingCount(new Set([...queuedIds, ...stagedIds]).size);
       setLoadError(false);
     } catch (err) {
       console.error('Failed to load profile data:', err);

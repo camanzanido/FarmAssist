@@ -2,16 +2,81 @@
 import { SupabaseConnector } from '../database/powersync/connector';
 import { db } from '../database/powersync/powersync';
 import { claimLocalDecisions } from '../database/repositories/decisions';
-import { createLocation, getLocationsByUser } from '../database/repositories/locations';
-import { createLocationRemote, upsertUserRemote } from '../database/repositories/researcher';
+import { createLocation, getAllLocations, getLocationsByUser } from '../database/repositories/locations';
+import { createLocationRemote, fetchUserRemote, upsertUserRemote } from '../database/repositories/researcher';
 import { upsertUser } from '../database/repositories/users';
 import { supabase } from '../database/supabase/supabase';
 import { UserType } from './types';
 
+
+async function resolveUserType(authUser: {
+  id: string;
+  user_metadata?: { user_type?: string };
+}): Promise<string> {
+  const local = await db.getOptional<{ user_type: string }>(
+    'SELECT user_type FROM users WHERE id = ?',
+    [authUser.id]
+  );
+  if (local) return local.user_type;
+
+
+  try {
+    const remote = await fetchUserRemote(authUser.id);
+    if (remote) return remote.user_type;
+  } catch (e) {
+    console.warn('Could not resolve role from server:', e);
+  }
+
+  return authUser.user_metadata?.user_type ?? 'farmer';
+}
+
 async function claimIfEligible(userId: string, userType: string) {
   if (userType === 'researcher') return;
+
   const locations = await getLocationsByUser(userId);
-  await claimLocalDecisions(userId, locations[0]?.id ?? '');
+  const locationId = locations[0]?.id ?? '';
+
+  if (!locationId) {
+    if (!(db.currentStatus?.hasSynced ?? false)) {
+      console.log('Deferring decision claim until the first sync completes');
+      return;
+    }
+
+    const [allLocal, localUserRow] = await Promise.all([
+      getAllLocations(),
+      db.getOptional<{ id: string }>('SELECT id FROM users WHERE id = ?', [userId]),
+    ]);
+    console.warn('Decision claim skipped: synced, but this user has no location', {
+      userId,
+      locationsInLocalDb: allLocal.length,
+      locationUserIds: allLocal.map((l) => l.user_id),
+      userRowSynced: !!localUserRow,
+      connected: db.currentStatus?.connected ?? false,
+      lastSyncedAt: db.currentStatus?.lastSyncedAt ?? null,
+    });
+    return;
+  }
+
+  const claimed = await claimLocalDecisions(userId, locationId);
+  if (claimed > 0) {
+    console.log(`Claimed ${claimed} offline decision(s) for ${userId}`);
+  }
+}
+
+
+const FIRST_SYNC_TIMEOUT_MS = 20_000;
+
+
+function claimAfterFirstSync(userId: string, userType: string): void {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FIRST_SYNC_TIMEOUT_MS);
+
+  void db
+    .waitForFirstSync({ signal: controller.signal })
+    .catch(() => undefined)
+    .then(() => claimIfEligible(userId, userType))
+    .catch((e) => console.warn('Deferred decision claim failed:', e))
+    .finally(() => clearTimeout(timer));
 }
 
 // Connects PowerSync to Supabase so sync begins
@@ -101,23 +166,40 @@ export async function signIn(email: string, password: string) {
     [data.user.id]
   );
 
-  // If no local profile (first time on this device), write from auth metadata
+
+
   let userType: string = existingProfile?.user_type ?? 'farmer';
   if (!existingProfile) {
+    let remoteProfile: Awaited<ReturnType<typeof fetchUserRemote>> = null;
+    let remoteLookupFailed = false;
+    try {
+      remoteProfile = await fetchUserRemote(data.user.id);
+    } catch (e) {
+
+      remoteLookupFailed = true;
+      console.warn('Could not check remote profile on sign-in:', e);
+    }
+
     const meta = data.user.user_metadata;
-    userType = meta.user_type ?? 'farmer';
-    const profile = {
-      id: data.user.id,
-      name: meta.name ?? '',
-      username: meta.username ?? '',
-      email: data.user.email ?? '',
-      status: 'active',
-      user_type: userType,
-    };
-    if (userType === 'researcher') {
-      await upsertUserRemote(profile);
+    if (remoteProfile) {
+      userType = remoteProfile.user_type;
     } else {
-      await upsertUser(profile);
+      userType = meta.user_type ?? 'farmer';
+      if (!remoteLookupFailed) {
+        const profile = {
+          id: data.user.id,
+          name: meta.name ?? '',
+          username: meta.username ?? '',
+          email: data.user.email ?? '',
+          status: 'active',
+          user_type: userType,
+        };
+        if (userType === 'researcher') {
+          await upsertUserRemote(profile);
+        } else {
+          await upsertUser(profile);
+        }
+      }
     }
   }
 
@@ -125,17 +207,17 @@ export async function signIn(email: string, password: string) {
   await claimIfEligible(data.user.id, userType);
 
   // Start syncing — PowerSync will pull all rows the user has RLS access to.
-  // Researchers work online-only and never connect to PowerSync.
   if (userType !== 'researcher') {
     await connectSync();
+    claimAfterFirstSync(data.user.id, userType);
   }
 
   return data;
 }
 
 export async function signOut() {
-  // Stop sync first, then sign out
-  await disconnectSync();
+
+  await db.disconnectAndClear({ clearLocal: false });
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }
@@ -145,11 +227,16 @@ export async function restoreSession(): Promise<boolean> {
 
   if (!data.session) return false; // offline-only mode
 
-  // Researchers work online-only and never connect to PowerSync — their
-  // role is available directly from auth metadata, no local lookup needed.
-  const userType = data.session.user.user_metadata?.user_type;
+
+  const userType = await resolveUserType(data.session.user);
   if (userType !== 'researcher') {
     await connectSync();
+
+    await claimIfEligible(data.session.user.id, userType).catch((e) =>
+      console.warn('Decision claim retry failed:', e)
+    );
+
+    claimAfterFirstSync(data.session.user.id, userType);
   }
 
   return true; // authenticated (farmers: online + syncing)

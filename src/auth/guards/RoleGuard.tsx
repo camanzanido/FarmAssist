@@ -21,5 +21,9 @@ export function RoleGuard({
   if (!user || !allowedRoles.includes(user.user_type)) {
     return <Redirect href={redirectTo} />;
   }
+
+  if (user.status !== 'active') {
+    return <Redirect href="/pending" />;
+  }
   return <>{children}</>;
 }

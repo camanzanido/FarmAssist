@@ -3,7 +3,7 @@ import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { Colors } from '@/src/constants/colors';
 import { historyCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
-import { deleteDecision, getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
+import { deleteDecision, getDecisionsByUser, getStagedDecisionIds, type Decision } from '@/src/database/repositories/decisions';
 import { formatCurrency } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -69,6 +69,7 @@ export default function HistoryScreen() {
       const pending = new Set(
         (batch?.crud ?? []).filter(e => e.table === 'decisions').map(e => e.id)
       );
+      for (const id of await getStagedDecisionIds()) pending.add(id);
       setPendingIds(pending);
     } catch (err) {
       console.error('Failed to load decision history:', err);

@@ -12,8 +12,8 @@ export interface FakeDb extends FakeTx {
 
 let rawDb: Database | null = null;
 
-const SCHEMA_SQL = `
-  CREATE TABLE decisions (
+
+const DECISION_DDL = `
     id TEXT PRIMARY KEY,
     decision_type TEXT,
     datetime TEXT,
@@ -24,9 +24,9 @@ const SCHEMA_SQL = `
     climate_driest REAL,
     climate_mid REAL,
     climate_wettest REAL
-  );
+`;
 
-  CREATE TABLE decision_options (
+const DECISION_OPTION_DDL = `
     id TEXT PRIMARY KEY,
     decision_id TEXT,
     option_slot INTEGER,
@@ -53,7 +53,20 @@ const SCHEMA_SQL = `
     yield_above_avg REAL,
     yield_very_good REAL,
     yield_wettest REAL
-  );
+`;
+
+const DECISION_TABLES = [
+  'decisions',
+  'local_decisions',
+  'decision_options',
+  'local_decision_options',
+] as const;
+
+const SCHEMA_SQL = `
+  CREATE TABLE decisions (${DECISION_DDL});
+  CREATE TABLE local_decisions (${DECISION_DDL});
+  CREATE TABLE decision_options (${DECISION_OPTION_DDL});
+  CREATE TABLE local_decision_options (${DECISION_OPTION_DDL});
 `;
 
 async function execute(sql: string, params: unknown[] = []): Promise<void> {
@@ -104,7 +117,7 @@ export async function initFakeDb(): Promise<void> {
 
 export async function resetFakeDb(): Promise<void> {
   if (!rawDb) throw new Error('fake-db: call initFakeDb() first');
-  rawDb.run('DELETE FROM decision_options; DELETE FROM decisions;');
+  rawDb.run(DECISION_TABLES.map((t) => `DELETE FROM ${t};`).join(' '));
 }
 
 export function closeFakeDb(): void {

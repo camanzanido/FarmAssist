@@ -30,6 +30,18 @@ export async function fetchAllLocations(): Promise<Location[]> {
   return (data ?? []) as Location[];
 }
 
+// Returns null only when the row definitively does not exist; throws on
+// network/RLS errors so callers can tell "missing" apart from "unknown".
+export async function fetchUserRemote(userId: string): Promise<User | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as User | null) ?? null;
+}
+
 export async function updateUserRemote(
   userId: string,
   fields: Partial<Pick<User, 'name' | 'username' | 'email' | 'status' | 'user_type'>>
