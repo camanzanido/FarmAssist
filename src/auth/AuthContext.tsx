@@ -103,6 +103,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     boot();
   }, [loadUserProfile]);
 
+  useEffect(() => {
+    const userId = state.user?.id;
+    if (!userId) return;
+
+    const controller = new AbortController();
+    db.watch(
+      'SELECT * FROM users WHERE id = ?',
+      [userId],
+      {
+        onResult: (result) => {
+          const row = (result.rows?._array as AuthUser[] | undefined)?.[0];
+          if (row) dispatch({ type: 'SET_USER', payload: row });
+        },
+        onError: (err) => console.error('Failed to watch profile:', err),
+      },
+      { signal: controller.signal }
+    );
+
+    return () => controller.abort();
+  }, [state.user?.id]);
+
   // Keep auth state in sync with Supabase session changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
