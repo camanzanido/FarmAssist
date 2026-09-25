@@ -79,12 +79,14 @@ function claimAfterFirstSync(userId: string, userType: string): void {
     .finally(() => clearTimeout(timer));
 }
 
+const SYNC_RETRY_DELAY_MS = 15_000;
+
 // Connects PowerSync to Supabase so sync begins
 export async function connectSync() {
   await disconnectSync();
 
   const connector = new SupabaseConnector(supabase);
-  await db.connect(connector);
+  await db.connect(connector, { retryDelayMs: SYNC_RETRY_DELAY_MS });
 }
 
 export async function disconnectSync() {
