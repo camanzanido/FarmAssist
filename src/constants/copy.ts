@@ -152,3 +152,11 @@ export const authCopy = {
   haveAccount: 'Already have an account?',
   signInInstead: 'Sign in',
 };
+
+export const startupCopy = {
+  starting: 'Starting FarmAssist…',
+  slowTitle: 'This is taking longer than usual.',
+  slowBody: 'Your saved decisions are safe. If this screen does not go away, close FarmAssist completely and open it again.',
+  errorTitle: "FarmAssist couldn't start.",
+  errorBody: 'Your saved decisions are safe. Close FarmAssist completely and open it again.',
+};
