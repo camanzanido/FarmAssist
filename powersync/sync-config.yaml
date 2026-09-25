@@ -1,0 +1,23 @@
+# PowerSync Sync Streams config — mirror of the live PowerSync dashboard.
+
+config:
+  edition: 3
+
+streams:
+  global:
+    auto_subscribe: true
+    queries:
+      - SELECT * FROM decision_stats_monthly
+      - SELECT * FROM decision_stats_yearly
+
+  by_user:
+    auto_subscribe: true
+    queries:
+      - SELECT * FROM users WHERE id = auth.user_id()
+      - SELECT * FROM decisions WHERE user_id = auth.user_id()
+      - SELECT * FROM user_activity_summary WHERE user_id = auth.user_id()
+      - SELECT * FROM options WHERE user_id = auth.user_id()
+      - SELECT * FROM reports WHERE researcher_id = auth.user_id()
+      - SELECT * FROM locations WHERE user_id = auth.user_id()
+      - SELECT * FROM decision_options
+          WHERE decision_id IN (SELECT id FROM decisions WHERE user_id = auth.user_id())
