@@ -1,10 +1,11 @@
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { Colors } from '@/src/constants/colors';
 import { authCopy as copy } from '@/src/constants/copy';
 import { getAuthErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 
@@ -18,6 +19,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState(false);
   const { signIn, isLoading } = useAuth();
+  const { notify } = useFeedback();
   const router = useRouter();
 
   function getFieldErrors(): FieldErrors {
@@ -40,7 +42,7 @@ export default function LoginScreen() {
     try {
       await signIn(email.trim(), password);
     } catch (e: any) {
-      Alert.alert('Login Failed', getAuthErrorMessage(e, 'Something went wrong. Please try again.'));
+      notify.error('Login failed', getAuthErrorMessage(e, 'Something went wrong. Please try again.'));
     }
   }
 

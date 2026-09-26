@@ -1,8 +1,9 @@
 import { useAuth } from '@/src/auth/AuthContext';
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function initials(name: string): string {
@@ -13,12 +14,17 @@ function initials(name: string): string {
 
 export default function ResearcherProfileScreen() {
   const { user, signOut } = useAuth();
+  const { confirm } = useFeedback();
 
-  function handleLogout() {
-    Alert.alert('Log out?', 'You will need to sign in again to access researcher tools.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => signOut() },
-    ]);
+  async function handleLogout() {
+    const confirmed = await confirm({
+      title: 'Log out?',
+      message: 'You will need to sign in again to access researcher tools.',
+      confirmText: 'Log out',
+      tone: 'destructive',
+      icon: 'log-out-outline',
+    });
+    if (confirmed) await signOut();
   }
 
   if (!user) return null;

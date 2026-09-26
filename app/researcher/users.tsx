@@ -1,5 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { UserType } from '@/src/auth/types';
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
 import { ResearcherColors as C } from '@/src/constants/colors';
@@ -9,7 +10,7 @@ import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type RoleFilter = 'all' | UserType;
@@ -25,6 +26,7 @@ const EMPTY: User[] = [];
 export default function ResearcherUsersScreen() {
   const { data: users, isLoading, error, reload } = useResearcherFetch(fetchAllUsers, EMPTY);
   const { user: currentUser } = useAuth();
+  const { confirm, notify } = useFeedback();
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [selected, setSelected] = useState<User | null>(null);
@@ -57,22 +59,20 @@ export default function ResearcherUsersScreen() {
       reload();
     } catch (err) {
       console.error('Failed to change role:', err);
-      Alert.alert('Could not update role', getActionErrorMessage(err, 'Please try again.'));
+      notify.error('Could not update role', getActionErrorMessage(err, 'Please try again.'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const setRole = (role: UserType) => {
+  const setRole = async (role: UserType) => {
     if (!selected || isSelf || role === selected.user_type) return;
-    Alert.alert(
-      `Change role to ${role === 'researcher' ? 'Researcher' : 'Farmer'}?`,
-      `${selected.name} will ${role === 'researcher' ? 'gain' : 'lose'} researcher access.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Confirm', onPress: () => applyRoleChange(role) },
-      ]
-    );
+    const confirmed = await confirm({
+      title: `Change role to ${role === 'researcher' ? 'Researcher' : 'Farmer'}?`,
+      message: `${selected.name} will ${role === 'researcher' ? 'gain' : 'lose'} researcher access.`,
+      icon: 'swap-horizontal-outline',
+    });
+    if (confirmed) await applyRoleChange(role);
   };
 
   const applyStatusChange = async (nextStatus: 'active' | 'inactive') => {
@@ -84,35 +84,32 @@ export default function ResearcherUsersScreen() {
       reload();
     } catch (err) {
       console.error('Failed to change status:', err);
-      Alert.alert('Could not update status', getActionErrorMessage(err, 'Please try again.'));
+      notify.error('Could not update status', getActionErrorMessage(err, 'Please try again.'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const toggleActive = () => {
+  const toggleActive = async () => {
     if (!selected || isSelf) return;
     const nextStatus = selected.status === 'active' ? 'inactive' : 'active';
 
     const isApproval = selected.status === 'pending';
-    Alert.alert(
-      nextStatus === 'inactive'
+    const deactivating = nextStatus === 'inactive';
+    const confirmed = await confirm({
+      title: deactivating
         ? 'Deactivate this account?'
         : isApproval ? 'Approve this account?' : 'Reactivate this account?',
-      nextStatus === 'inactive'
+      message: deactivating
         ? `${selected.name} won't be able to sign in until reactivated.`
         : isApproval
           ? `${selected.name} will gain full ${selected.user_type === 'researcher' ? 'researcher ' : ''}access.`
           : `${selected.name} will be able to sign in again.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: nextStatus === 'inactive' ? 'Deactivate' : isApproval ? 'Approve' : 'Reactivate',
-          style: nextStatus === 'inactive' ? 'destructive' : 'default',
-          onPress: () => applyStatusChange(nextStatus),
-        },
-      ]
-    );
+      confirmText: deactivating ? 'Deactivate' : isApproval ? 'Approve' : 'Reactivate',
+      tone: deactivating ? 'destructive' : 'default',
+      icon: deactivating ? 'person-remove-outline' : 'person-add-outline',
+    });
+    if (confirmed) await applyStatusChange(nextStatus);
   };
 
   return (

@@ -1,3 +1,4 @@
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import type { Decision } from '@/src/database/repositories/decisions';
 import type { Location } from '@/src/database/repositories/locations';
@@ -6,7 +7,7 @@ import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Alert, Modal, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Format = 'excel' | 'pdf';
 
@@ -54,6 +55,7 @@ export function ExportSheet({
   const [includeFarmerLocation, setIncludeFarmerLocation] = useState(true);
   const [includeClimate, setIncludeClimate] = useState(false);
   const sync = useSyncStatus();
+  const { notify } = useFeedback();
 
   const handleExport = async () => {
     const usersById = new Map(users.map(u => [u.id, u]));
@@ -64,7 +66,10 @@ export function ExportSheet({
       onClose();
     } catch (err) {
       console.error('Export share failed:', err);
-      Alert.alert('Export failed', getActionErrorMessage(err, "Couldn't share the export. Please try again."));
+      // Close first: on iOS a toast would render behind this sheet's Modal.
+      // The sheet stays mounted, so the chosen options survive reopening it.
+      onClose();
+      notify.error('Export failed', getActionErrorMessage(err, "Couldn't share the export. Please try again."));
     }
   };
 

@@ -1,3 +1,4 @@
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
@@ -11,7 +12,7 @@ import { getActionErrorMessage } from '@/src/utils/errors';
 import { formatCurrency } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TypeFilter = 'all' | DecisionType;
@@ -38,6 +39,7 @@ export default function ResearcherDecisionsScreen() {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { confirm, notify } = useFeedback();
 
   const usersById = useMemo(() => new Map(users.map(u => [u.id, u])), [users]);
   const locationsById = useMemo(() => new Map(locations.map(l => [l.id, l])), [locations]);
@@ -57,30 +59,27 @@ export default function ResearcherDecisionsScreen() {
     });
   }, [decisions, typeFilter, query, usersById, locationsById]);
 
-  const confirmDelete = (decision: Decision) => {
-    Alert.alert(
-      'Remove this decision?',
-      `This permanently deletes "${decision.result}" from the database. This can't be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            setDeletingId(decision.id);
-            try {
-              await deleteDecisionRemote(decision.id);
-              reload();
-            } catch (err) {
-              console.error('Failed to delete decision:', err);
-              Alert.alert('Could not remove decision', getActionErrorMessage(err, 'Please try again.'));
-            } finally {
-              setDeletingId(null);
-            }
-          },
-        },
-      ]
-    );
+  const confirmDelete = async (decision: Decision) => {
+    const confirmed = await confirm({
+      title: 'Remove this decision?',
+      message: `This permanently deletes "${decision.result}" from the database. This can't be undone.`,
+      confirmText: 'Remove',
+      tone: 'destructive',
+      icon: 'trash-outline',
+    });
+    if (!confirmed) return;
+
+    setDeletingId(decision.id);
+    try {
+      await deleteDecisionRemote(decision.id);
+      reload();
+      notify.success('Decision removed');
+    } catch (err) {
+      console.error('Failed to delete decision:', err);
+      notify.error('Could not remove decision', getActionErrorMessage(err, 'Please try again.'));
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (

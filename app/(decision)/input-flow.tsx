@@ -1,11 +1,12 @@
 import StepIndicator from '@/src/components/decision/steps-indicator';
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
 import { ClimateColors, Colors } from '@/src/constants/colors';
 import { climateCopy, dataEntryCopy, namingCopy } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, BackHandler, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function emptyFive(): string[] {
@@ -22,6 +23,7 @@ const CLIMATE_COLOR_LIST = [
 
 export default function DecisionInputFlow() {
   const router = useRouter();
+  const { confirm } = useFeedback();
   const { decisionType } = useLocalSearchParams<{ decisionType: DecisionType }>();
 
   useEffect(() => {
@@ -154,16 +156,20 @@ export default function DecisionInputFlow() {
     }
   };
 
-  const exitFlow = () => {
+  const exitFlow = async () => {
     const hasEnteredNames = names[0].trim().length > 0 || names[1].trim().length > 0;
     if (!hasEnteredNames) {
       router.back();
       return;
     }
-    Alert.alert(namingCopy.discardTitle, namingCopy.discardBody, [
-      { text: namingCopy.discardCancel, style: 'cancel' },
-      { text: namingCopy.discardConfirm, style: 'destructive', onPress: () => router.back() },
-    ]);
+    const confirmed = await confirm({
+      title: namingCopy.discardTitle,
+      message: namingCopy.discardBody,
+      confirmText: namingCopy.discardConfirm,
+      cancelText: namingCopy.discardCancel,
+      tone: 'destructive',
+    });
+    if (confirmed) router.back();
   };
 
   const goBack = () => {

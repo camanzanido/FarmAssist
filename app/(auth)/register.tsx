@@ -1,3 +1,4 @@
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { DropdownField } from '@/src/components/ui/dropdown-field';
 import { Colors } from '@/src/constants/colors';
 import { authCopy as copy } from '@/src/constants/copy';
@@ -6,7 +7,7 @@ import { getAuthErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 import { UserType } from '../../src/auth/types';
@@ -60,6 +61,7 @@ export default function RegisterScreen() {
   const [userType, setUserType] = useState<UserType>('farmer');
   const [touched, setTouched] = useState(false);
   const { signUp, isLoading } = useAuth();
+  const { notify } = useFeedback();
   const router = useRouter();
 
   function getFieldErrors(): FieldErrors {
@@ -110,7 +112,7 @@ export default function RegisterScreen() {
       });
       router.back();
     } catch (e: any) {
-      Alert.alert('Registration Failed', getAuthErrorMessage(e, 'Something went wrong. Please try again.'));
+      notify.error('Registration failed', getAuthErrorMessage(e, 'Something went wrong. Please try again.'));
     }
   }
 

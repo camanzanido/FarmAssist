@@ -104,6 +104,9 @@ export const historyCopy = {
   deleteBody: (result: string) => `This removes "${result}" from your history. This can't be undone.`,
   deleteCancel: "No, keep it",
   deleteConfirm: 'Delete',
+  deletedToast: 'Decision deleted',
+  deleteFailedTitle: 'Could not delete',
+  deleteFailedBody: 'Please try again.',
 };
 
 export const profileCopy = {

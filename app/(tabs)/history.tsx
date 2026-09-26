@@ -1,4 +1,5 @@
 import { useAuth } from '@/src/auth/AuthContext';
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { Colors } from '@/src/constants/colors';
 import { historyCopy as copy } from '@/src/constants/copy';
@@ -11,7 +12,6 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   SectionList,
   StatusBar,
@@ -48,6 +48,7 @@ function monthKey(iso: string): string {
 export default function HistoryScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { confirm, notify } = useFeedback();
   const userId = user?.id ?? '';
 
   const [decisions, setDecisions] = useState<Decision[]>([]);
@@ -106,30 +107,28 @@ export default function HistoryScreen() {
     return Array.from(groups.entries()).map(([title, data]) => ({ title, data }));
   }, [filtered]);
 
-  const confirmDelete = (decision: Decision) => {
-    Alert.alert(
-      copy.deleteTitle,
-      copy.deleteBody(decision.result),
-      [
-        { text: copy.deleteCancel, style: 'cancel' },
-        {
-          text: copy.deleteConfirm,
-          style: 'destructive',
-          onPress: async () => {
-            setDeletingId(decision.id);
-            try {
-              await deleteDecision(decision.id);
-              setDecisions(prev => prev.filter(d => d.id !== decision.id));
-            } catch (err) {
-              console.error('Failed to delete decision:', err);
-              Alert.alert('Could not delete', 'Please try again.');
-            } finally {
-              setDeletingId(null);
-            }
-          },
-        },
-      ]
-    );
+  const confirmDelete = async (decision: Decision) => {
+    const confirmed = await confirm({
+      title: copy.deleteTitle,
+      message: copy.deleteBody(decision.result),
+      confirmText: copy.deleteConfirm,
+      cancelText: copy.deleteCancel,
+      tone: 'destructive',
+      icon: 'trash-outline',
+    });
+    if (!confirmed) return;
+
+    setDeletingId(decision.id);
+    try {
+      await deleteDecision(decision.id);
+      setDecisions(prev => prev.filter(d => d.id !== decision.id));
+      notify.success(copy.deletedToast);
+    } catch (err) {
+      console.error('Failed to delete decision:', err);
+      notify.error(copy.deleteFailedTitle, copy.deleteFailedBody);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (

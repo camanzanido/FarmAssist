@@ -1,5 +1,6 @@
 // app/(tabs)/profile.tsx
 import { useAuth } from '@/src/auth/AuthContext';
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
 import { Colors } from '@/src/constants/colors';
 import { profileCopy as copy } from '@/src/constants/copy';
@@ -12,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function initials(name: string): string {
@@ -29,6 +30,7 @@ function formatSyncTime(date: Date | null): string {
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const { confirm } = useFeedback();
   const router = useRouter();
   const isAuthenticated = !!user;
   const sync = useSyncStatus();
@@ -64,11 +66,16 @@ export default function ProfileScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  function handleLogout() {
-    Alert.alert(copy.logoutConfirmTitle, copy.logoutConfirmBody, [
-      { text: copy.logoutCancel, style: 'cancel' },
-      { text: copy.logOut, style: 'destructive', onPress: () => signOut() },
-    ]);
+  async function handleLogout() {
+    const confirmed = await confirm({
+      title: copy.logoutConfirmTitle,
+      message: copy.logoutConfirmBody,
+      confirmText: copy.logOut,
+      cancelText: copy.logoutCancel,
+      tone: 'destructive',
+      icon: 'log-out-outline',
+    });
+    if (confirmed) await signOut();
   }
 
   async function handleSyncNow() {
