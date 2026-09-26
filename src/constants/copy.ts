@@ -163,3 +163,20 @@ export const startupCopy = {
   errorTitle: "FarmAssist couldn't start.",
   errorBody: 'Your saved decisions are safe. Close FarmAssist completely and open it again.',
 };
+
+export const claimCopy = {
+  promptTitle: 'Add offline decisions to your account?',
+  promptBody: (count: number) =>
+    `${count} decision${count === 1 ? ' was' : 's were'} made on this phone without signing in. ` +
+    'Add them to your account so they sync? Only do this if they are yours.',
+  notNow: 'Not now',
+  confirm: 'Add to my account',
+  doneTitle: 'Decisions added',
+  doneBody: (count: number) =>
+    `${count} decision${count === 1 ? '' : 's'} will sync with your account.`,
+  deferredTitle: "Couldn't add them yet",
+  deferredBody:
+    "Your account details haven't finished downloading. The decisions are safe on this phone, and we'll ask again next time you open FarmAssist.",
+  errorTitle: "Couldn't add decisions",
+  errorBody: "They are still safe on this phone. We'll ask again next time you open FarmAssist.",
+};

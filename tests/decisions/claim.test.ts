@@ -5,6 +5,7 @@ jest.mock('../../src/database/repositories/utils', () => require('../helpers/fak
 
 import {
   claimLocalDecisions,
+  countAnonymousStagedDecisions,
   createDecision,
   deleteDecision,
   getDecision,
@@ -139,7 +140,7 @@ describe('claimLocalDecisions', () => {
   it('moves staged decisions into the synced table under the real identity', async () => {
     const id = await createAnonymous();
 
-    const claimed = await claimLocalDecisions('user-9', 'loc-9');
+    const claimed = await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous');
 
     expect(claimed).toBe(1);
     expect(await rowsIn('local_decisions')).toHaveLength(0);
@@ -163,7 +164,7 @@ describe('claimLocalDecisions', () => {
     });
     const before = await getDecision(id);
 
-    await claimLocalDecisions('user-9', 'loc-9');
+    await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous');
     const after = await getDecision(id);
 
     expect(after).not.toBeNull();
@@ -183,14 +184,14 @@ describe('claimLocalDecisions', () => {
     await createAnonymous();
     await createAnonymous();
 
-    expect(await claimLocalDecisions('user-9', 'loc-9')).toBe(3);
+    expect(await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous')).toBe(3);
     expect(await rowsIn('decisions')).toHaveLength(3);
     expect(await optionsIn('decision_options')).toHaveLength(6);
   });
 
   it('leaves rows staged when there is no location yet', async () => {
     await createAnonymous();
-    expect(await claimLocalDecisions('user-9', '')).toBe(0);
+    expect(await claimLocalDecisions('user-9', '', 'own-and-anonymous')).toBe(0);
     expect(await rowsIn('local_decisions')).toHaveLength(1);
     expect(await rowsIn('decisions')).toHaveLength(0);
   });
@@ -198,12 +199,12 @@ describe('claimLocalDecisions', () => {
   it('leaves rows staged when there is no user yet', async () => {
     await createAnonymous();
 
-    expect(await claimLocalDecisions('', 'loc-9')).toBe(0);
+    expect(await claimLocalDecisions('', 'loc-9', 'own-and-anonymous')).toBe(0);
     expect(await rowsIn('local_decisions')).toHaveLength(1);
   });
 
   it('is a no-op when nothing is staged', async () => {
-    expect(await claimLocalDecisions('user-9', 'loc-9')).toBe(0);
+    expect(await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous')).toBe(0);
   });
 
   it('does not touch decisions that already belong to someone', async () => {
@@ -213,12 +214,68 @@ describe('claimLocalDecisions', () => {
       secondOption: makeOption({ option_name: 'Atsal' }),
     });
 
-    await claimLocalDecisions('user-9', 'loc-9');
+    await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous');
 
     const synced = await rowsIn('decisions');
     expect(synced).toHaveLength(1);
     expect(synced[0].user_id).toBe('user-1');
     expect(synced[0].location_id).toBe('loc-1');
+  });
+
+  describe('ownership scope', () => {
+    it("'own' claims the user's own staged decisions", async () => {
+      const id = await createAnonymous({ user_id: 'user-9', location_id: '' });
+
+      expect(await claimLocalDecisions('user-9', 'loc-9', 'own')).toBe(1);
+      const synced = await rowsIn('decisions');
+      expect(synced.map((d) => d.id)).toEqual([id]);
+      expect(synced[0].location_id).toBe('loc-9');
+    });
+
+    it("'own' leaves decisions made while signed out alone", async () => {
+      await createAnonymous();
+
+      expect(await claimLocalDecisions('user-9', 'loc-9', 'own')).toBe(0);
+      expect(await rowsIn('local_decisions')).toHaveLength(1);
+      expect(await rowsIn('decisions')).toHaveLength(0);
+    });
+
+    it("'own-and-anonymous' claims both the user's and ownerless decisions", async () => {
+      await createAnonymous({ user_id: 'user-9', location_id: '' });
+      await createAnonymous();
+
+      expect(await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous')).toBe(2);
+      expect(await rowsIn('local_decisions')).toHaveLength(0);
+    });
+
+    it("never claims a decision staged under another user's id", async () => {
+      const othersId = await createAnonymous({ user_id: 'user-1', location_id: '' });
+
+      expect(await claimLocalDecisions('user-9', 'loc-9', 'own')).toBe(0);
+      expect(await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous')).toBe(0);
+
+      const staged = await rowsIn('local_decisions');
+      expect(staged.map((d) => d.id)).toEqual([othersId]);
+      expect(staged[0].user_id).toBe('user-1');
+      expect(await optionsIn('local_decision_options')).toHaveLength(2);
+    });
+  });
+});
+
+describe('countAnonymousStagedDecisions', () => {
+  it('counts only decisions made while signed out', async () => {
+    await createAnonymous();
+    await createAnonymous();
+    await createAnonymous({ user_id: 'user-1', location_id: '' });
+
+    expect(await countAnonymousStagedDecisions()).toBe(2);
+  });
+
+  it('is zero once they are claimed', async () => {
+    await createAnonymous();
+    await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous');
+
+    expect(await countAnonymousStagedDecisions()).toBe(0);
   });
 });
 
@@ -231,7 +288,7 @@ describe('getStagedDecisionIds', () => {
 
   it('stops reporting them once they are claimed', async () => {
     await createAnonymous();
-    await claimLocalDecisions('user-9', 'loc-9');
+    await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous');
 
     expect(await getStagedDecisionIds()).toEqual([]);
   });
@@ -303,7 +360,7 @@ describe('repairUnsyncableDecisions', () => {
     await seedLegacyRow('legacy-3', '', '');
 
     await repairUnsyncableDecisions();
-    expect(await claimLocalDecisions('user-9', 'loc-9')).toBe(1);
+    expect(await claimLocalDecisions('user-9', 'loc-9', 'own-and-anonymous')).toBe(1);
 
     const synced = await rowsIn('decisions');
     expect(synced).toHaveLength(1);

@@ -10,6 +10,7 @@ import React, {
 import { db } from '../database/powersync/powersync';
 import { supabase } from '../database/supabase/supabase';
 import { restoreSession, signIn, signOut, signUp } from './authService';
+import { resetClaimPrompt } from './claimPromptState';
 import { AuthState, AuthUser, UserType } from './types';
 
 interface AuthContextValue extends AuthState {
@@ -182,6 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       await signOut();
+      resetClaimPrompt();
       dispatch({ type: 'CLEAR_USER' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });

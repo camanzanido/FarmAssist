@@ -1,7 +1,7 @@
 // auth/authService.ts
 import { SupabaseConnector } from '../database/powersync/connector';
 import { db } from '../database/powersync/powersync';
-import { claimLocalDecisions } from '../database/repositories/decisions';
+import { claimLocalDecisions, countAnonymousStagedDecisions, type ClaimScope } from '../database/repositories/decisions';
 import { createLocation, getAllLocations, getLocationsByUser } from '../database/repositories/locations';
 import { createLocationRemote, fetchUserRemote, upsertUserRemote } from '../database/repositories/researcher';
 import { upsertUser } from '../database/repositories/users';
@@ -30,8 +30,12 @@ async function resolveUserType(authUser: {
   return authUser.user_metadata?.user_type ?? 'farmer';
 }
 
-async function claimIfEligible(userId: string, userType: string) {
-  if (userType === 'researcher') return;
+async function claimIfEligible(
+  userId: string,
+  userType: string,
+  scope: ClaimScope = 'own'
+): Promise<number> {
+  if (userType === 'researcher') return 0;
 
   const locations = await getLocationsByUser(userId);
   const locationId = locations[0]?.id ?? '';
@@ -39,7 +43,7 @@ async function claimIfEligible(userId: string, userType: string) {
   if (!locationId) {
     if (!(db.currentStatus?.hasSynced ?? false)) {
       console.log('Deferring decision claim until the first sync completes');
-      return;
+      return 0;
     }
 
     const [allLocal, localUserRow] = await Promise.all([
@@ -54,29 +58,46 @@ async function claimIfEligible(userId: string, userType: string) {
       connected: db.currentStatus?.connected ?? false,
       lastSyncedAt: db.currentStatus?.lastSyncedAt ?? null,
     });
-    return;
+    return 0;
   }
 
-  const claimed = await claimLocalDecisions(userId, locationId);
+  const claimed = await claimLocalDecisions(userId, locationId, scope);
   if (claimed > 0) {
-    console.log(`Claimed ${claimed} offline decision(s) for ${userId}`);
+    console.log(`Claimed ${claimed} offline decision(s) for ${userId} (${scope})`);
   }
+  return claimed;
 }
 
 
 const FIRST_SYNC_TIMEOUT_MS = 20_000;
 
 
-function claimAfterFirstSync(userId: string, userType: string): void {
+async function waitForFirstSyncBounded(): Promise<void> {
+  if (db.currentStatus?.hasSynced) return;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FIRST_SYNC_TIMEOUT_MS);
+  try {
+    await db.waitForFirstSync({ signal: controller.signal });
+  } catch {
+    return;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-  void db
-    .waitForFirstSync({ signal: controller.signal })
-    .catch(() => undefined)
+export async function claimAnonymousDecisions(
+  userId: string
+): Promise<{ claimed: number; remaining: number }> {
+  await waitForFirstSyncBounded();
+  const claimed = await claimIfEligible(userId, 'farmer', 'own-and-anonymous');
+  const remaining = await countAnonymousStagedDecisions();
+  return { claimed, remaining };
+}
+
+function claimAfterFirstSync(userId: string, userType: string): void {
+  void waitForFirstSyncBounded()
     .then(() => claimIfEligible(userId, userType))
-    .catch((e) => console.warn('Deferred decision claim failed:', e))
-    .finally(() => clearTimeout(timer));
+    .catch((e) => console.warn('Deferred decision claim failed:', e));
 }
 
 const SYNC_RETRY_DELAY_MS = 15_000;

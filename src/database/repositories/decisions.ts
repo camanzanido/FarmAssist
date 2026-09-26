@@ -187,9 +187,7 @@ export async function getDecision(decisionId: string): Promise<DecisionWithOptio
  * The `user_id = ''` arm matters: a decision made while signed out keeps its
  * placeholder id until the claim runs, and the claim can legitimately be
  * deferred (no location yet). Without this the decision would vanish from its
- * own author's history the moment they signed in. Unclaimed rows belong to
- * whoever signs in on this device, which is exactly what claimLocalDecisions
- * already assumes.
+ * own author's history the moment they signed in.
  */
 export async function getDecisionsByUser(
   userId: string,
@@ -232,6 +230,13 @@ export async function getStagedDecisionIds(): Promise<string[]> {
   return rows.map((r) => r.id);
 }
 
+export async function countAnonymousStagedDecisions(): Promise<number> {
+  const row = await db.getOptional<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM ${LOCAL_DECISIONS} WHERE user_id = ''`
+  );
+  return row?.n ?? 0;
+}
+
 /**
  * Move staged decisions into the synced tables under a real identity.
  *
@@ -242,14 +247,25 @@ export async function getStagedDecisionIds(): Promise<string[]> {
  *
  * Returns the number of decisions claimed.
  */
-export async function claimLocalDecisions(userId: string, locationId: string): Promise<number> {
+export type ClaimScope = 'own' | 'own-and-anonymous';
+
+export async function claimLocalDecisions(
+  userId: string,
+  locationId: string,
+  scope: ClaimScope
+): Promise<number> {
   // Without both ids the rows would be just as unsyncable in `decisions` as
   // they are here, so leave them staged for a later attempt rather than
   // promoting them into a guaranteed 22P02 discard.
   if (!userId || !locationId) return 0;
 
   // Read outside the write transaction — never call db.* inside writeTransaction.
-  const staged = await db.getAll<Decision>(`SELECT ${decisionCols} FROM ${LOCAL_DECISIONS}`);
+  const staged = await db.getAll<Decision>(
+    scope === 'own-and-anonymous'
+      ? `SELECT ${decisionCols} FROM ${LOCAL_DECISIONS} WHERE user_id = ? OR user_id = ''`
+      : `SELECT ${decisionCols} FROM ${LOCAL_DECISIONS} WHERE user_id = ?`,
+    [userId]
+  );
   if (staged.length === 0) return 0;
 
   const ids = staged.map((d) => d.id);
