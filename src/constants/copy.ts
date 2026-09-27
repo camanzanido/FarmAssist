@@ -50,6 +50,7 @@ export const climateCopy = {
   offlineNote: 'Calculated right here on your phone. No internet needed.',
   submit: 'Show my answer',
   errorOver100: 'Total cannot exceed 100%',
+  errorNoAverage: 'Leave at least 1% for average years.',
 };
 
 export const resultCopy = {
@@ -93,6 +94,7 @@ export const decisionDetailCopy = {
   loadError: "We couldn't load this decision.",
   notFound: 'This decision no longer exists on this device.',
   incomplete: "This decision is missing its inputs, so it can't be shown again.",
+  cannotRecompute: "This decision was saved with 0% average years, which the model can't calculate.",
   retry: 'Retry',
   back: 'Back to history',
 };

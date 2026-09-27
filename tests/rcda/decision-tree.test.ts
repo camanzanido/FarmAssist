@@ -10,6 +10,8 @@ import {
   collapseScenario7to5,
   computeRcda,
   decisionToRcdaInputs,
+  isForecastComputable,
+  RcdaComputeError,
   RcdaInputs,
 } from '../../src/rcda/decisionTree';
 import { expandScenario5to7 } from '../../src/rcda/financials';
@@ -116,11 +118,12 @@ describe('buildDecisionTree', () => {
   });
 
   it('gives a 0% third a null leaf and still matches the score', () => {
-    const inputs = { ...EXAMPLE, climate: [60, 0, 40] };
+    const inputs = { ...EXAMPLE, climate: [0, 60, 40] };
     const r = computeRcda(inputs);
     const tree = buildDecisionTree(r, inputs.climate, inputs.optionNames);
-    const avg = tree.branches[0].outcomes[1];
-    expect(avg).toEqual({ key: 'average', probability: 0, value: null });
+    const dry = tree.branches[0].outcomes[0];
+    expect(dry).toEqual({ key: 'dry', probability: 0, value: null });
+    expect(Number.isFinite(tree.branches[0].expectedValue)).toBe(true);
     expect(tree.branches[0].expectedValue).toBeCloseTo(r.averages[0], 6);
   });
 
@@ -184,5 +187,55 @@ describe('saved decisions', () => {
       result: '', profit_increase: 0, climate_driest: 33, climate_mid: 34, climate_wettest: 33,
       options: [],
     })).toBeNull();
+  });
+});
+
+describe('division by zero', () => {
+  // An option whose profit is the same in every scenario, so zero-width bands give 0/0 as well as x/0.
+  const FLAT: RcdaInputs = {
+    ...EXAMPLE,
+    yield: [[5000, 5000, 5000, 5000, 5000], EXAMPLE.yield[1]],
+    cost: [[100000, 100000, 100000, 100000, 100000], EXAMPLE.cost[1]],
+    price: [50, 40],
+  };
+
+  function allForecasts(): number[][] {
+    const out: number[][] = [];
+    for (let d = 0; d <= 100; d++) for (let w = 0; d + w <= 100; w++) out.push([d, 100 - d - w, w]);
+    return out;
+  }
+
+  it('refuses 0% average years instead of recommending an option from infinite scores', () => {
+    expect(() => computeRcda({ ...EXAMPLE, climate: [60, 0, 40] })).toThrow(RcdaComputeError);
+    expect(() => computeRcda({ ...FLAT, climate: [60, 0, 40] })).toThrow(RcdaComputeError);
+  });
+
+  it('never returns a non-finite result for any of the 5151 forecasts', () => {
+    for (const inputs of [EXAMPLE, FLAT]) {
+      for (const climate of allForecasts()) {
+        let r;
+        try {
+          r = computeRcda({ ...inputs, climate });
+        } catch (err) {
+          expect(err).toBeInstanceOf(RcdaComputeError);
+          continue;
+        }
+        expect(r.averages.every(Number.isFinite)).toBe(true);
+      }
+    }
+  });
+
+  it('computes every forecast the input screen allows', () => {
+    const allowed = allForecasts().filter(isForecastComputable);
+    expect(allowed).toHaveLength(5050);
+    for (const inputs of [EXAMPLE, FLAT]) {
+      for (const climate of allowed) expect(() => computeRcda({ ...inputs, climate })).not.toThrow();
+    }
+  });
+
+  it('allows a forecast only when average years are at least 1%', () => {
+    expect(isForecastComputable([33, 34, 33])).toBe(true);
+    expect(isForecastComputable([0, 1, 99])).toBe(true);
+    expect(isForecastComputable([50, 0, 50])).toBe(false);
   });
 });

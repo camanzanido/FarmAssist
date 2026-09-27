@@ -4,6 +4,7 @@ import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/con
 import { ClimateColors, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy } from '@/src/constants/copy';
+import { isForecastComputable } from '@/src/rcda/decisionTree';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -51,15 +52,17 @@ export default function DecisionInputFlow() {
   const wVal = parseInt(wettest) || 0;
   const mid = Math.max(0, 100 - dVal - wVal);
 
-  const isWeatherValid = dVal + wVal <= 100 && (driest !== '' && wettest !== '');
+  const isOver100 = dVal + wVal > 100;
+  const hasNoAverage = !isOver100 && !isForecastComputable([dVal, mid, wVal]);
+  const isWeatherValid = !isOver100 && !hasNoAverage && (driest !== '' && wettest !== '');
 
   const adjustDriest = (delta: number) => {
     const next = Math.max(0, dVal + delta);
-    if (next + wVal <= 100) setDriest(String(next));
+    if (next + wVal <= 99) setDriest(String(next));
   };
   const adjustWettest = (delta: number) => {
     const next = Math.max(0, wVal + delta);
-    if (dVal + next <= 100) setWettest(String(next));
+    if (dVal + next <= 99) setWettest(String(next));
   };
 
   const handleDriestInput = (v: string) => {
@@ -396,8 +399,11 @@ export default function DecisionInputFlow() {
               <Text style={s.offlineNoteText}>{climateCopy.offlineNote}</Text>
             </View>
 
-            {dVal + wVal > 100 && (
+            {isOver100 && (
               <Text style={s.errorText}>{climateCopy.errorOver100}</Text>
+            )}
+            {hasNoAverage && (
+              <Text style={s.errorText}>{climateCopy.errorNoAverage}</Text>
             )}
 
             <View style={s.footer}>

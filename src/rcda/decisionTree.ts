@@ -20,6 +20,16 @@ export interface RcdaComputation {
   recommendedOption: 0 | 1;
 }
 
+// The inputs cannot produce a valid result; callers must not show or save one.
+export class RcdaComputeError extends Error {
+  name = 'RcdaComputeError';
+}
+
+// The walk divides by the width of each climate band; 0% average years makes one band zero-wide.
+export function isForecastComputable(climate: number[]): boolean {
+  return climate.length === 3 && climate[1] >= 1;
+}
+
 export function computeRcda(inputs: RcdaInputs): RcdaComputation {
   const yield7 = expandClimateScenarios(transpose2DList(inputs.yield));
   const cost7 = expandClimateScenarios(transpose2DList(inputs.cost));
@@ -29,7 +39,10 @@ export function computeRcda(inputs: RcdaInputs): RcdaComputation {
   const profit = getProfit(income, cost7, addCost7);
   const profitWalk = getRevisedProfitWalk(profit, inputs.climate);
   if (profitWalk.length !== 100) {
-    throw new Error('RCDA inputs did not produce a 100-point profit walk');
+    throw new RcdaComputeError('RCDA inputs did not produce a 100-point profit walk');
+  }
+  if (!profitWalk.every((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]))) {
+    throw new RcdaComputeError(`RCDA profit walk is not finite for forecast ${JSON.stringify(inputs.climate)}`);
   }
 
   const averages = getCrossOverAverages(profitWalk);

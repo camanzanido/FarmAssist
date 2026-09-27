@@ -3,7 +3,7 @@ import { DECISION_LABELS, DecisionType } from '@/src/constants';
 import { Colors } from '@/src/constants/colors';
 import { decisionDetailCopy as copy } from '@/src/constants/copy';
 import { getDecision } from '@/src/database/repositories/decisions';
-import { computeRcda, decisionToRcdaInputs } from '@/src/rcda/decisionTree';
+import { computeRcda, decisionToRcdaInputs, RcdaComputeError } from '@/src/rcda/decisionTree';
 import { RcdaSummary, summarizeRcda } from '@/src/rcda/summary';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -48,6 +48,11 @@ export default function DecisionDetailScreen() {
       }
       setState({ status: 'ready', summary, decisionType: decision.decision_type, datetime: decision.datetime });
     } catch (err) {
+      if (err instanceof RcdaComputeError) {
+        console.warn('[decision detail] saved inputs cannot be recomputed:', err.message);
+        setState({ status: 'error', message: copy.cannotRecompute, canRetry: false });
+        return;
+      }
       console.error('Failed to load decision detail:', err);
       setState({ status: 'error', message: copy.loadError, canRetry: true });
     }
