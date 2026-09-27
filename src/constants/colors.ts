@@ -34,6 +34,18 @@ export const Colors = {
   dangerBg: '#FBEAEA',
 
   disabled: '#B0C4B8',
+
+  inkMuted: '#5C6B60',
+  inkDim: '#A39A8B',
+  onDarkBody: '#C8DFD0',
+  amberOnDark: '#E0C68F',
+  amberDeepText: '#8A6B2E',
+  amberBorderStrong: '#E2CFA8',
+  dangerBorder: '#EFC6C0',
+  dangerText: '#8A3A30',
+  tabInactive: '#9AA79D',
+  barMuted: '#C5BFB3',
+  surfaceAlt: '#F8F5F0',
 } as const;
 
 // Researcher side: same hues, inverted — forest is the surface, not the accent.
@@ -60,6 +72,11 @@ export const ResearcherColors = {
   amberText: '#E0C68F',
 
   danger: '#E08585',
+
+  textBody: '#C8DFD0',
+  avatar: '#2F6B52',
+  sheet: '#0B2E20',
+  headerBg: '#0C3324',
 } as const;
 
 export const ClimateColors = {
@@ -68,4 +85,12 @@ export const ClimateColors = {
   average: '#5A9A6E',
   above_ave: '#4A8BBF',
   wettest: '#4A7FB5',
+} as const;
+
+// The three forecast bands (dry / average / wet years), as on the forecast input screen.
+export const ForecastColors = {
+  dry: ClimateColors.driest,
+  average: '#C9BE9E',
+  averageText: '#43391F',
+  wet: ClimateColors.above_ave,
 } as const;

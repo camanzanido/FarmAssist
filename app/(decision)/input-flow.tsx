@@ -1,7 +1,8 @@
+import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
-import { ClimateColors, Colors } from '@/src/constants/colors';
+import { ClimateColors, Colors, ForecastColors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy } from '@/src/constants/copy';
 import { isForecastComputable } from '@/src/rcda/decisionTree';
@@ -297,7 +298,7 @@ export default function DecisionInputFlow() {
 
             <View style={s.climateCard}>
               <View style={s.climateBar}>
-                <View style={[s.climateBarSeg, { width: `${dVal}%`, backgroundColor: ClimateColors.driest }]}>
+                <View style={[s.climateBarSeg, { width: `${dVal}%`, backgroundColor: ForecastColors.dry }]}>
                   {dVal >= 12 && (
                     <>
                       <Text style={s.climateBarPct}>{dVal}%</Text>
@@ -305,15 +306,15 @@ export default function DecisionInputFlow() {
                     </>
                   )}
                 </View>
-                <View style={[s.climateBarSeg, { width: `${mid}%`, backgroundColor: '#C9BE9E' }]}>
+                <View style={[s.climateBarSeg, { width: `${mid}%`, backgroundColor: ForecastColors.average }]}>
                   {mid >= 12 && (
                     <>
-                      <Text style={[s.climateBarPct, { color: '#43391F' }]}>{mid}%</Text>
-                      <Text style={[s.climateBarLabel, { color: '#43391F', opacity: 0.85 }]}>Average</Text>
+                      <Text style={[s.climateBarPct, { color: ForecastColors.averageText }]}>{mid}%</Text>
+                      <Text style={[s.climateBarLabel, { color: ForecastColors.averageText, opacity: 0.85 }]}>Average</Text>
                     </>
                   )}
                 </View>
-                <View style={[s.climateBarSeg, { width: `${wVal}%`, backgroundColor: ClimateColors.above_ave }]}>
+                <View style={[s.climateBarSeg, { width: `${wVal}%`, backgroundColor: ForecastColors.wet }]}>
                   {wVal >= 12 && (
                     <>
                       <Text style={s.climateBarPct}>{wVal}%</Text>
@@ -355,7 +356,7 @@ export default function DecisionInputFlow() {
               {/* Average (auto) */}
               <View style={s.climateRow}>
                 <View style={s.climateRowInfo}>
-                  <View style={[s.climateDot, { backgroundColor: '#C9BE9E' }]} />
+                  <View style={[s.climateDot, { backgroundColor: ForecastColors.average }]} />
                   <View>
                     <Text style={s.climateRowLabel}>{climateCopy.averageYears}</Text>
                     <Text style={s.climateRowSub}>{climateCopy.averageYearsSub}</Text>
@@ -368,7 +369,7 @@ export default function DecisionInputFlow() {
               {/* Wet Years */}
               <View style={s.climateRow}>
                 <View style={s.climateRowInfo}>
-                  <View style={[s.climateDot, { backgroundColor: ClimateColors.above_ave }]} />
+                  <View style={[s.climateDot, { backgroundColor: ForecastColors.wet }]} />
                   <View>
                     <Text style={s.climateRowLabel}>{climateCopy.wetYears}</Text>
                     <Text style={s.climateRowSub}>{climateCopy.wetYearsSub}</Text>
@@ -541,12 +542,7 @@ export default function DecisionInputFlow() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   container: { ...contentColumn, flex: 1, paddingHorizontal: 24, paddingTop: 12 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 24 },
-  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
-
-  titleBlock: { marginBottom: 20 },
-  title: { fontSize: 24, fontWeight: '800', color: Colors.ink, marginBottom: 4 },
-  subtitle: { fontSize: 13, color: Colors.inkSoft },
+  ...wizardHeader,
   bold: { fontWeight: '700', color: Colors.ink },
 
   // Naming step
@@ -581,7 +577,7 @@ const s = StyleSheet.create({
   scenarioFields: { flexDirection: 'row', gap: 8 },
   scenarioField: { flex: 1 },
   scenarioFieldLabel: { fontSize: 11, fontWeight: '600', color: Colors.inkSoft, marginBottom: 5 },
-  scenarioFieldUnit: { color: '#A39A8B' },
+  scenarioFieldUnit: { color: Colors.inkDim },
   scenarioInput: {
     backgroundColor: Colors.bg, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 9,
     paddingVertical: 11, textAlign: 'center', fontSize: 15, fontWeight: '700', color: Colors.ink,

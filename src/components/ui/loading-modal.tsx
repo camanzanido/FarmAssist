@@ -1,3 +1,4 @@
+import { Colors } from '@/src/constants/colors';
 import React from 'react';
 import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
 
@@ -10,7 +11,7 @@ export interface LoadingModalProps {
 export function LoadingModal({
   visible,
   message,
-  color = '#0A3B28',
+  color = Colors.ink,
 }: LoadingModalProps) {
   return (
     <Modal
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 28,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.surface,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.2,
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     fontWeight: '600',
-    color: '#0A3B28',
+    color: Colors.ink,
     textAlign: 'center',
   },
 });

@@ -269,7 +269,7 @@ const s = StyleSheet.create({
   userRow: { flexDirection: 'row', alignItems: 'center', gap: 13, backgroundColor: C.card, borderRadius: 14, padding: 14, marginBottom: 9 },
   userRowInactive: { opacity: 0.55 },
   userRowSelected: { borderWidth: 1.5, borderColor: C.accentStrong },
-  avatar: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#2F6B52', alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 44, height: 44, borderRadius: 14, backgroundColor: C.avatar, alignItems: 'center', justifyContent: 'center' },
   avatarResearcher: { backgroundColor: C.accent },
   avatarText: { fontSize: 15, fontWeight: '800', color: C.accentStrong },
   avatarTextResearcher: { color: C.accentDeepText },
@@ -285,7 +285,7 @@ const s = StyleSheet.create({
 
   detailCard: { backgroundColor: C.card, borderRadius: 18, padding: 18, marginTop: 12 },
   detailHeader: { flexDirection: 'row', alignItems: 'center', gap: 13, marginBottom: 18 },
-  detailAvatar: { width: 50, height: 50, borderRadius: 15, backgroundColor: '#2F6B52', alignItems: 'center', justifyContent: 'center' },
+  detailAvatar: { width: 50, height: 50, borderRadius: 15, backgroundColor: C.avatar, alignItems: 'center', justifyContent: 'center' },
   detailAvatarText: { fontSize: 17, fontWeight: '800', color: C.accentStrong },
   detailName: { fontSize: 17, fontWeight: '800', color: C.text },
   detailMeta: { fontSize: 12.5, color: C.textSoft, marginTop: 2 },

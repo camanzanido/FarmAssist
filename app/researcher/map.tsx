@@ -247,7 +247,7 @@ export default function ResearcherMapScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
 
-  header: { backgroundColor: '#0C3324', paddingTop: 52, paddingHorizontal: 20, paddingBottom: 16 },
+  header: { backgroundColor: C.headerBg, paddingTop: 52, paddingHorizontal: 20, paddingBottom: 16 },
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: 'rgba(4,26,18,0.9)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
@@ -256,7 +256,7 @@ const s = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, color: C.text, padding: 0 },
 
   mapWrap: { height: 420 },
-  map: { flex: 1, backgroundColor: '#0C3324' },
+  map: { flex: 1, backgroundColor: C.headerBg },
   mapLoadingBadge: {
     position: 'absolute', top: 10, right: 10,
     flexDirection: 'row', alignItems: 'center', gap: 6,

@@ -132,10 +132,10 @@ const s = StyleSheet.create({
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 14, fontWeight: '800', color: Colors.dark },
-  greeting: { fontSize: 15, fontWeight: '600', color: '#C8DFD0' },
+  greeting: { fontSize: 15, fontWeight: '600', color: Colors.onDarkBody },
   offlinePill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   offlineDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.amber },
-  offlinePillText: { fontSize: 12, fontWeight: '600', color: '#E0C68F' },
+  offlinePillText: { fontSize: 12, fontWeight: '600', color: Colors.amberOnDark },
 
   heading: { fontSize: 32, fontWeight: '800', color: Colors.onDark, lineHeight: 38, letterSpacing: -0.6, marginBottom: 8 },
   subtitle: { fontSize: 14, color: Colors.onDarkFaint, marginBottom: 24 },

@@ -1,13 +1,13 @@
-import { ClimateColors, Colors } from '@/src/constants/colors';
+import { Colors, ForecastColors } from '@/src/constants/colors';
 import { treeCopy as copy } from '@/src/constants/copy';
 import type { DecisionTree as Tree, OutcomeKey, TreeBranch } from '@/src/rcda/decisionTree';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 const OUTCOME_COLORS: Record<OutcomeKey, string> = {
-  dry: ClimateColors.driest,
-  average: ClimateColors.average,
-  wet: ClimateColors.wettest,
+  dry: ForecastColors.dry,
+  average: ForecastColors.average,
+  wet: ForecastColors.wet,
 };
 
 const RAIL = Colors.borderStrong;

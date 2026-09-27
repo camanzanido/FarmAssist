@@ -261,7 +261,7 @@ const s = StyleSheet.create({
   filterRow: { ...contentColumn, flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
   chip: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   chipActive: { backgroundColor: Colors.ink, borderColor: Colors.ink },
-  chipText: { fontSize: 13, fontWeight: '600', color: '#5C6B60' },
+  chipText: { fontSize: 13, fontWeight: '600', color: Colors.inkMuted },
   chipTextActive: { color: Colors.onDark, fontWeight: '700' },
 
   centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
@@ -293,7 +293,7 @@ const s = StyleSheet.create({
   cardType: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 9, flexWrap: 'wrap' },
   cardProfit: { fontSize: 14, fontWeight: '800', color: Colors.accent },
-  cardDate: { fontSize: 12, color: '#A39A8B' },
+  cardDate: { fontSize: 12, color: Colors.inkDim },
   syncChip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   syncChipPending: { backgroundColor: Colors.amberBg },
   syncChipSent: { backgroundColor: Colors.divider },

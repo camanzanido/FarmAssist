@@ -262,7 +262,7 @@ export function ExportSheet({
 const s = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' },
   sheet: {
-    backgroundColor: '#0B2E20', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: C.sheet, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 20, paddingBottom: 34, maxHeight: '92%',
     width: '100%', maxWidth: 640, alignSelf: 'center',
   },

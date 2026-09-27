@@ -1,3 +1,4 @@
+import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { DECISIONS, DecisionType } from '@/src/constants';
 import { Colors } from '@/src/constants/colors';
@@ -72,18 +73,7 @@ export default function DecisionTypeScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   container: { ...contentColumn, flex: 1, paddingHorizontal: 24, paddingTop: 12 },
-  header: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    marginBottom: 30,
-  },
-  backBtn: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: Colors.border, alignItems: 'center', justifyContent: 'center',
-  },
-
-  titleBlock: { marginBottom: 26 },
-  title: { fontSize: 29, fontWeight: '800', color: Colors.ink, lineHeight: 35, letterSpacing: -0.5, marginBottom: 8 },
-  subtitle: { fontSize: 15, color: Colors.inkSoft, lineHeight: 21 },
+  ...wizardHeader,
 
   cards: { gap: 12 },
   card: {

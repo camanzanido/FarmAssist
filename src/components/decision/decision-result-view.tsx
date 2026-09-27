@@ -137,7 +137,7 @@ const s = StyleSheet.create({
   deltaRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 18, marginBottom: 6 },
   deltaValue: { fontSize: 40, fontWeight: '800', color: Colors.onDarkSoft, lineHeight: 40 },
   deltaUnit: { fontSize: 14, color: Colors.onDarkFaint, paddingBottom: 6 },
-  verdictDetail: { fontSize: 15, color: '#C8DFD0', lineHeight: 21 },
+  verdictDetail: { fontSize: 15, color: Colors.onDarkBody, lineHeight: 21 },
 
   body: { ...contentColumn, padding: 20, paddingTop: 20 },
 
@@ -153,9 +153,9 @@ const s = StyleSheet.create({
   earningsBarBg: { height: 12, backgroundColor: Colors.divider, borderRadius: 6, overflow: 'hidden' },
   earningsBarFill: { height: '100%', borderRadius: 6 },
   earningsBarWinner: { backgroundColor: Colors.accent },
-  earningsBarLoser: { backgroundColor: '#C5BFB3' },
+  earningsBarLoser: { backgroundColor: Colors.barMuted },
 
-  keepInMindBody: { fontSize: 14, color: '#5C6B60', lineHeight: 20, marginBottom: 14 },
+  keepInMindBody: { fontSize: 14, color: Colors.inkMuted, lineHeight: 20, marginBottom: 14 },
   favorRow: { flexDirection: 'row', gap: 6 },
   favorItem: { flex: 1, alignItems: 'center' },
   favorIconWrap: { width: '100%', height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
@@ -172,7 +172,7 @@ const s = StyleSheet.create({
 
   table: { backgroundColor: Colors.surface, borderRadius: 14, overflow: 'hidden', marginBottom: 14 },
   tableRow: { flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 12 },
-  tableRowAlt: { backgroundColor: '#F8F5F0' },
+  tableRowAlt: { backgroundColor: Colors.surfaceAlt },
   tableCell: { flex: 1, fontSize: 12, color: Colors.ink, textAlign: 'center' },
   tableHeader: { fontWeight: '700', color: Colors.inkFaint, fontSize: 11, letterSpacing: 0.3 },
   climateLabelCell: { justifyContent: 'center' },
