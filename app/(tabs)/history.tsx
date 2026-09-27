@@ -200,27 +200,35 @@ export default function HistoryScreen() {
             const isPending = pendingIds.has(item.id);
             return (
               <View style={s.card}>
-                <View style={s.cardIconWrap}>
-                  <Ionicons name={decisionTypeIcon(item.decision_type)} size={21} color={Colors.ink} />
-                </View>
-                <View style={s.cardBody}>
-                  <Text style={s.cardResult} numberOfLines={1}>{item.result}</Text>
-                  <Text style={s.cardType}>{decisionTypeLabel(item.decision_type)}</Text>
-                  <View style={s.cardMetaRow}>
-                    <Text style={s.cardProfit}>+{formatCurrency(item.profit_increase)}</Text>
-                    <Text style={s.cardDate}>{formatDate(item.datetime)}</Text>
-                    <View style={[s.syncChip, isPending ? s.syncChipPending : s.syncChipSent]}>
-                      <Ionicons
-                        name={isPending ? 'cloud-offline-outline' : 'checkmark'}
-                        size={11}
-                        color={isPending ? Colors.amber : Colors.inkSoft}
-                      />
-                      <Text style={[s.syncChipText, isPending ? s.syncChipTextPending : s.syncChipTextSent]}>
-                        {isPending ? copy.notSent : copy.sent}
-                      </Text>
+                <TouchableOpacity
+                  style={s.cardMain}
+                  onPress={() => router.push({ pathname: '/decision/[id]', params: { id: item.id } })}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityHint={copy.openHint}
+                >
+                  <View style={s.cardIconWrap}>
+                    <Ionicons name={decisionTypeIcon(item.decision_type)} size={21} color={Colors.ink} />
+                  </View>
+                  <View style={s.cardBody}>
+                    <Text style={s.cardResult} numberOfLines={1}>{item.result}</Text>
+                    <Text style={s.cardType}>{decisionTypeLabel(item.decision_type)}</Text>
+                    <View style={s.cardMetaRow}>
+                      <Text style={s.cardProfit}>+{formatCurrency(item.profit_increase)}</Text>
+                      <Text style={s.cardDate}>{formatDate(item.datetime)}</Text>
+                      <View style={[s.syncChip, isPending ? s.syncChipPending : s.syncChipSent]}>
+                        <Ionicons
+                          name={isPending ? 'cloud-offline-outline' : 'checkmark'}
+                          size={11}
+                          color={isPending ? Colors.amber : Colors.inkSoft}
+                        />
+                        <Text style={[s.syncChipText, isPending ? s.syncChipTextPending : s.syncChipTextSent]}>
+                          {isPending ? copy.notSent : copy.sent}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={s.deleteBtn}
                   onPress={() => confirmDelete(item)}
@@ -274,6 +282,7 @@ const s = StyleSheet.create({
     padding: 16, gap: 13,
     marginBottom: 9,
   },
+  cardMain: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 13 },
   cardIconWrap: {
     width: 44, height: 44, borderRadius: 13,
     backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center',

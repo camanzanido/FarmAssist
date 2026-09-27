@@ -78,6 +78,25 @@ export const resultCopy = {
   retrying: 'Retrying…',
 };
 
+export const treeCopy = {
+  heading: 'Decision tree',
+  subtitle: "Each option's value is the chance of each kind of year times what it earns in that year, added up.",
+  rootLabel: 'Your choice',
+  best: 'BEST',
+  expected: 'Expected',
+  outcomes: { dry: 'Dry years', average: 'Average years', wet: 'Wet years' },
+  notForecast: 'not forecast',
+};
+
+export const decisionDetailCopy = {
+  title: 'Saved decision',
+  loadError: "We couldn't load this decision.",
+  notFound: 'This decision no longer exists on this device.',
+  incomplete: "This decision is missing its inputs, so it can't be shown again.",
+  retry: 'Retry',
+  back: 'Back to history',
+};
+
 export const homeCopy = {
   greeting: (name: string) => `Hi, ${name}`,
   offlinePill: 'Offline',
@@ -107,6 +126,7 @@ export const historyCopy = {
   deletedToast: 'Decision deleted',
   deleteFailedTitle: 'Could not delete',
   deleteFailedBody: 'Please try again.',
+  openHint: 'Opens the full result and decision tree',
 };
 
 export const profileCopy = {
