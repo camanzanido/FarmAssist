@@ -101,10 +101,14 @@ export default function ResearcherUsersScreen() {
         ? 'Deactivate this account?'
         : isApproval ? 'Approve this account?' : 'Reactivate this account?',
       message: deactivating
-        ? `${selected.name} won't be able to sign in until reactivated.`
+        ? selected.user_type === 'researcher'
+          ? `${selected.name} will lose access to researcher tools until reactivated. They can still sign in.`
+          : `${selected.name} can still sign in and use the app. Their account will be marked inactive.`
         : isApproval
           ? `${selected.name} will gain full ${selected.user_type === 'researcher' ? 'researcher ' : ''}access.`
-          : `${selected.name} will be able to sign in again.`,
+          : selected.user_type === 'researcher'
+            ? `${selected.name} will regain access to researcher tools.`
+            : `${selected.name}'s account will be marked active again.`,
       confirmText: deactivating ? 'Deactivate' : isApproval ? 'Approve' : 'Reactivate',
       tone: deactivating ? 'destructive' : 'default',
       icon: deactivating ? 'person-remove-outline' : 'person-add-outline',

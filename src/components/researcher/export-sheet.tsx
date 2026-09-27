@@ -3,7 +3,6 @@ import { ResearcherColors as C } from '@/src/constants/colors';
 import type { Decision } from '@/src/database/repositories/decisions';
 import type { Location } from '@/src/database/repositories/locations';
 import type { User } from '@/src/database/repositories/users';
-import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
@@ -54,7 +53,6 @@ export function ExportSheet({
   const [format, setFormat] = useState<Format>('excel');
   const [includeFarmerLocation, setIncludeFarmerLocation] = useState(true);
   const [includeClimate, setIncludeClimate] = useState(false);
-  const sync = useSyncStatus();
   const { notify } = useFeedback();
 
   const handleExport = async () => {
@@ -127,12 +125,6 @@ export function ExportSheet({
             </TouchableOpacity>
           </View>
 
-          {!sync.connected && (
-            <View style={s.offlineRow}>
-              <Ionicons name="cloud-offline-outline" size={17} color={C.amber} />
-              <Text style={s.offlineText}>You&apos;re offline. The file is built from local data on this device.</Text>
-            </View>
-          )}
 
           <TouchableOpacity
             style={[s.exportBtn, format === 'pdf' && s.exportBtnDisabled]}
@@ -170,8 +162,6 @@ const s = StyleSheet.create({
   checkboxChecked: { backgroundColor: C.accentStrong, borderColor: C.accentStrong },
   includeLabel: { flex: 1, fontSize: 14.5, color: C.text },
 
-  offlineRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amberBorder, borderRadius: 12, padding: 12, marginBottom: 18 },
-  offlineText: { flex: 1, fontSize: 12.5, color: C.amberText, lineHeight: 17 },
 
   exportBtn: { height: 58, borderRadius: 15, backgroundColor: C.accentStrong, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9 },
   exportBtnDisabled: { opacity: 0.4 },

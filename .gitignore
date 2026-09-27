@@ -43,9 +43,8 @@ app-example
 /ios
 /android
 
-CLAUDE.md
-UPDATE.md
-GOAL.md
-RCDA.md
+*.md
+!README.md
+
 
 input.txt
