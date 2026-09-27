@@ -234,7 +234,7 @@ export default function ResearcherDashboardScreen() {
       <ExportSheet
         visible={exportOpen}
         onClose={() => setExportOpen(false)}
-        decisions={rangeFiltered}
+        decisions={decisions}
         users={users}
         locations={locations}
       />
