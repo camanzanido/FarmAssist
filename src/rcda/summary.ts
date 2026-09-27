@@ -10,7 +10,7 @@ export interface RcdaSummary {
   optionNames: string[];
   recommendedOption: 0 | 1;
   scores: number[];           // rounded RCDA score per option
-  profitIncrease: number;     // |score difference|, what gets saved as profit_increase
+  profitIncrease: number;     // exact score gap rounded once (Excel L36), saved as profit_increase
   breakdown: number[][];      // [option][scenario] rounded net return at the sampled percentiles
   favorFlags: boolean[];      // per scenario: does the recommended option earn at least as much?
   tree: DecisionTree;
@@ -33,7 +33,7 @@ export function summarizeRcda(
     optionNames,
     recommendedOption,
     scores,
-    profitIncrease: Math.abs(scores[0] - scores[1]),
+    profitIncrease: Math.round(Math.abs(averages[0] - averages[1])),
     breakdown,
     favorFlags: winner.map((v, i) => v >= loser[i]),
     tree: buildDecisionTree(computation, climate, optionNames),

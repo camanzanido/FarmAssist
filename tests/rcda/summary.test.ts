@@ -15,9 +15,9 @@ describe('summarizeRcda', () => {
   const computation = computeRcda(EXAMPLE);
   const summary = summarizeRcda(computation, EXAMPLE.optionNames, EXAMPLE.climate);
 
-  it('rounds the scores and saves the gap of the rounded scores as profit_increase', () => {
+  it('rounds the scores and rounds the exact score gap once, matching Excel L36 (7041.64 to 7042)', () => {
     expect(summary.scores).toEqual([105221, 112262]);
-    expect(summary.profitIncrease).toBe(7041);
+    expect(summary.profitIncrease).toBe(7042);
     expect(summary.recommendedOption).toBe(1);
   });
 
