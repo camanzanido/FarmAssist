@@ -1,6 +1,7 @@
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { DECISIONS, DecisionType } from '@/src/constants';
 import { Colors } from '@/src/constants/colors';
+import { contentColumn } from '@/src/constants/layout';
 import { decisionTypeCopy as copy } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -70,7 +71,7 @@ export default function DecisionTypeScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  container: { flex: 1, paddingHorizontal: 24, paddingTop: 12 },
+  container: { ...contentColumn, flex: 1, paddingHorizontal: 24, paddingTop: 12 },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     marginBottom: 30,

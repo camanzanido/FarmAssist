@@ -3,6 +3,7 @@ import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
+import { wideColumn } from '@/src/constants/layout';
 import { type Decision } from '@/src/database/repositories/decisions';
 import { type Location } from '@/src/database/repositories/locations';
 import { deleteDecisionRemote, fetchAllDecisions, fetchAllLocations, fetchAllUsers } from '@/src/database/repositories/researcher';
@@ -172,7 +173,7 @@ export default function ResearcherDecisionsScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  content: { padding: 20, paddingTop: 12, paddingBottom: 20 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
 
   title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
   subtitle: { fontSize: 12.5, color: C.textFaint, marginTop: 3, marginBottom: 16 },

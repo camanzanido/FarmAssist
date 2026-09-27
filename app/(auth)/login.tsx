@@ -1,5 +1,6 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { Colors } from '@/src/constants/colors';
+import { contentColumn } from '@/src/constants/layout';
 import { authCopy as copy } from '@/src/constants/copy';
 import { getAuthErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
@@ -119,7 +120,7 @@ export default function LoginScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.dark },
-  container: { flex: 1, paddingHorizontal: 24, paddingTop: 10 },
+  container: { ...contentColumn, flex: 1, paddingHorizontal: 24, paddingTop: 10 },
   closeBtn: {
     alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center',

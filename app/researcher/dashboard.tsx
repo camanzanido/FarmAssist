@@ -2,6 +2,7 @@ import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { ExportSheet } from '@/src/components/researcher/export-sheet';
 import { DECISIONS, DecisionType } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
+import { useIsWide, wideColumn } from '@/src/constants/layout';
 import { type Decision } from '@/src/database/repositories/decisions';
 import { type Location } from '@/src/database/repositories/locations';
 import { fetchAllDecisions, fetchAllLocations, fetchAllUsers } from '@/src/database/repositories/researcher';
@@ -27,6 +28,7 @@ const EMPTY = { decisions: [] as Decision[], users: [] as User[], locations: [] 
 export default function ResearcherDashboardScreen() {
   const [range, setRange] = useState<Range>('season');
   const [exportOpen, setExportOpen] = useState(false);
+  const isWide = useIsWide();
 
   const fetchOverview = useCallback(async () => {
     const [decisions, users, locations] = await Promise.all([
@@ -121,26 +123,28 @@ export default function ResearcherDashboardScreen() {
             </View>
           </View>
 
-          <View style={s.statRow}>
-            <View style={s.statCard}>
-              <Text style={s.statValue}>{stats.total.toLocaleString()}</Text>
-              <Text style={s.statLabel}>Decisions</Text>
-              <Text style={s.statDelta}>+{stats.thisMonthDecisions} this month</Text>
+          <View style={isWide && s.statGridWide}>
+            <View style={[s.statRow, isWide && s.statRowWide]}>
+              <View style={s.statCard}>
+                <Text style={s.statValue}>{stats.total.toLocaleString()}</Text>
+                <Text style={s.statLabel}>Decisions</Text>
+                <Text style={s.statDelta}>+{stats.thisMonthDecisions} this month</Text>
+              </View>
+              <View style={s.statCard}>
+                <Text style={s.statValue}>{stats.activeFarmers.toLocaleString()}</Text>
+                <Text style={s.statLabel}>Active farmers</Text>
+                <Text style={s.statDelta}>+{stats.newFarmersThisMonth} this month</Text>
+              </View>
             </View>
-            <View style={s.statCard}>
-              <Text style={s.statValue}>{stats.activeFarmers.toLocaleString()}</Text>
-              <Text style={s.statLabel}>Active farmers</Text>
-              <Text style={s.statDelta}>+{stats.newFarmersThisMonth} this month</Text>
-            </View>
-          </View>
-          <View style={s.statRow}>
-            <View style={s.statCard}>
-              <Text style={[s.statValue, { color: C.text }]}>{users.filter(u => u.user_type === 'researcher').length}</Text>
-              <Text style={s.statLabel}>Researchers</Text>
-            </View>
-            <View style={s.statCard}>
-              <Text style={s.statValue}>{formatCurrency(stats.medianGain)}</Text>
-              <Text style={s.statLabel}>Median gain/ha</Text>
+            <View style={[s.statRow, isWide && s.statRowWide]}>
+              <View style={s.statCard}>
+                <Text style={[s.statValue, { color: C.text }]}>{users.filter(u => u.user_type === 'researcher').length}</Text>
+                <Text style={s.statLabel}>Researchers</Text>
+              </View>
+              <View style={s.statCard}>
+                <Text style={s.statValue}>{formatCurrency(stats.medianGain)}</Text>
+                <Text style={s.statLabel}>Median gain/ha</Text>
+              </View>
             </View>
           </View>
 
@@ -240,13 +244,15 @@ export default function ResearcherDashboardScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  content: { padding: 20, paddingTop: 12, paddingBottom: 20 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
 
   header: { marginBottom: 18 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: C.textFaint, marginBottom: 5 },
   title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
 
   statRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  statGridWide: { flexDirection: 'row', gap: 10 },
+  statRowWide: { flex: 1 },
   statCard: { flex: 1, backgroundColor: C.card, borderRadius: 16, padding: 16 },
   statValue: { fontSize: 28, fontWeight: '800', color: C.text, letterSpacing: -0.5 },
   statLabel: { fontSize: 12.5, color: C.textSoft, marginTop: 3 },

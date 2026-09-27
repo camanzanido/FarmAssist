@@ -1,6 +1,7 @@
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
 import { ResearcherColors as C } from '@/src/constants/colors';
+import { wideColumn } from '@/src/constants/layout';
 import { cityCoordinateKey, ensureCoordinates, type CityCoordinate } from '@/src/database/repositories/cityCoordinates';
 import { type Decision } from '@/src/database/repositories/decisions';
 import { type Location } from '@/src/database/repositories/locations';
@@ -271,7 +272,7 @@ const s = StyleSheet.create({
   },
   mapNoticeText: { flex: 1, fontSize: 12, color: C.textFaint, lineHeight: 16 },
 
-  list: { padding: 20, gap: 10 },
+  list: { ...wideColumn, padding: 20, gap: 10 },
 
   cityCard: { backgroundColor: C.card, borderRadius: 16, padding: 16, marginBottom: 10 },
   cityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 },

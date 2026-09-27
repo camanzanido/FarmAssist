@@ -4,6 +4,7 @@ import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
 import { ResearcherColors as C } from '@/src/constants/colors';
+import { wideColumn } from '@/src/constants/layout';
 import { fetchAllUsers, updateUserRemote } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
@@ -252,7 +253,7 @@ export default function ResearcherUsersScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  content: { padding: 20, paddingTop: 12, paddingBottom: 20 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
 
   title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4, marginBottom: 16 },
 

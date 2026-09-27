@@ -2,6 +2,7 @@ import StepIndicator from '@/src/components/decision/steps-indicator';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
 import { ClimateColors, Colors } from '@/src/constants/colors';
+import { contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -533,7 +534,7 @@ export default function DecisionInputFlow() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  container: { flex: 1, paddingHorizontal: 24, paddingTop: 12 },
+  container: { ...contentColumn, flex: 1, paddingHorizontal: 24, paddingTop: 12 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 24 },
   backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
 

@@ -1,6 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherColors as C } from '@/src/constants/colors';
+import { wideColumn } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -71,7 +72,7 @@ export default function ResearcherProfileScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  content: { padding: 20, paddingTop: 12, paddingBottom: 40 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 40 },
 
   header: { marginBottom: 22 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: C.textFaint, marginBottom: 5 },

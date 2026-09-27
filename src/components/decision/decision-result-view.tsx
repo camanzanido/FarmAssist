@@ -1,4 +1,5 @@
 import { Colors } from '@/src/constants/colors';
+import { contentColumn } from '@/src/constants/layout';
 import { resultCopy as copy } from '@/src/constants/copy';
 import { CLIMATE_LABELS, RcdaSummary } from '@/src/rcda/summary';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,14 +29,16 @@ export function DecisionResultView({ summary, heroTop, banner, footer }: Props) 
     <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
       {/* Hero */}
       <View style={s.hero}>
-        <View style={s.heroTopRow}>{heroTop}</View>
-        <Text style={s.answerEyebrow}>{copy.answerEyebrow}</Text>
-        <Text style={s.verdict}>{copy.verdict(winner)}</Text>
-        <View style={s.deltaRow}>
-          <Text style={s.deltaValue}>+₱{summary.profitIncrease.toLocaleString()}</Text>
-          <Text style={s.deltaUnit}>{copy.perHectare}</Text>
+        <View style={s.heroInner}>
+          <View style={s.heroTopRow}>{heroTop}</View>
+          <Text style={s.answerEyebrow}>{copy.answerEyebrow}</Text>
+          <Text style={s.verdict}>{copy.verdict(winner)}</Text>
+          <View style={s.deltaRow}>
+            <Text style={s.deltaValue}>+₱{summary.profitIncrease.toLocaleString()}</Text>
+            <Text style={s.deltaUnit}>{copy.perHectare}</Text>
+          </View>
+          <Text style={s.verdictDetail}>{copy.verdictDetail(winner, loser)}</Text>
         </View>
-        <Text style={s.verdictDetail}>{copy.verdictDetail(winner, loser)}</Text>
       </View>
 
       <View style={s.body}>
@@ -127,6 +130,7 @@ const s = StyleSheet.create({
 
   // Hero
   hero: { backgroundColor: Colors.dark, paddingTop: 50, paddingHorizontal: 22, paddingBottom: 26, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  heroInner: contentColumn,
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 },
   answerEyebrow: { fontSize: 12, fontWeight: '700', letterSpacing: 1.2, color: Colors.onDarkFaint, marginBottom: 10 },
   verdict: { fontSize: 32, fontWeight: '800', color: Colors.onDark, lineHeight: 38, letterSpacing: -0.6 },
@@ -135,7 +139,7 @@ const s = StyleSheet.create({
   deltaUnit: { fontSize: 14, color: Colors.onDarkFaint, paddingBottom: 6 },
   verdictDetail: { fontSize: 15, color: '#C8DFD0', lineHeight: 21 },
 
-  body: { padding: 20, paddingTop: 20 },
+  body: { ...contentColumn, padding: 20, paddingTop: 20 },
 
   card: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, marginBottom: 14 },
   cardTitle: { fontSize: 14, fontWeight: '800', color: Colors.ink, marginBottom: 14 },

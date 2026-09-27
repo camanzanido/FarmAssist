@@ -1,5 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { Colors } from '@/src/constants/colors';
+import { contentColumn } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -90,7 +91,7 @@ export default function PendingScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  content: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
+  content: { ...contentColumn, flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
   iconWrap: {
     width: 68, height: 68, borderRadius: 34, alignSelf: 'center',
     alignItems: 'center', justifyContent: 'center',

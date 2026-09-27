@@ -3,6 +3,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
 import { Colors } from '@/src/constants/colors';
+import { contentColumn } from '@/src/constants/layout';
 import { profileCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { getDecisionsByUser, getStagedDecisionIds } from '@/src/database/repositories/decisions';
@@ -222,7 +223,7 @@ const s = StyleSheet.create({
   secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 14, paddingVertical: 16, width: '100%', alignItems: 'center' },
   secondaryBtnText: { color: Colors.ink, fontWeight: '700', fontSize: 15 },
 
-  content: { padding: 22, paddingTop: 12, paddingBottom: 40 },
+  content: { ...contentColumn, padding: 22, paddingTop: 12, paddingBottom: 40 },
   profileHeader: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },
   avatar: { width: 64, height: 64, borderRadius: 20, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 23, fontWeight: '800', color: Colors.accentTintStrong },

@@ -2,6 +2,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { Colors } from '@/src/constants/colors';
+import { contentColumn } from '@/src/constants/layout';
 import { historyCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { deleteDecision, getDecisionsByUser, getStagedDecisionIds, type Decision } from '@/src/database/repositories/decisions';
@@ -253,11 +254,11 @@ export default function HistoryScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
 
-  header: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 },
+  header: { ...contentColumn, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 },
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
   subtitle: { fontSize: 14, color: Colors.inkSoft, marginTop: 3 },
 
-  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
+  filterRow: { ...contentColumn, flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
   chip: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   chipActive: { backgroundColor: Colors.ink, borderColor: Colors.ink },
   chipText: { fontSize: 13, fontWeight: '600', color: '#5C6B60' },
@@ -273,7 +274,7 @@ const s = StyleSheet.create({
   ctaBtn: { marginTop: 8, backgroundColor: Colors.ink, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24 },
   ctaBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 14 },
 
-  list: { padding: 22, paddingTop: 8 },
+  list: { ...contentColumn, padding: 22, paddingTop: 8 },
   sectionHeader: { fontSize: 12, fontWeight: '700', letterSpacing: 0.9, color: Colors.inkFaint, marginTop: 18, marginBottom: 10 },
 
   card: {

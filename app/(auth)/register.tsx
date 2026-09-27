@@ -1,6 +1,7 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { DropdownField } from '@/src/components/ui/dropdown-field';
 import { Colors } from '@/src/constants/colors';
+import { contentColumn } from '@/src/constants/layout';
 import { authCopy as copy } from '@/src/constants/copy';
 import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locations';
 import { getAuthErrorMessage } from '@/src/utils/errors';
@@ -189,7 +190,7 @@ export default function RegisterScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  scroll: { padding: 24, paddingBottom: 40 },
+  scroll: { ...contentColumn, padding: 24, paddingBottom: 40 },
   closeBtn: {
     alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
     backgroundColor: Colors.border, alignItems: 'center', justifyContent: 'center', marginBottom: 16,

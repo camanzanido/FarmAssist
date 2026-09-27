@@ -1,6 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { DECISIONS } from '@/src/constants';
 import { Colors } from '@/src/constants/colors';
+import { contentColumn } from '@/src/constants/layout';
 import { homeCopy as copy } from '@/src/constants/copy';
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
@@ -125,7 +126,7 @@ export default function HomeScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.dark },
-  content: { padding: 22, paddingTop: 16, paddingBottom: 40 },
+  content: { ...contentColumn, padding: 22, paddingTop: 16, paddingBottom: 40 },
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 26 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 9 },
