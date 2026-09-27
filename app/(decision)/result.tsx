@@ -159,7 +159,8 @@ export default function ResultScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  const startOver = () => router.replace('/(tabs)');
+
+  const startOver = () => router.dismissTo('/(tabs)');
 
   const handleShare = () => {
     if (!result) return;

@@ -7,8 +7,9 @@ import { contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy } from '@/src/constants/copy';
 import { isForecastComputable } from '@/src/rcda/decisionTree';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -187,13 +188,16 @@ export default function DecisionInputFlow() {
   const goBackRef = useRef(goBack);
   goBackRef.current = goBack;
 
-  useEffect(() => {
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      goBackRef.current();
-      return true;
-    });
-    return () => sub.remove();
-  }, []);
+  // Only while this screen is focused; a mounted-but-hidden wizard must not swallow back presses elsewhere.
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        goBackRef.current();
+        return true;
+      });
+      return () => sub.remove();
+    }, [])
+  );
 
   // Helper to get step number (1-3) for indicator
   const getStepNumber = (): { current: number; total: number } => {
