@@ -2,7 +2,9 @@ import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { authCopy as copy } from '@/src/constants/copy';
-import { getAuthErrorMessage } from '@/src/utils/errors';
+import { formatLockTime } from '@/src/auth/signInThrottle';
+import { useSignInThrottle } from '@/src/hooks/use-sign-in-throttle';
+import { getAuthErrorMessage, isInvalidCredentialsError } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -22,6 +24,7 @@ export default function LoginScreen() {
   const { signIn, isLoading } = useAuth();
   const { notify } = useFeedback();
   const router = useRouter();
+  const throttle = useSignInThrottle();
 
   function getFieldErrors(): FieldErrors {
     const errors: FieldErrors = {};
@@ -40,9 +43,13 @@ export default function LoginScreen() {
     setTouched(true);
     if (Object.keys(errors).length > 0) return;
 
+    if (throttle.isLocked) return;
+
     try {
       await signIn(email.trim(), password);
+      throttle.onSuccess();
     } catch (e: any) {
+      if (isInvalidCredentialsError(e)) throttle.onFailure();
       notify.error('Login failed', getAuthErrorMessage(e, 'Something went wrong. Please try again.'));
     }
   }
@@ -92,9 +99,21 @@ export default function LoginScreen() {
           {touched && errors.password && <Text style={s.errorText}>{errors.password}</Text>}
         </View>
 
-        <TouchableOpacity onPress={handleLogin} disabled={isLoading} style={[s.signInBtn, isLoading && s.signInBtnDisabled]} activeOpacity={0.85}>
-          <Text style={s.signInBtnText}>{isLoading ? copy.signingIn : copy.signIn}</Text>
+        <TouchableOpacity
+          onPress={handleLogin}
+          disabled={isLoading || throttle.isLocked}
+          style={[s.signInBtn, (isLoading || throttle.isLocked) && s.signInBtnDisabled]}
+          activeOpacity={0.85}
+        >
+          <Text style={s.signInBtnText}>
+            {throttle.isLocked ? copy.lockedButton(formatLockTime(throttle.lockMs)) : isLoading ? copy.signingIn : copy.signIn}
+          </Text>
         </TouchableOpacity>
+        {throttle.isLocked ? (
+          <Text style={s.throttleText}>{copy.lockedMessage}</Text>
+        ) : throttle.failures > 0 && throttle.attemptsLeft > 0 && throttle.attemptsLeft <= 2 ? (
+          <Text style={s.throttleText}>{copy.attemptsLeft(throttle.attemptsLeft)}</Text>
+        ) : null}
 
         <TouchableOpacity onPress={() => router.push('/(auth)/register')} style={s.noAccountRow}>
           <Text style={s.noAccountText}>
@@ -148,6 +167,7 @@ const s = StyleSheet.create({
   signInBtn: { backgroundColor: Colors.accentTintStrong, borderRadius: 16, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
   signInBtnDisabled: { opacity: 0.6 },
   signInBtnText: { fontSize: 17, fontWeight: '800', color: Colors.dark },
+  throttleText: { fontSize: 13, color: Colors.amberOnDark, textAlign: 'center', marginTop: -4, marginBottom: 14 },
 
   noAccountRow: { alignItems: 'center' },
   noAccountText: { fontSize: 15, color: Colors.onDarkFaint },

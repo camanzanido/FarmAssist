@@ -22,9 +22,22 @@ const AUTH_MESSAGE_OVERRIDES: Record<string, string> = {
   'Invalid login credentials': 'Incorrect email or password.',
 };
 
+const RATE_LIMIT_MESSAGE = 'Too many sign-in attempts. Please wait a few minutes and try again.';
+
+// A wrong email or password, as opposed to a network or server problem; only these count toward the sign-in limit.
+export function isInvalidCredentialsError(err: unknown): boolean {
+  return errCode(err) === 'invalid_credentials' || errMessage(err).includes('Invalid login credentials');
+}
+
+function isRateLimitError(err: unknown): boolean {
+  const status = err && typeof err === 'object' && 'status' in err ? (err as any).status : undefined;
+  return status === 429 || errCode(err) === 'over_request_rate_limit';
+}
+
 
 export function getAuthErrorMessage(err: unknown, fallback: string): string {
   if (isNetworkError(err)) return OFFLINE_MESSAGE;
+  if (isRateLimitError(err)) return RATE_LIMIT_MESSAGE;
   const msg = errMessage(err);
   for (const key of Object.keys(AUTH_MESSAGE_OVERRIDES)) {
     if (msg.includes(key)) return AUTH_MESSAGE_OVERRIDES[key];
