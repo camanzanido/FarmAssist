@@ -1,3 +1,4 @@
+import { fetchAllRows } from '../../utils/pagination';
 import { withTimeout } from '../../utils/withTimeout';
 import { supabase } from '../supabase/supabase';
 import type { Decision } from './decisions';
@@ -5,37 +6,36 @@ import type { Location } from './locations';
 import type { User } from './users';
 
 export async function fetchAllDecisions(): Promise<Decision[]> {
-  const { data, error } = await withTimeout((signal) => supabase
+  return fetchAllRows<Decision>((from, to, signal) => supabase
     .from('decisions')
     .select('*')
     .order('datetime', { ascending: false })
+    .order('id', { ascending: true })
+    .range(from, to)
     .abortSignal(signal));
-  if (error) throw error;
-  return (data ?? []) as Decision[];
 }
 
 export async function fetchAllUsers(): Promise<User[]> {
-  const { data, error } = await withTimeout((signal) => supabase
+  return fetchAllRows<User>((from, to, signal) => supabase
     .from('users')
     .select('*')
     .order('created_at', { ascending: false })
+    .order('id', { ascending: true })
+    .range(from, to)
     .abortSignal(signal));
-  if (error) throw error;
-  return (data ?? []) as User[];
 }
 
 export async function fetchAllLocations(): Promise<Location[]> {
-  const { data, error } = await withTimeout((signal) => supabase
+  return fetchAllRows<Location>((from, to, signal) => supabase
     .from('locations')
     .select('*')
     .order('city', { ascending: true })
+    .order('id', { ascending: true })
+    .range(from, to)
     .abortSignal(signal));
-  if (error) throw error;
-  return (data ?? []) as Location[];
 }
 
-// Returns null only when the row definitively does not exist; throws on
-// network/RLS errors so callers can tell "missing" apart from "unknown".
+// Null only when the row is missing; throws on network/RLS errors so "missing" and "unknown" differ.
 export async function fetchUserRemote(userId: string): Promise<User | null> {
   const { data, error } = await supabase
     .from('users')

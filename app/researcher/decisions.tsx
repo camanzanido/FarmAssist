@@ -11,12 +11,15 @@ import { type User } from '@/src/database/repositories/users';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { formatCurrency } from '@/src/utils/formatters';
+import { paginate } from '@/src/utils/pagination';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TypeFilter = 'all' | DecisionType;
+
+const PAGE_SIZE = 20;
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
@@ -40,6 +43,8 @@ export default function ResearcherDecisionsScreen() {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const scrollRef = useRef<ScrollView>(null);
   const { confirm, notify } = useFeedback();
 
   const usersById = useMemo(() => new Map(users.map(u => [u.id, u])), [users]);
@@ -59,6 +64,15 @@ export default function ResearcherDecisionsScreen() {
       return haystack.includes(q);
     });
   }, [decisions, typeFilter, query, usersById, locationsById]);
+
+  const paged = useMemo(() => paginate(filtered, page, PAGE_SIZE), [filtered, page]);
+
+  const changeQuery = (q: string) => { setQuery(q); setPage(1); };
+  const changeType = (t: TypeFilter) => { setTypeFilter(t); setPage(1); };
+  const goToPage = (p: number) => {
+    setPage(p);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  };
 
   const confirmDelete = async (decision: Decision) => {
     const confirmed = await confirm({
@@ -92,9 +106,11 @@ export default function ResearcherDecisionsScreen() {
         onRetry={reload}
         errorMessage="Couldn't load decisions. Check your connection."
       >
-        <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        <ScrollView ref={scrollRef} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
           <Text style={s.title}>Decisions</Text>
-          <Text style={s.subtitle}>{decisions.length} total</Text>
+          <Text style={s.subtitle}>
+            {filtered.length === decisions.length ? `${decisions.length} total` : `${filtered.length} of ${decisions.length} match`}
+          </Text>
 
           <View style={s.searchRow}>
             <Ionicons name="search-outline" size={19} color={C.textFaint} />
@@ -103,24 +119,24 @@ export default function ResearcherDecisionsScreen() {
               placeholder="Farmer, result, or municipality"
               placeholderTextColor={C.textFaint}
               value={query}
-              onChangeText={setQuery}
+              onChangeText={changeQuery}
             />
             {query.length > 0 && (
-              <TouchableOpacity onPress={() => setQuery('')} hitSlop={8}>
+              <TouchableOpacity onPress={() => changeQuery('')} hitSlop={8}>
                 <Ionicons name="close-circle" size={18} color={C.textFaint} />
               </TouchableOpacity>
             )}
           </View>
 
           <View style={s.filterRow}>
-            <TouchableOpacity style={[s.filterChip, typeFilter === 'all' && s.filterChipActive]} onPress={() => setTypeFilter('all')}>
+            <TouchableOpacity style={[s.filterChip, typeFilter === 'all' && s.filterChipActive]} onPress={() => changeType('all')}>
               <Text style={[s.filterChipText, typeFilter === 'all' && s.filterChipTextActive]}>All</Text>
             </TouchableOpacity>
             {DECISIONS.map(d => (
               <TouchableOpacity
                 key={d.id}
                 style={[s.filterChip, typeFilter === d.id && s.filterChipActive]}
-                onPress={() => setTypeFilter(d.id)}
+                onPress={() => changeType(d.id)}
               >
                 <Text style={[s.filterChipText, typeFilter === d.id && s.filterChipTextActive]}>{d.label}</Text>
               </TouchableOpacity>
@@ -134,7 +150,7 @@ export default function ResearcherDecisionsScreen() {
               subtitle={decisions.length === 0 ? undefined : 'Try a different search term or type filter.'}
             />
           ) : (
-            filtered.map(d => {
+            paged.items.map(d => {
               const farmer = usersById.get(d.user_id);
               const loc = locationsById.get(d.location_id);
               return (
@@ -162,6 +178,33 @@ export default function ResearcherDecisionsScreen() {
                 </View>
               );
             })
+          )}
+
+          {paged.pageCount > 1 && (
+            <View style={s.pager}>
+              <TouchableOpacity
+                style={[s.pagerBtn, paged.page === 1 && s.pagerBtnDisabled]}
+                onPress={() => goToPage(paged.page - 1)}
+                disabled={paged.page === 1}
+                accessibilityLabel="Previous page"
+              >
+                <Ionicons name="chevron-back" size={18} color={C.text} />
+                <Text style={s.pagerBtnText}>Prev</Text>
+              </TouchableOpacity>
+              <View style={s.pagerInfo}>
+                <Text style={s.pagerRange}>{paged.start}–{paged.end} of {paged.total}</Text>
+                <Text style={s.pagerPage}>Page {paged.page} of {paged.pageCount}</Text>
+              </View>
+              <TouchableOpacity
+                style={[s.pagerBtn, paged.page === paged.pageCount && s.pagerBtnDisabled]}
+                onPress={() => goToPage(paged.page + 1)}
+                disabled={paged.page === paged.pageCount}
+                accessibilityLabel="Next page"
+              >
+                <Text style={s.pagerBtnText}>Next</Text>
+                <Ionicons name="chevron-forward" size={18} color={C.text} />
+              </TouchableOpacity>
+            </View>
           )}
 
           <View style={{ height: 20 }} />
@@ -194,6 +237,14 @@ const s = StyleSheet.create({
   rowBottomRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 },
   rowProfit: { fontSize: 13.5, fontWeight: '800', color: C.accent },
   rowDate: { fontSize: 11.5, color: C.textFaint },
+
+  pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 8 },
+  pagerBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 42, paddingHorizontal: 14, borderRadius: 11, borderWidth: 1, borderColor: C.cardBorderStrong },
+  pagerBtnDisabled: { opacity: 0.35 },
+  pagerBtnText: { fontSize: 13.5, fontWeight: '700', color: C.text },
+  pagerInfo: { alignItems: 'center' },
+  pagerRange: { fontSize: 13.5, fontWeight: '700', color: C.text },
+  pagerPage: { fontSize: 11.5, color: C.textFaint, marginTop: 2 },
 
   deleteBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(224,133,133,0.14)' },
 });
