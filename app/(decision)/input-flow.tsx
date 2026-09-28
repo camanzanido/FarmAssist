@@ -6,6 +6,7 @@ import { ClimateColors, Colors, ForecastColors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy } from '@/src/constants/copy';
 import { isForecastComputable } from '@/src/rcda/decisionTree';
+import { formatNumberDisplay, normalizeNumberInput } from '@/src/utils/numberInput';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -87,7 +88,7 @@ export default function DecisionInputFlow() {
   const currentOptionIdx = step === 'data-0' ? 0 : 1;
   const currentOptionData = optionData[currentOptionIdx];
 
-  const NUMBER_PATTERN = /^\d+(\.\d+)?$/;
+  const NUMBER_PATTERN = /^\d+(\.\d*)?$/;
   const isValidNumber = (v: string) => NUMBER_PATTERN.test(v.trim());
   const isValidPrice = (v: string) => isValidNumber(v) && Number(v) > 0;
 
@@ -123,7 +124,7 @@ export default function DecisionInputFlow() {
     setOptionData(prev => {
       const updated = [...prev];
       const newGroup = [...updated[currentOptionIdx][group]];
-      newGroup[index] = value;
+      newGroup[index] = normalizeNumberInput(value);
       updated[currentOptionIdx] = { ...updated[currentOptionIdx], [group]: newGroup };
       return updated;
     });
@@ -132,7 +133,7 @@ export default function DecisionInputFlow() {
   const updateCurrentOptionPrice = (value: string) => {
     setOptionData(prev => {
       const updated = [...prev];
-      updated[currentOptionIdx] = { ...updated[currentOptionIdx], price: value };
+      updated[currentOptionIdx] = { ...updated[currentOptionIdx], price: normalizeNumberInput(value) };
       return updated;
     });
   };
@@ -464,7 +465,7 @@ export default function DecisionInputFlow() {
                 <TextInput
                   style={s.priceInput}
                   keyboardType="numeric"
-                  value={currentOptionData.price}
+                  value={formatNumberDisplay(currentOptionData.price)}
                   onChangeText={updateCurrentOptionPrice}
                   placeholder="18.00"
                   placeholderTextColor={Colors.placeholder}
@@ -486,7 +487,7 @@ export default function DecisionInputFlow() {
                     <TextInput
                       style={[s.scenarioInput, isFieldInvalid(currentOptionData.yield[i]) && s.fieldInvalidBorder]}
                       keyboardType="numeric"
-                      value={currentOptionData.yield[i]}
+                      value={formatNumberDisplay(currentOptionData.yield[i])}
                       onChangeText={v => updateCurrentOptionField('yield', i, v)}
                       placeholder="0"
                       placeholderTextColor={Colors.placeholder}
@@ -494,25 +495,31 @@ export default function DecisionInputFlow() {
                   </View>
                   <View style={s.scenarioField}>
                     <Text style={s.scenarioFieldLabel}>{dataEntryCopy.cost} <Text style={s.scenarioFieldUnit}>{dataEntryCopy.costUnit}</Text></Text>
-                    <TextInput
-                      style={[s.scenarioInput, isFieldInvalid(currentOptionData.cost[i]) && s.fieldInvalidBorder]}
-                      keyboardType="numeric"
-                      value={currentOptionData.cost[i]}
-                      onChangeText={v => updateCurrentOptionField('cost', i, v)}
-                      placeholder="0"
-                      placeholderTextColor={Colors.placeholder}
-                    />
+                    <View style={[s.scenarioInput, s.moneyInputWrap, isFieldInvalid(currentOptionData.cost[i]) && s.fieldInvalidBorder]}>
+                      <Text style={s.moneySymbol}>₱</Text>
+                      <TextInput
+                        style={s.moneyInput}
+                        keyboardType="numeric"
+                        value={formatNumberDisplay(currentOptionData.cost[i])}
+                        onChangeText={v => updateCurrentOptionField('cost', i, v)}
+                        placeholder="0"
+                        placeholderTextColor={Colors.placeholder}
+                      />
+                    </View>
                   </View>
                   <View style={s.scenarioField}>
                     <Text style={s.scenarioFieldLabel}>{dataEntryCopy.addCost} <Text style={s.scenarioFieldUnit}>{dataEntryCopy.addCostUnit}</Text></Text>
-                    <TextInput
-                      style={[s.scenarioInput, isFieldInvalid(currentOptionData.addCost[i]) && s.fieldInvalidBorder]}
-                      keyboardType="numeric"
-                      value={currentOptionData.addCost[i]}
-                      onChangeText={v => updateCurrentOptionField('addCost', i, v)}
-                      placeholder="0"
-                      placeholderTextColor={Colors.placeholder}
-                    />
+                    <View style={[s.scenarioInput, s.moneyInputWrap, isFieldInvalid(currentOptionData.addCost[i]) && s.fieldInvalidBorder]}>
+                      <Text style={s.moneySymbol}>₱</Text>
+                      <TextInput
+                        style={s.moneyInput}
+                        keyboardType="numeric"
+                        value={formatNumberDisplay(currentOptionData.addCost[i])}
+                        onChangeText={v => updateCurrentOptionField('addCost', i, v)}
+                        placeholder="0"
+                        placeholderTextColor={Colors.placeholder}
+                      />
+                    </View>
                   </View>
                 </View>
               </View>
@@ -586,6 +593,9 @@ const s = StyleSheet.create({
     backgroundColor: Colors.bg, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 9,
     paddingVertical: 11, textAlign: 'center', fontSize: 15, fontWeight: '700', color: Colors.ink,
   },
+  moneyInputWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 0, paddingHorizontal: 6 },
+  moneySymbol: { fontSize: 13, color: Colors.inkFaint, marginRight: 2 },
+  moneyInput: { flexShrink: 1, paddingVertical: 11, fontSize: 15, fontWeight: '700', color: Colors.ink, textAlign: 'center' },
   fieldInvalidBorder: { borderColor: Colors.danger, borderWidth: 1.5 },
 
   footer: { position: 'absolute', bottom: 28, left: 24, right: 24 },
