@@ -44,6 +44,13 @@ export default function ResearcherLayout() {
           }}
         />
         <Tabs.Screen
+          name="inputs"
+          options={{
+            title: 'Inputs',
+            tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'options' : 'options-outline'} size={23} color={color} />,
+          }}
+        />
+        <Tabs.Screen
           name="map"
           options={{
             title: 'Map',

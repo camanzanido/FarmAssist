@@ -1,4 +1,5 @@
-import type { DecisionOption, DecisionWithOptions } from '../database/repositories/decisions';
+import type { DecisionWithOptions } from '../database/repositories/decisions';
+import type { OptionClimateFields } from '../database/repositories/options';
 import { transpose2DList } from '../utils/formatters';
 import { expandClimateScenarios, getIncome, getProfit, getYield } from './financials';
 import { getCrossOverAverages, getRevisedProfitWalk } from './interpolations';
@@ -115,14 +116,13 @@ export function collapseScenario7to5(values7: number[]): number[] {
   return [values7[0], values7[2], values7[3], values7[4], values7[6]];
 }
 
-function optionYield7(o: DecisionOption): number[] {
-  return [o.yield_driest, o.yield_very_dry, o.yield_below_avg, o.yield_average, o.yield_above_avg, o.yield_very_good, o.yield_wettest];
-}
-function optionCost7(o: DecisionOption): number[] {
-  return [o.cost_driest, o.cost_very_dry, o.cost_below_avg, o.cost_average, o.cost_above_avg, o.cost_very_good, o.cost_wettest];
-}
-function optionAddCost7(o: DecisionOption): number[] {
-  return [o.add_cost_driest, o.add_cost_very_dry, o.add_cost_below_avg, o.add_cost_average, o.add_cost_above_avg, o.add_cost_very_good, o.add_cost_wettest];
+// The 5 scenarios a user entered, recovered from any row that stores the 7 climate points.
+export function climateFieldsTo5(o: OptionClimateFields): { yield: number[]; cost: number[]; addCost: number[] } {
+  return {
+    yield: collapseScenario7to5([o.yield_driest, o.yield_very_dry, o.yield_below_avg, o.yield_average, o.yield_above_avg, o.yield_very_good, o.yield_wettest]),
+    cost: collapseScenario7to5([o.cost_driest, o.cost_very_dry, o.cost_below_avg, o.cost_average, o.cost_above_avg, o.cost_very_good, o.cost_wettest]),
+    addCost: collapseScenario7to5([o.add_cost_driest, o.add_cost_very_dry, o.add_cost_below_avg, o.add_cost_average, o.add_cost_above_avg, o.add_cost_very_good, o.add_cost_wettest]),
+  };
 }
 
 /** Rebuilds the original RCDA inputs from a saved decision, or null if it is incomplete. */
@@ -131,9 +131,9 @@ export function decisionToRcdaInputs(decision: DecisionWithOptions): RcdaInputs 
   if (options.length !== 2) return null;
   return {
     optionNames: options.map((o) => o.option_name),
-    yield: options.map((o) => collapseScenario7to5(optionYield7(o))),
-    cost: options.map((o) => collapseScenario7to5(optionCost7(o))),
-    addCost: options.map((o) => collapseScenario7to5(optionAddCost7(o))),
+    yield: options.map((o) => climateFieldsTo5(o).yield),
+    cost: options.map((o) => climateFieldsTo5(o).cost),
+    addCost: options.map((o) => climateFieldsTo5(o).addCost),
     price: options.map((o) => o.price),
     climate: [decision.climate_driest, decision.climate_mid, decision.climate_wettest],
   };

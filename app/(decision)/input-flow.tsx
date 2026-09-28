@@ -1,12 +1,16 @@
+import { useAuth } from '@/src/auth/AuthContext';
+import { PredefinedPicker } from '@/src/components/decision/predefined-picker';
 import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
 import { ClimateColors, Colors, ForecastColors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { climateCopy, dataEntryCopy, namingCopy } from '@/src/constants/copy';
+import { climateCopy, dataEntryCopy, namingCopy, predefinedCopy } from '@/src/constants/copy';
+import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { isForecastComputable } from '@/src/rcda/decisionTree';
 import { formatNumberDisplay, normalizeNumberInput } from '@/src/utils/numberInput';
+import { PredefinedOption, predefinedToFormValues } from '@/src/utils/predefinedOptions';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -28,7 +32,9 @@ const CLIMATE_COLOR_LIST = [
 
 export default function DecisionInputFlow() {
   const router = useRouter();
-  const { confirm } = useFeedback();
+  const { confirm, notify } = useFeedback();
+  const { user } = useAuth();
+  const { connected } = useSyncStatus();
   const { decisionType } = useLocalSearchParams<{ decisionType: DecisionType }>();
 
   useEffect(() => {
@@ -36,6 +42,8 @@ export default function DecisionInputFlow() {
   }, [decisionType]);
 
   const [names, setNames] = useState<string[]>(['', '']);
+  const [pickerFor, setPickerFor] = useState<number | null>(null);
+  const [loadedFrom, setLoadedFrom] = useState<(string | null)[]>([null, null]);
   const placeholders = decisionType ? PLACEHOLDERS[decisionType] : undefined;
   const namesFilled = names[0].trim().length > 0 && names[1].trim().length > 0;
   const namesDuplicate = namesFilled && names[0].trim().toLowerCase() === names[1].trim().toLowerCase();
@@ -128,6 +136,19 @@ export default function DecisionInputFlow() {
       updated[currentOptionIdx] = { ...updated[currentOptionIdx], [group]: newGroup };
       return updated;
     });
+  };
+
+  const applyPredefined = (index: number, option: PredefinedOption) => {
+    const values = predefinedToFormValues(option);
+    setNames(prev => { const next = [...prev]; next[index] = values.name; return next; });
+    setOptionData(prev => {
+      const next = [...prev];
+      next[index] = { yield: values.yield, cost: values.cost, addCost: values.addCost, price: values.price };
+      return next;
+    });
+    setLoadedFrom(prev => { const next = [...prev]; next[index] = option.id; return next; });
+    setPickerFor(null);
+    notify.success(predefinedCopy.loaded(values.name), predefinedCopy.loadedBody);
   };
 
   const updateCurrentOptionPrice = (value: string) => {
@@ -251,10 +272,41 @@ export default function DecisionInputFlow() {
                     onChangeText={v => setNames(prev => { const updated = [...prev]; updated[i] = v; return updated; })}
                     returnKeyType="next"
                   />
+                  {user && (
+                    <View style={s.useSavedRow}>
+                      <TouchableOpacity
+                        style={[s.useSavedBtn, !connected && s.useSavedBtnDisabled]}
+                        onPress={() => setPickerFor(i)}
+                        disabled={!connected}
+                        accessibilityRole="button"
+                      >
+                        <Ionicons name={connected ? 'download-outline' : 'cloud-offline-outline'} size={16} color={connected ? Colors.accent : Colors.inkFaint} />
+                        <Text style={[s.useSavedText, !connected && s.useSavedTextDisabled]}>
+                          {connected ? predefinedCopy.useSaved : predefinedCopy.goOnline}
+                        </Text>
+                      </TouchableOpacity>
+                      {loadedFrom[i] && (
+                        <View style={s.loadedTag}>
+                          <Ionicons name="checkmark" size={13} color={Colors.accent} />
+                          <Text style={s.loadedTagText}>{predefinedCopy.loadedTag}</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
                 </View>
               ))}
             </View>
             {namesDuplicate && <Text style={s.errorText}>{namingCopy.duplicateNames}</Text>}
+
+            {user && decisionType && (
+              <PredefinedPicker
+                visible={pickerFor !== null}
+                decisionType={decisionType}
+                userId={user.id}
+                onPick={option => pickerFor !== null && applyPredefined(pickerFor, option)}
+                onClose={() => setPickerFor(null)}
+              />
+            )}
 
             <View style={s.helperRow}>
               <Ionicons name="information-circle-outline" size={19} color={Colors.inkFaint} />
@@ -563,6 +615,13 @@ const s = StyleSheet.create({
   badge: { alignSelf: 'flex-start', backgroundColor: Colors.accentTint, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 12 },
   badgeText: { fontSize: 13, fontWeight: '700', color: Colors.ink, letterSpacing: 0.4 },
   namingInput: { fontSize: 19, fontWeight: '700', color: Colors.ink, paddingVertical: 8, borderBottomWidth: 2, borderBottomColor: Colors.ink },
+  useSavedRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  useSavedBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.accentTintStrong, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  useSavedBtnDisabled: { borderColor: Colors.border, backgroundColor: Colors.bg },
+  useSavedText: { fontSize: 13, fontWeight: '700', color: Colors.accent },
+  useSavedTextDisabled: { color: Colors.inkFaint, fontWeight: '600' },
+  loadedTag: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  loadedTagText: { fontSize: 12, fontWeight: '600', color: Colors.accent },
   helperRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 18, paddingHorizontal: 4 },
   helperText: { flex: 1, fontSize: 13, color: Colors.inkFaint, lineHeight: 18 },
 

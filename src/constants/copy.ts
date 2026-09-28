@@ -20,6 +20,21 @@ export const namingCopy = {
   discardConfirm: 'Discard',
 };
 
+export const predefinedCopy = {
+  useSaved: 'Use saved values',
+  goOnline: 'Go online to use saved values',
+  pickerTitle: 'Saved values',
+  pickerSubtitle: 'Values prepared by researchers. You can still change them before continuing.',
+  allProvinces: 'All provinces',
+  empty: 'No saved values for this decision type yet.',
+  loadError: "Couldn't load saved values. Check your connection.",
+  retry: 'Retry',
+  close: 'Close',
+  loaded: (name: string) => `Loaded ${name}`,
+  loadedBody: 'Yield, cost and price are filled in. Check them on the next steps.',
+  loadedTag: 'Saved values loaded',
+};
+
 export const dataEntryCopy = {
   stepContext: (optionName: string) => optionName,
   price: 'Selling price',
