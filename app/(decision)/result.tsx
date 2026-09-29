@@ -2,9 +2,9 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { DecisionResultView, heroTopStyles } from '@/src/components/decision/decision-result-view';
 import { Colors } from '@/src/constants/colors';
 import { resultCopy as copy } from '@/src/constants/copy';
-import { createDecision } from '@/src/database/repositories/decisions';
+import { createDecision, OptionSnapshot } from '@/src/database/repositories/decisions';
 import { getLocationsByUser } from '@/src/database/repositories/locations';
-import { buildOptionClimateFields, Option } from '@/src/database/repositories/options';
+import { buildOptionClimateFields } from '@/src/database/climateFields';
 import { cltlgy } from '@/src/rcda/constants';
 import { computeRcda, RcdaInputs } from '@/src/rcda/decisionTree';
 import { expandScenario5to7, getcltlgyRevised } from '@/src/rcda/financials';
@@ -86,14 +86,9 @@ export default function ResultScreen() {
   const [saveError, setSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const buildOptionSnapshot = (index: number, userId: string, locationId: string): Option => ({
-    id: '',
+  const buildOptionSnapshot = (index: number): OptionSnapshot => ({
     option_name: optionNames[index],
-    decision_type: decisionType,
     price: priceData[index],
-    location_id: locationId,
-    user_id: userId,
-    created_at: new Date().toISOString(),
     ...buildOptionClimateFields(
       expandScenario5to7(yieldData[index]),
       expandScenario5to7(costData[index]),
@@ -120,8 +115,8 @@ export default function ResultScreen() {
           climate_mid: climate[1],
           climate_wettest: climate[2],
         },
-        firstOption: buildOptionSnapshot(0, userId, locationId),
-        secondOption: buildOptionSnapshot(1, userId, locationId),
+        firstOption: buildOptionSnapshot(0),
+        secondOption: buildOptionSnapshot(1),
       });
       setSaveError(false);
     } catch (err) {

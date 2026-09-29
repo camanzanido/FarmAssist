@@ -4,8 +4,8 @@ jest.mock('../../src/database/powersync/powersync', () => ({ db: fakeDb }));
 jest.mock('../../src/database/repositories/utils', () => require('../helpers/fake-generate-id'));
 
 import { expandScenario5to7 } from '../../src/rcda/financials';
-import { buildOptionClimateFields, Option } from '../../src/database/repositories/options';
-import { createDecision, getDecision } from '../../src/database/repositories/decisions';
+import { buildOptionClimateFields } from '../../src/database/climateFields';
+import { createDecision, getDecision, OptionSnapshot } from '../../src/database/repositories/decisions';
 
 beforeAll(initFakeDb);
 afterEach(resetFakeDb);
@@ -30,15 +30,10 @@ const CLIMATE = [90, 5, 5];
 const DECISION_TYPE = 'crop_choice';
 
 // Mirrors buildOptionSnapshot() in app/(decision)/result.tsx exactly.
-function buildOptionSnapshot(index: number, userId: string, locationId: string): Option {
+function buildOptionSnapshot(index: number): OptionSnapshot {
   return {
-    id: '',
     option_name: OPTION_NAMES[index],
-    decision_type: DECISION_TYPE,
     price: PRICE_BY_OPTION[index],
-    location_id: locationId,
-    user_id: userId,
-    created_at: new Date().toISOString(),
     ...buildOptionClimateFields(
       expandScenario5to7(YIELD_BY_OPTION[index]),
       expandScenario5to7(COST_BY_OPTION[index]),
@@ -63,8 +58,8 @@ describe('result screen persistence flow', () => {
         climate_mid: CLIMATE[1],
         climate_wettest: CLIMATE[2],
       },
-      firstOption: buildOptionSnapshot(0, userId, locationId),
-      secondOption: buildOptionSnapshot(1, userId, locationId),
+      firstOption: buildOptionSnapshot(0),
+      secondOption: buildOptionSnapshot(1),
     });
 
     const saved = await getDecision(id);
@@ -104,8 +99,8 @@ describe('result screen persistence flow', () => {
         climate_mid: CLIMATE[1],
         climate_wettest: CLIMATE[2],
       },
-      firstOption: buildOptionSnapshot(0, '', ''),
-      secondOption: buildOptionSnapshot(1, '', ''),
+      firstOption: buildOptionSnapshot(0),
+      secondOption: buildOptionSnapshot(1),
     });
 
     const saved = await getDecision(id);
@@ -129,8 +124,8 @@ describe('result screen persistence flow', () => {
         climate_mid: 5,
         climate_wettest: 5,
       },
-      firstOption: buildOptionSnapshot(0, userId, 'loc-1'),
-      secondOption: buildOptionSnapshot(1, userId, 'loc-1'),
+      firstOption: buildOptionSnapshot(0),
+      secondOption: buildOptionSnapshot(1),
     });
 
     const decisions = await getDecisionsByUser(userId);

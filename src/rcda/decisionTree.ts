@@ -1,5 +1,5 @@
 import type { DecisionWithOptions } from '../database/repositories/decisions';
-import type { OptionClimateFields } from '../database/repositories/options';
+import type { OptionClimateFields } from '../database/climateFields';
 import { transpose2DList } from '../utils/formatters';
 import { expandClimateScenarios, getIncome, getProfit, getYield } from './financials';
 import { getCrossOverAverages, getRevisedProfitWalk } from './interpolations';

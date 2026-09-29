@@ -1,15 +1,9 @@
-import { Decision } from '../../src/database/repositories/decisions';
-import { Option } from '../../src/database/repositories/options';
+import { Decision, OptionSnapshot } from '../../src/database/repositories/decisions';
 
-export function makeOption(overrides: Partial<Option> = {}): Option {
+export function makeOption(overrides: Partial<OptionSnapshot> = {}): OptionSnapshot {
   return {
-    id: 'option-fixture-id',
     option_name: 'Cabbage',
-    decision_type: 'crop_choice',
     price: 70,
-    location_id: 'loc-1',
-    user_id: 'user-1',
-    created_at: new Date().toISOString(),
 
     cost_driest: 20000,
     cost_very_dry: 20000,

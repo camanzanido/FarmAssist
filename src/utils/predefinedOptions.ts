@@ -1,4 +1,4 @@
-import { buildOptionClimateFields, type OptionClimateFields } from '../database/repositories/options';
+import { buildOptionClimateFields, type OptionClimateFields } from '../database/climateFields';
 import { climateFieldsTo5 } from '../rcda/decisionTree';
 import { expandScenario5to7 } from '../rcda/financials';
 

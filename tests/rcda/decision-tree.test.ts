@@ -3,8 +3,8 @@ import { fakeDb, closeFakeDb, initFakeDb, resetFakeDb } from '../helpers/fake-db
 jest.mock('../../src/database/powersync/powersync', () => ({ db: fakeDb }));
 jest.mock('../../src/database/repositories/utils', () => require('../helpers/fake-generate-id'));
 
-import { createDecision, getDecision } from '../../src/database/repositories/decisions';
-import { buildOptionClimateFields, Option } from '../../src/database/repositories/options';
+import { createDecision, getDecision, OptionSnapshot } from '../../src/database/repositories/decisions';
+import { buildOptionClimateFields } from '../../src/database/climateFields';
 import {
   buildDecisionTree,
   collapseScenario7to5,
@@ -142,14 +142,9 @@ describe('saved decisions', () => {
 
   it('a decision read back from the database recomputes to the same result', async () => {
     // Mirrors buildOptionSnapshot() in app/(decision)/result.tsx.
-    const snapshot = (i: number): Option => ({
-      id: '',
+    const snapshot = (i: number): OptionSnapshot => ({
       option_name: EXAMPLE.optionNames[i],
-      decision_type: 'crop_choice',
       price: EXAMPLE.price[i],
-      location_id: 'loc-1',
-      user_id: 'user-1',
-      created_at: new Date().toISOString(),
       ...buildOptionClimateFields(
         expandScenario5to7(EXAMPLE.yield[i]),
         expandScenario5to7(EXAMPLE.cost[i]),

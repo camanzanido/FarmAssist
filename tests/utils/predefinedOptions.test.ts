@@ -3,7 +3,7 @@ import { fakeDb } from '../helpers/fake-db';
 jest.mock('../../src/database/powersync/powersync', () => ({ db: fakeDb }));
 jest.mock('../../src/database/repositories/utils', () => require('../helpers/fake-generate-id'));
 
-import type { OptionClimateFields } from '../../src/database/repositories/options';
+import type { OptionClimateFields } from '../../src/database/climateFields';
 import { computeRcda } from '../../src/rcda/decisionTree';
 import {
   climateRowToFormValues,

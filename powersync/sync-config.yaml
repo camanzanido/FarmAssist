@@ -16,7 +16,6 @@ streams:
       - SELECT * FROM users WHERE id = auth.user_id()
       - SELECT * FROM decisions WHERE user_id = auth.user_id()
       - SELECT * FROM user_activity_summary WHERE user_id = auth.user_id()
-      - SELECT * FROM options WHERE user_id = auth.user_id()
       - SELECT * FROM reports WHERE researcher_id = auth.user_id()
       - SELECT * FROM locations WHERE user_id = auth.user_id()
       - SELECT * FROM decision_options

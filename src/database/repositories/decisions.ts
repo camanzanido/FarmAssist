@@ -1,7 +1,7 @@
 // db/decisions.ts
 import { Transaction } from '@powersync/react-native';
 import { db } from '../powersync/powersync';
-import { Option, OptionClimateFields } from './options';
+import type { OptionClimateFields } from '../climateFields';
 import { generateId } from './utils';
 
 export interface Decision {
@@ -28,6 +28,9 @@ export interface DecisionOption extends OptionClimateFields {
 export interface DecisionWithOptions extends Decision {
   options: DecisionOption[];
 }
+
+// What the wizard hands over for each option; createDecision adds the ids and slot.
+export type OptionSnapshot = Omit<DecisionOption, 'id' | 'decision_id' | 'option_slot'>;
 
 // ---------------------------------------------------------------------------
 // Synced tables vs. local staging tables.
@@ -88,46 +91,15 @@ async function insertRow<T extends object>(
   );
 }
 
-// Snapshot an Option row into a DecisionOption insert payload
-function snapshotOption(
-  decisionId: string,
-  slot: number,
-  option: Option
-): Omit<DecisionOption, 'id'> {
-  return {
-    decision_id: decisionId,
-    option_slot: slot,
-    option_name: option.option_name,
-    price: option.price,
-    cost_driest: option.cost_driest,
-    cost_very_dry: option.cost_very_dry,
-    cost_below_avg: option.cost_below_avg,
-    cost_average: option.cost_average,
-    cost_above_avg: option.cost_above_avg,
-    cost_very_good: option.cost_very_good,
-    cost_wettest: option.cost_wettest,
-    add_cost_driest: option.add_cost_driest,
-    add_cost_very_dry: option.add_cost_very_dry,
-    add_cost_below_avg: option.add_cost_below_avg,
-    add_cost_average: option.add_cost_average,
-    add_cost_above_avg: option.add_cost_above_avg,
-    add_cost_very_good: option.add_cost_very_good,
-    add_cost_wettest: option.add_cost_wettest,
-    yield_driest: option.yield_driest,
-    yield_very_dry: option.yield_very_dry,
-    yield_below_avg: option.yield_below_avg,
-    yield_average: option.yield_average,
-    yield_above_avg: option.yield_above_avg,
-    yield_very_good: option.yield_very_good,
-    yield_wettest: option.yield_wettest,
-  };
+function snapshotOption(decisionId: string, slot: number, option: OptionSnapshot): Omit<DecisionOption, 'id'> {
+  return { ...option, decision_id: decisionId, option_slot: slot };
 }
 
 // Main entry point: save a full decision with its two option snapshots atomically
 export async function createDecision(params: {
   decision: Omit<Decision, 'id' | 'datetime'>;
-  firstOption: Option;
-  secondOption: Option;
+  firstOption: OptionSnapshot;
+  secondOption: OptionSnapshot;
 }): Promise<string> {
   const decisionId = generateId();
   const datetime = new Date().toISOString();

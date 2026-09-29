@@ -61,40 +61,6 @@ export const AppSchema = new Schema({
     user_id: column.text,
   }),
 
-  // Reusable option profiles (user-configured templates)
-  options: new Table({
-    option_name: column.text,
-    decision_type: column.text,
-    price: column.real,
-    location_id: column.text,
-    user_id: column.text,
-    created_at: column.text,
-
-    cost_driest: column.real,
-    cost_very_dry: column.real,
-    cost_below_avg: column.real,
-    cost_average: column.real,
-    cost_above_avg: column.real,
-    cost_very_good: column.real,
-    cost_wettest: column.real,
-
-    add_cost_driest: column.real,
-    add_cost_very_dry: column.real,
-    add_cost_below_avg: column.real,
-    add_cost_average: column.real,
-    add_cost_above_avg: column.real,
-    add_cost_very_good: column.real,
-    add_cost_wettest: column.real,
-
-    yield_driest: column.real,
-    yield_very_dry: column.real,
-    yield_below_avg: column.real,
-    yield_average: column.real,
-    yield_above_avg: column.real,
-    yield_very_good: column.real,
-    yield_wettest: column.real,
-  }),
-
   decisions: new Table(decisionColumns()),
 
   // Immutable snapshot of each option used in a decision
