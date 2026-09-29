@@ -120,10 +120,12 @@ export const decisionDetailCopy = {
 };
 
 export const homeCopy = {
-  greeting: (name: string) => `Hi, ${name}`,
-  offlinePill: 'Offline',
-  heading: 'What decision do\nyou need today?',
-  subtitle: "Pick a question. We'll answer it using your climate data.",
+  greeting: (name?: string) => (name ? `Hi, ${name}!` : 'Hi, Farmer!'),
+  offlineLabel: 'Offline',
+  headingBefore: 'What ',
+  headingAccent: 'decision',
+  headingAfter: ' do\nyou need today?',
+  subtitle: "Pick a decision problem. We'll answer it using your climate data.",
   lastDecisionHeading: 'LAST DECISION',
   weatherPlaceholder: 'Weather data unavailable',
   loadErrorTitle: "Couldn't load your recent decision.",

@@ -94,3 +94,9 @@ export const ForecastColors = {
   averageText: '#43391F',
   wet: ClimateColors.above_ave,
 } as const;
+
+// Brand gradient stops, left to right.
+export const BrandGradient = ['#006D5B', '#0F7E66', '#58D09B'] as const;
+
+export const brandGradientCss = (angle = 90) =>
+  `linear-gradient(${angle}deg, ${BrandGradient[0]} 0%, ${BrandGradient[1]} 50%, ${BrandGradient[2]} 100%)`;
