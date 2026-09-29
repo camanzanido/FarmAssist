@@ -174,7 +174,41 @@ export const profileCopy = {
   createAccount: 'Create Account',
   accountType: 'Account type',
   about: 'About FarmAssist',
+  viewIntro: 'View introduction',
 };
+
+export const onboardingCopy = {
+  skip: 'Skip',
+  next: 'Next',
+  getStarted: 'Get started',
+  done: 'Done',
+  haveAccount: 'Already have an account?',
+  signIn: 'Sign in',
+  close: 'Close introduction',
+  pageLabel: (page: number, total: number) => `Page ${page} of ${total}`,
+  slides: [
+    {
+      key: 'welcome',
+      title: 'Welcome to FarmAssist',
+      body: 'Mobile-based Decision Support System for crop selection, crop protection, and harvest decisions.',
+    },
+    {
+      key: 'compare',
+      title: 'Compare two options',
+      body: 'Which crop to plant, whether to protect a crop, or whether to harvest now or wait. Enter the yield, cost, and price for each option, and FarmAssist recommends the one likely to earn more.',
+    },
+    {
+      key: 'offline',
+      title: 'Works without internet',
+      body: 'Everything is calculated and saved right on your phone. You can use FarmAssist in the field with no signal.',
+    },
+    {
+      key: 'sync',
+      title: 'Sign in when you are ready',
+      body: 'An account backs up your decisions to the cloud and lets you load saved values prepared by researchers. You can start without one.',
+    },
+  ],
+} as const;
 
 export const aboutCopy = {
   title: 'About',

@@ -63,9 +63,14 @@ export default function ResearcherProfileScreen() {
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Account type</Text>
             <Text style={s.rowValue}>Researcher</Text>
           </View>
-          <TouchableOpacity style={s.row} onPress={() => router.push('/about')} activeOpacity={0.7} accessibilityRole="button">
+          <TouchableOpacity style={[s.row, s.rowBorder]} onPress={() => router.push('/about')} activeOpacity={0.7} accessibilityRole="button">
             <Ionicons name="information-circle-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.about}</Text>
+            <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
+          </TouchableOpacity>
+          <TouchableOpacity style={s.row} onPress={() => router.push('/onboarding?replay=1')} activeOpacity={0.7} accessibilityRole="button">
+            <Ionicons name="book-outline" size={19} color={C.textSoft} />
+            <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.viewIntro}</Text>
             <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
           </TouchableOpacity>
         </View>

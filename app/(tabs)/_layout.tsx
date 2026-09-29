@@ -1,12 +1,18 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { HapticTab } from '@/src/components/ui/haptic-tab';
 import { Colors } from '@/src/constants/colors';
+import { useOnboarding } from '@/src/onboarding/OnboardingContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 
 export default function TabLayout() {
   const { isResearcher } = useAuth();
+  const { status: onboarding } = useOnboarding();
+
+  // Checked before the researcher redirect so every account sees the intro on first launch.
+  if (onboarding === 'loading') return null;
+  if (onboarding === 'pending') return <Redirect href="/onboarding" />;
   if (isResearcher) return <Redirect href="/researcher/dashboard" />;
 
   return (

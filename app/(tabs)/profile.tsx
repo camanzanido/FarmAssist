@@ -117,6 +117,10 @@ export default function ProfileScreen() {
             <Ionicons name="information-circle-outline" size={17} color={Colors.inkSoft} />
             <Text style={s.aboutLinkText}>{copy.about}</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={[s.aboutLink, { marginTop: 0 }]} onPress={() => router.push('/onboarding?replay=1')} accessibilityRole="link">
+            <Ionicons name="book-outline" size={17} color={Colors.inkSoft} />
+            <Text style={s.aboutLinkText}>{copy.viewIntro}</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
@@ -205,9 +209,14 @@ export default function ProfileScreen() {
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.accountType}</Text>
               <Text style={s.listRowValue}>Farmer</Text>
             </View>
-            <TouchableOpacity style={s.listRow} onPress={() => router.push('/about')} activeOpacity={0.7} accessibilityRole="button">
+            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => router.push('/about')} activeOpacity={0.7} accessibilityRole="button">
               <Ionicons name="information-circle-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.about}</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
+            </TouchableOpacity>
+            <TouchableOpacity style={s.listRow} onPress={() => router.push('/onboarding?replay=1')} activeOpacity={0.7} accessibilityRole="button">
+              <Ionicons name="book-outline" size={20} color={Colors.ink} />
+              <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.viewIntro}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </TouchableOpacity>
           </View>
