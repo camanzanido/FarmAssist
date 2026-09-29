@@ -113,6 +113,10 @@ export default function ProfileScreen() {
           <TouchableOpacity style={s.secondaryBtn} onPress={() => router.push('/(auth)/register')} activeOpacity={0.85}>
             <Text style={s.secondaryBtnText}>{copy.createAccount}</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={s.aboutLink} onPress={() => router.push('/about')} accessibilityRole="link">
+            <Ionicons name="information-circle-outline" size={17} color={Colors.inkSoft} />
+            <Text style={s.aboutLinkText}>{copy.about}</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
@@ -196,11 +200,16 @@ export default function ProfileScreen() {
           )}
 
           <View style={s.listCard}>
-            <View style={s.listRow}>
+            <View style={[s.listRow, s.listRowBorder]}>
               <Ionicons name="shield-checkmark-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.accountType}</Text>
               <Text style={s.listRowValue}>Farmer</Text>
             </View>
+            <TouchableOpacity style={s.listRow} onPress={() => router.push('/about')} activeOpacity={0.7} accessibilityRole="button">
+              <Ionicons name="information-circle-outline" size={20} color={Colors.ink} />
+              <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.about}</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity onPress={handleLogout} style={s.logoutRow}>
@@ -222,6 +231,8 @@ const s = StyleSheet.create({
   primaryBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
   secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 14, paddingVertical: 16, width: '100%', alignItems: 'center' },
   secondaryBtnText: { color: Colors.ink, fontWeight: '700', fontSize: 15 },
+  aboutLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 22, paddingVertical: 10, paddingHorizontal: 12 },
+  aboutLinkText: { color: Colors.inkSoft, fontWeight: '600', fontSize: 14 },
 
   content: { ...contentColumn, padding: 22, paddingTop: 12, paddingBottom: 40 },
   profileHeader: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },

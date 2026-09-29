@@ -1,0 +1,130 @@
+import { Colors } from '@/src/constants/colors';
+import { aboutCopy as copy } from '@/src/constants/copy';
+import { contentColumn } from '@/src/constants/layout';
+import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { Image, Linking, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Read from app.json so the screen never drifts from the build's real version.
+const APP_VERSION = Constants.expoConfig?.version ?? '—';
+
+function Section({ heading, body }: { heading: string; body: string }) {
+  return (
+    <>
+      <Text style={s.sectionHeading}>{heading}</Text>
+      <View style={s.card}>
+        <Text style={s.body}>{body}</Text>
+      </View>
+    </>
+  );
+}
+
+export default function AboutScreen() {
+  const router = useRouter();
+
+  function handleContact() {
+    Linking.openURL(`mailto:${copy.contactEmail}`).catch(err => {
+      console.warn('Could not open mail app:', err);
+    });
+  }
+
+  return (
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
+      <View style={s.topBar}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={s.backBtn}
+          accessibilityRole="button"
+          accessibilityLabel={copy.back}
+        >
+          <Ionicons name="arrow-back" size={22} color={Colors.ink} />
+        </TouchableOpacity>
+        <Text style={s.topTitle} accessibilityRole="header">{copy.title}</Text>
+        <View style={s.backBtn} />
+      </View>
+
+      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        <View style={s.hero}>
+          <Image
+            source={require('@/assets/images/FarmAssist-logo.png')}
+            style={s.logo}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+          />
+          <Text style={s.appName}>{copy.appName}</Text>
+          <Text style={s.tagline}>{copy.tagline}</Text>
+          <View style={s.versionPill}>
+            <Text style={s.versionText}>{copy.version(APP_VERSION)}</Text>
+          </View>
+        </View>
+
+        <Section heading={copy.whatHeading} body={copy.whatBody} />
+        <Section heading={copy.rcdaHeading} body={copy.rcdaBody} />
+        <Section heading={copy.originHeading} body={copy.originBody} />
+
+        <Text style={s.sectionHeading}>{copy.creditsHeading}</Text>
+        <View style={s.card}>
+          {copy.credits.map((c, i) => (
+            <View key={c.label} style={[s.row, i < copy.credits.length - 1 && s.rowBorder]}>
+              <View style={s.iconWrap}>
+                <Ionicons name={c.icon} size={18} color={Colors.ink} />
+              </View>
+              <Text style={s.rowLabel}>{c.label}</Text>
+              <Text style={s.rowValue}>{c.value}</Text>
+            </View>
+          ))}
+        </View>
+
+        <Text style={s.sectionHeading}>{copy.contactHeading}</Text>
+        <View style={s.card}>
+          <TouchableOpacity style={s.row} onPress={handleContact} activeOpacity={0.7} accessibilityRole="link">
+            <View style={s.iconWrap}>
+              <Ionicons name="mail-outline" size={18} color={Colors.ink} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[s.rowLabel, { flex: 0 }]}>{copy.contactLabel}</Text>
+              <Text style={s.rowSub}>{copy.contactEmail}</Text>
+            </View>
+            <Ionicons name="open-outline" size={17} color={Colors.inkFaint} />
+          </TouchableOpacity>
+        </View>
+
+        <Text style={s.footer}>{copy.footer}</Text>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.bg },
+
+  topBar: { ...contentColumn, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 6 },
+  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  topTitle: { fontSize: 17, fontWeight: '800', color: Colors.ink },
+
+  content: { ...contentColumn, padding: 22, paddingTop: 8, paddingBottom: 40 },
+
+  hero: { alignItems: 'center', marginBottom: 26 },
+  logo: { width: 96, height: 96, marginBottom: 12 },
+  appName: { fontSize: 26, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
+  tagline: { fontSize: 14, color: Colors.inkSoft, textAlign: 'center', marginTop: 4, lineHeight: 20 },
+  versionPill: { marginTop: 12, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+  versionText: { fontSize: 12, fontWeight: '700', color: Colors.accent },
+
+  sectionHeading: { fontSize: 12, fontWeight: '700', letterSpacing: 0.9, color: Colors.inkFaint, marginBottom: 10 },
+  card: { backgroundColor: Colors.surface, borderRadius: 16, overflow: 'hidden', marginBottom: 20 },
+  body: { fontSize: 14.5, color: Colors.inkMuted, lineHeight: 21, padding: 16 },
+
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, minHeight: 56 },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.divider },
+  iconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+  rowLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.ink },
+  rowValue: { fontSize: 14, color: Colors.inkFaint, maxWidth: '50%', textAlign: 'right' },
+  rowSub: { fontSize: 13, color: Colors.inkFaint, marginTop: 2 },
+
+  footer: { fontSize: 12.5, color: Colors.inkDim, textAlign: 'center', marginTop: 4 },
+});

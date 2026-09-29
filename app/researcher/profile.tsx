@@ -1,8 +1,10 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherColors as C } from '@/src/constants/colors';
+import { profileCopy } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +18,7 @@ function initials(name: string): string {
 export default function ResearcherProfileScreen() {
   const { user, signOut } = useAuth();
   const { confirm } = useFeedback();
+  const router = useRouter();
 
   async function handleLogout() {
     const confirmed = await confirm({
@@ -55,11 +58,16 @@ export default function ResearcherProfileScreen() {
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Email</Text>
             <Text style={s.rowValue}>{user.email}</Text>
           </View>
-          <View style={s.row}>
+          <View style={[s.row, s.rowBorder]}>
             <Ionicons name="shield-checkmark-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Account type</Text>
             <Text style={s.rowValue}>Researcher</Text>
           </View>
+          <TouchableOpacity style={s.row} onPress={() => router.push('/about')} activeOpacity={0.7} accessibilityRole="button">
+            <Ionicons name="information-circle-outline" size={19} color={C.textSoft} />
+            <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.about}</Text>
+            <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity onPress={handleLogout} style={s.logoutRow} activeOpacity={0.8}>

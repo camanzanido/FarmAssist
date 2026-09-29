@@ -173,7 +173,31 @@ export const profileCopy = {
   signIn: 'Sign In',
   createAccount: 'Create Account',
   accountType: 'Account type',
+  about: 'About FarmAssist',
 };
+
+export const aboutCopy = {
+  title: 'About',
+  back: 'Back',
+  appName: 'FarmAssist',
+  tagline: 'Climate-smart decisions for Filipino farmers',
+  version: (v: string) => `Version ${v}`,
+  whatHeading: 'WHAT IT DOES',
+  whatBody: 'FarmAssist helps farmers and extension workers choose between two farming options, such as which crop to plant, whether to protect a crop, or whether to harvest now or wait. You enter the expected yields, prices, and costs, and the app recommends the option likely to earn more under the coming season\'s climate. It works fully offline, and your decisions sync to the cloud once you sign in.',
+  rcdaHeading: 'THE RCDA MODEL',
+  rcdaBody: 'Recommendations come from Rapid Climate Decision Analysis (RCDA). It combines the seasonal rainfall forecast (the chance of a below-normal, near-normal, or above-normal season) with the profit of each option under dry, average, and wet conditions. It then compares the expected returns and shows the recommended option, the estimated profit difference, and a decision tree of possible outcomes. It is created from the prototype Rapid Climate Decision Analysis version 3.2.',
+  originHeading: 'ORIGIN',
+  originBody: 'This mobile application is developed through the collaborative project between the UPLB Interdisciplinary Studies Center for Integrated Natural Resources and Environment Management (UPLB-INREM) and the Institute of Computer Science (ICS) of the University of the Philippines Los Baños (UPLB).',
+  creditsHeading: 'PROJECT',
+  credits: [
+    { icon: 'school-outline', label: 'Institution', value: 'UPLB-INREM & UPLB-ICS' },
+    { icon: 'person-outline', label: 'Developer', value: 'Clarence Manzanido\nUPLB BSCS Student' },
+  ],
+  contactHeading: 'CONTACT',
+  contactLabel: 'Send feedback',
+  contactEmail: 'camanzanido@up.edu.ph',
+  footer: 'Made for farmers and extension workers.',
+} as const;
 
 export const authCopy = {
   brand: 'FarmAssist',
