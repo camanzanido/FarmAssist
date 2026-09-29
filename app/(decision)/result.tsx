@@ -14,7 +14,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Share,
   StatusBar,
   StyleSheet,
   Text, TouchableOpacity,
@@ -162,14 +161,6 @@ export default function ResultScreen() {
 
   const startOver = () => router.dismissTo('/(tabs)');
 
-  const handleShare = () => {
-    if (!result) return;
-    const winner = optionNames[result.recommendedOption];
-    Share.share({
-      message: `FarmAssist: ${winner} is the better choice — expected +₱${result.profitIncrease.toLocaleString()}/ha over ${optionNames[1 - result.recommendedOption]}.`,
-    }).catch(() => {});
-  };
-
   const renderFallback = (message: string) => (
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
@@ -252,9 +243,6 @@ export default function ResultScreen() {
                 <Ionicons name="home-outline" size={16} color={Colors.ink} />
                 <Text style={s.newComparisonText}>{copy.newComparison}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={s.shareBtn} onPress={handleShare} activeOpacity={0.8}>
-                <Ionicons name="share-outline" size={20} color={Colors.ink} />
-              </TouchableOpacity>
             </View>
           }
         />
@@ -299,10 +287,6 @@ const s = StyleSheet.create({
     height: 56, borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
   newComparisonText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
-  shareBtn: {
-    width: 56, height: 56, borderRadius: 16, backgroundColor: Colors.surface,
-    borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center',
-  },
   startOverBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, backgroundColor: Colors.surface, borderRadius: 14,
