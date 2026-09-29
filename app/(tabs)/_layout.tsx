@@ -1,6 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { HapticTab } from '@/src/components/ui/haptic-tab';
 import { Colors } from '@/src/constants/colors';
+import { useTabBarFrame } from '@/src/constants/layout';
 import { useOnboarding } from '@/src/onboarding/OnboardingContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
@@ -9,6 +10,7 @@ import React from 'react';
 export default function TabLayout() {
   const { isResearcher } = useAuth();
   const { status: onboarding } = useOnboarding();
+  const tabBarFrame = useTabBarFrame();
 
   // Checked before the researcher redirect so every account sees the intro on first launch.
   if (onboarding === 'loading') return null;
@@ -23,8 +25,7 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.border,
-          height: 83,
-          paddingTop: 9,
+          ...tabBarFrame,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         headerShown: false,

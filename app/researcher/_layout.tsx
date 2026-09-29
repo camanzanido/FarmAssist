@@ -1,10 +1,13 @@
 import { HapticTab } from '@/src/components/ui/haptic-tab';
 import { ResearcherColors } from '@/src/constants/colors';
+import { useTabBarFrame } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { RoleGuard } from '../../src/auth/guards/RoleGuard';
 
 export default function ResearcherLayout() {
+  const tabBarFrame = useTabBarFrame();
+
   return (
     <RoleGuard allowedRoles={['researcher']}>
       <Tabs
@@ -16,8 +19,7 @@ export default function ResearcherLayout() {
           tabBarStyle: {
             backgroundColor: ResearcherColors.tabBg,
             borderTopColor: ResearcherColors.divider,
-            height: 83,
-            paddingTop: 9,
+            ...tabBarFrame,
           },
           tabBarLabelStyle: { fontSize: 10.5, fontWeight: '700' },
         }}
