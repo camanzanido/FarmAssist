@@ -3,7 +3,7 @@ import { predefinedCopy as copy } from '@/src/constants/copy';
 import { getLocationsByUser } from '@/src/database/repositories/locations';
 import { fetchPredefinedOptions } from '@/src/database/repositories/predefined';
 import { formatCurrency } from '@/src/utils/formatters';
-import { normalizeProvince, PredefinedOption, predefinedForProvince } from '@/src/utils/predefinedOptions';
+import { normalizePlace, placeLabel, PredefinedOption, predefinedForLocation } from '@/src/utils/predefinedOptions';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -11,14 +11,17 @@ import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacit
 type State =
   | { status: 'loading' }
   | { status: 'error' }
-  | { status: 'ready'; options: PredefinedOption[]; province: string | null };
+  | { status: 'ready'; options: PredefinedOption[]; city: string | null };
 
 export function PredefinedPicker({
-  visible, decisionType, userId, onPick, onClose,
+  visible, decisionType, userId, currentId, takenId, takenLabel, onPick, onClose,
 }: {
   visible: boolean;
   decisionType: string;
   userId: string;
+  currentId: string | null; // already loaded into this option; picking it again resets any edits
+  takenId: string | null; // loaded into the other option, so it can't be picked twice
+  takenLabel: string;
   onPick: (option: PredefinedOption) => void;
   onClose: () => void;
 }) {
@@ -28,8 +31,8 @@ export function PredefinedPicker({
     setState({ status: 'loading' });
     try {
       const [options, locations] = await Promise.all([fetchPredefinedOptions(decisionType), getLocationsByUser(userId)]);
-      const province = locations[0]?.province ?? null;
-      setState({ status: 'ready', options: predefinedForProvince(options, province), province });
+      const location = locations[0] ?? null;
+      setState({ status: 'ready', options: predefinedForLocation(options, location), city: location?.city ?? null });
     } catch (err) {
       console.error('Failed to load predefined options:', err);
       setState({ status: 'error' });
@@ -68,19 +71,34 @@ export function PredefinedPicker({
           {state.status === 'ready' && state.options.length > 0 && (
             <ScrollView style={s.list} showsVerticalScrollIndicator={false}>
               {state.options.map((o) => {
-                const local = !!normalizeProvince(o.province);
+                const local = !!o.municipality && normalizePlace(o.municipality) === normalizePlace(state.city);
+                const taken = o.id === takenId;
+                const current = o.id === currentId;
                 return (
-                  <TouchableOpacity key={o.id} style={s.row} onPress={() => onPick(o)} activeOpacity={0.75}>
+                  <TouchableOpacity
+                    key={o.id}
+                    style={[s.row, taken && s.rowTaken, current && s.rowCurrent]}
+                    onPress={() => onPick(o)}
+                    disabled={taken}
+                    activeOpacity={0.75}
+                    accessibilityState={{ disabled: taken }}
+                  >
                     <View style={{ flex: 1 }}>
                       <Text style={s.rowName} numberOfLines={1}>{o.option_name}</Text>
                       <View style={s.rowMetaRow}>
                         <View style={[s.tag, local && s.tagLocal]}>
-                          <Text style={[s.tagText, local && s.tagTextLocal]}>{local ? o.province!.trim() : copy.allProvinces}</Text>
+                          <Text style={[s.tagText, local && s.tagTextLocal]}>{placeLabel(o, copy.allProvinces)}</Text>
                         </View>
                         <Text style={s.rowPrice}>{formatCurrency(o.price)}/kg</Text>
                       </View>
+                      {taken && <Text style={s.takenText}>{takenLabel}</Text>}
+                      {current && <Text style={s.currentText}>{copy.current}</Text>}
                     </View>
-                    <Ionicons name="download-outline" size={20} color={Colors.accent} />
+                    <Ionicons
+                      name={taken ? 'lock-closed-outline' : current ? 'checkmark-circle' : 'download-outline'}
+                      size={20}
+                      color={taken ? Colors.inkFaint : Colors.accent}
+                    />
                   </TouchableOpacity>
                 );
               })}
@@ -114,6 +132,10 @@ const s = StyleSheet.create({
 
   list: { flexGrow: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 8 },
+  rowTaken: { opacity: 0.5 },
+  rowCurrent: { borderWidth: 1.5, borderColor: Colors.accent },
+  currentText: { fontSize: 12, fontWeight: '700', color: Colors.accent, marginTop: 6 },
+  takenText: { fontSize: 12, fontWeight: '600', color: Colors.inkSoft, marginTop: 6 },
   rowName: { fontSize: 16, fontWeight: '800', color: Colors.ink },
   rowMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
   tag: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: Colors.divider },

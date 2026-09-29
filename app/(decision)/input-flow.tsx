@@ -10,13 +10,17 @@ import { climateCopy, dataEntryCopy, namingCopy, predefinedCopy } from '@/src/co
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { isForecastComputable } from '@/src/rcda/decisionTree';
 import { formatNumberDisplay, normalizeNumberInput } from '@/src/utils/numberInput';
-import { PredefinedOption, predefinedToFormValues } from '@/src/utils/predefinedOptions';
+import { PredefinedOption, climateRowToFormValues } from '@/src/utils/predefinedOptions';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+type OptionEntry = { yield: string[]; cost: string[]; addCost: string[]; price: string };
+// What an option looked like before saved values were loaded, so Remove can put it back.
+type LoadedSaved = { id: string; before: { name: string; data: OptionEntry } };
 
 function emptyFive(): string[] {
   return ['', '', '', '', ''];
@@ -43,13 +47,13 @@ export default function DecisionInputFlow() {
 
   const [names, setNames] = useState<string[]>(['', '']);
   const [pickerFor, setPickerFor] = useState<number | null>(null);
-  const [loadedFrom, setLoadedFrom] = useState<(string | null)[]>([null, null]);
+  const [loaded, setLoaded] = useState<(LoadedSaved | null)[]>([null, null]);
   const placeholders = decisionType ? PLACEHOLDERS[decisionType] : undefined;
   const namesFilled = names[0].trim().length > 0 && names[1].trim().length > 0;
   const namesDuplicate = namesFilled && names[0].trim().toLowerCase() === names[1].trim().toLowerCase();
   const namesValid = namesFilled && !namesDuplicate;
 
-  const [optionData, setOptionData] = useState([
+  const [optionData, setOptionData] = useState<OptionEntry[]>([
     { yield: emptyFive(), cost: emptyFive(), addCost: emptyFive(), price: '' },
     { yield: emptyFive(), cost: emptyFive(), addCost: emptyFive(), price: '' },
   ]);
@@ -139,16 +143,29 @@ export default function DecisionInputFlow() {
   };
 
   const applyPredefined = (index: number, option: PredefinedOption) => {
-    const values = predefinedToFormValues(option);
+    const values = climateRowToFormValues(option);
     setNames(prev => { const next = [...prev]; next[index] = values.name; return next; });
     setOptionData(prev => {
       const next = [...prev];
       next[index] = { yield: values.yield, cost: values.cost, addCost: values.addCost, price: values.price };
       return next;
     });
-    setLoadedFrom(prev => { const next = [...prev]; next[index] = option.id; return next; });
+    setLoaded(prev => {
+      const next = [...prev];
+      next[index] = { id: option.id, before: prev[index]?.before ?? { name: names[index], data: optionData[index] } };
+      return next;
+    });
     setPickerFor(null);
     notify.success(predefinedCopy.loaded(values.name), predefinedCopy.loadedBody);
+  };
+
+  const removePredefined = (index: number) => {
+    const entry = loaded[index];
+    if (!entry) return;
+    setNames(prev => { const next = [...prev]; next[index] = entry.before.name; return next; });
+    setOptionData(prev => { const next = [...prev]; next[index] = entry.before.data; return next; });
+    setLoaded(prev => { const next = [...prev]; next[index] = null; return next; });
+    notify.success(predefinedCopy.removed);
   };
 
   const updateCurrentOptionPrice = (value: string) => {
@@ -274,22 +291,40 @@ export default function DecisionInputFlow() {
                   />
                   {user && (
                     <View style={s.useSavedRow}>
-                      <TouchableOpacity
-                        style={[s.useSavedBtn, !connected && s.useSavedBtnDisabled]}
-                        onPress={() => setPickerFor(i)}
-                        disabled={!connected}
-                        accessibilityRole="button"
-                      >
-                        <Ionicons name={connected ? 'download-outline' : 'cloud-offline-outline'} size={16} color={connected ? Colors.accent : Colors.inkFaint} />
-                        <Text style={[s.useSavedText, !connected && s.useSavedTextDisabled]}>
-                          {connected ? predefinedCopy.useSaved : predefinedCopy.goOnline}
-                        </Text>
-                      </TouchableOpacity>
-                      {loadedFrom[i] && (
-                        <View style={s.loadedTag}>
-                          <Ionicons name="checkmark" size={13} color={Colors.accent} />
-                          <Text style={s.loadedTagText}>{predefinedCopy.loadedTag}</Text>
+                      {loaded[i] ? (
+                        <View style={[s.useSavedBtn, s.loadedBtn]}>
+                          <TouchableOpacity
+                            style={s.loadedBody}
+                            onPress={() => setPickerFor(i)}
+                            disabled={!connected}
+                            accessibilityRole="button"
+                            accessibilityLabel={predefinedCopy.showSavedLabel}
+                          >
+                            <Ionicons name="checkmark-circle" size={16} color={Colors.onDark} />
+                            <Text style={s.loadedBtnText}>{predefinedCopy.loadedTag}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={s.loadedClear}
+                            onPress={() => removePredefined(i)}
+                            accessibilityRole="button"
+                            accessibilityLabel={predefinedCopy.removeLabel}
+                            hitSlop={8}
+                          >
+                            <Ionicons name="close" size={16} color={Colors.onDark} />
+                          </TouchableOpacity>
                         </View>
+                      ) : (
+                        <TouchableOpacity
+                          style={[s.useSavedBtn, !connected && s.useSavedBtnDisabled]}
+                          onPress={() => setPickerFor(i)}
+                          disabled={!connected}
+                          accessibilityRole="button"
+                        >
+                          <Ionicons name={connected ? 'download-outline' : 'cloud-offline-outline'} size={16} color={connected ? Colors.accent : Colors.inkFaint} />
+                          <Text style={[s.useSavedText, !connected && s.useSavedTextDisabled]}>
+                            {connected ? predefinedCopy.useSaved : predefinedCopy.goOnline}
+                          </Text>
+                        </TouchableOpacity>
                       )}
                     </View>
                   )}
@@ -303,6 +338,9 @@ export default function DecisionInputFlow() {
                 visible={pickerFor !== null}
                 decisionType={decisionType}
                 userId={user.id}
+                currentId={pickerFor !== null ? loaded[pickerFor]?.id ?? null : null}
+                takenId={pickerFor !== null ? loaded[1 - pickerFor]?.id ?? null : null}
+                takenLabel={pickerFor === 0 ? predefinedCopy.usedBySecond : predefinedCopy.usedByFirst}
                 onPick={option => pickerFor !== null && applyPredefined(pickerFor, option)}
                 onClose={() => setPickerFor(null)}
               />
@@ -620,8 +658,10 @@ const s = StyleSheet.create({
   useSavedBtnDisabled: { borderColor: Colors.border, backgroundColor: Colors.bg },
   useSavedText: { fontSize: 13, fontWeight: '700', color: Colors.accent },
   useSavedTextDisabled: { color: Colors.inkFaint, fontWeight: '600' },
-  loadedTag: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  loadedTagText: { fontSize: 12, fontWeight: '600', color: Colors.accent },
+  loadedBtn: { backgroundColor: Colors.accent, borderColor: Colors.accent, paddingVertical: 0, paddingHorizontal: 0, gap: 0 },
+  loadedBody: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 12, paddingRight: 8, paddingVertical: 7 },
+  loadedBtnText: { fontSize: 13, fontWeight: '700', color: Colors.onDark },
+  loadedClear: { paddingLeft: 8, paddingRight: 10, paddingVertical: 7, borderLeftWidth: 1, borderLeftColor: 'rgba(255,255,255,0.35)' },
   helperRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 18, paddingHorizontal: 4 },
   helperText: { flex: 1, fontSize: 13, color: Colors.inkFaint, lineHeight: 18 },
 

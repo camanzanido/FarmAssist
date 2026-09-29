@@ -2,75 +2,134 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
-import { blankPredefinedForm, PredefinedFormInitial, PredefinedFormSheet } from '@/src/components/researcher/predefined-form-sheet';
+import {
+  blankPredefinedForm, PredefinedFormInitial, PredefinedFormMode, PredefinedFormSheet,
+} from '@/src/components/researcher/predefined-form-sheet';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { wideColumn } from '@/src/constants/layout';
 import {
-  createPredefinedOption, deletePredefinedOption, fetchPredefinedOptions, PredefinedInput, updatePredefinedOption,
+  createPredefinedOption, deletePredefinedOption, fetchOptionAverages, fetchPredefinedOptions, PredefinedInput, updatePredefinedOption,
 } from '@/src/database/repositories/predefined';
 import { fetchAllLocations } from '@/src/database/repositories/researcher';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { formatCurrency } from '@/src/utils/formatters';
-import { PredefinedOption, predefinedToFormValues } from '@/src/utils/predefinedOptions';
+import {
+  climateRowToFormValues, OptionAverage, placeLabel, PredefinedOption, predefinedKey,
+} from '@/src/utils/predefinedOptions';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+type Tab = 'farmers' | 'published';
 type TypeFilter = 'all' | DecisionType;
-type Editing = { mode: 'create' } | { mode: 'edit'; option: PredefinedOption };
+type Editing = { mode: Exclude<PredefinedFormMode, 'edit'> } | { mode: 'edit'; option: PredefinedOption };
 
-const EMPTY = { options: [] as PredefinedOption[], provinces: [] as string[] };
+const EMPTY = {
+  published: [] as PredefinedOption[],
+  averages: [] as OptionAverage[],
+  places: {} as Record<string, string[]>,
+};
+
+// Province -> its cities, spelled as farmers registered them.
+function placesFrom(locations: { city: string; province: string }[]): Record<string, string[]> {
+  const byProvince = new Map<string, { name: string; cities: Map<string, string> }>();
+  for (const l of locations) {
+    const province = (l.province ?? '').trim();
+    if (!province) continue;
+    const entry = byProvince.get(province.toLowerCase()) ?? { name: province, cities: new Map() };
+    const city = (l.city ?? '').trim();
+    if (city && !entry.cities.has(city.toLowerCase())) entry.cities.set(city.toLowerCase(), city);
+    byProvince.set(province.toLowerCase(), entry);
+  }
+  const places: Record<string, string[]> = {};
+  for (const { name, cities } of byProvince.values()) {
+    places[name] = [...cities.values()].sort((a, b) => a.localeCompare(b));
+  }
+  return places;
+}
+
+const rowKey = (a: OptionAverage) => [a.decision_type, a.option_key, a.province, a.municipality].join('|');
 
 export default function ResearcherInputsScreen() {
   const { user } = useAuth();
   const { confirm, notify } = useFeedback();
 
   const fetchAll = useCallback(async () => {
-    const [options, locations] = await Promise.all([fetchPredefinedOptions(), fetchAllLocations()]);
-    const provinces = new Map<string, string>();
-    for (const l of locations) {
-      const p = (l.province ?? '').trim();
-      if (p && !provinces.has(p.toLowerCase())) provinces.set(p.toLowerCase(), p);
-    }
-    return { options, provinces: [...provinces.values()].sort((a, b) => a.localeCompare(b)) };
+    const [published, averages, locations] = await Promise.all([
+      fetchPredefinedOptions(), fetchOptionAverages(), fetchAllLocations(),
+    ]);
+    return { published, averages, places: placesFrom(locations) };
   }, []);
-  const { data: { options, provinces }, isLoading, error, reload } = useResearcherFetch(fetchAll, EMPTY);
+  const { data: { published, averages, places }, isLoading, error, reload } = useResearcherFetch(fetchAll, EMPTY);
 
+  const [tab, setTab] = useState<Tab>('farmers');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<Editing | null>(null);
   const [formInitial, setFormInitial] = useState<PredefinedFormInitial>(() => blankPredefinedForm());
   const [saving, setSaving] = useState(false);
 
-  const filtered = useMemo(
-    () => (typeFilter === 'all' ? options : options.filter((o) => o.decision_type === typeFilter)),
-    [options, typeFilter]
-  );
+  const publishedByKey = useMemo(() => new Map(published.map((p) => [predefinedKey(p), p])), [published]);
+  const publishedIds = useMemo(() => new Map(published.map((p) => [predefinedKey(p), p.id])), [published]);
+
+  const matches = useCallback((o: { decision_type: string; option_name: string; province: string | null; municipality: string | null }) => {
+    if (typeFilter !== 'all' && o.decision_type !== typeFilter) return false;
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return [o.option_name, o.province, o.municipality].some((f) => f?.toLowerCase().includes(q));
+  }, [typeFilter, query]);
+
+  const filteredAverages = useMemo(() => averages.filter(matches), [averages, matches]);
+  const filteredPublished = useMemo(() => published.filter(matches), [published, matches]);
 
   const openCreate = () => {
     setFormInitial(blankPredefinedForm(typeFilter === 'all' ? 'crop_choice' : typeFilter));
     setEditing({ mode: 'create' });
   };
 
+  const openPublish = (average: OptionAverage) => {
+    setFormInitial({
+      decisionType: average.decision_type as DecisionType,
+      province: average.province,
+      municipality: average.municipality,
+      values: climateRowToFormValues(average),
+      source: { entries: average.total_entries, farmers: average.farmer_count },
+    });
+    setEditing({ mode: 'publish' });
+  };
+
   const openEdit = (option: PredefinedOption) => {
     setFormInitial({
       decisionType: option.decision_type as DecisionType,
       province: option.province ?? '',
-      values: predefinedToFormValues(option),
+      municipality: option.municipality ?? '',
+      values: climateRowToFormValues(option),
+      source: option.source_entries != null && option.source_farmers != null
+        ? { entries: option.source_entries, farmers: option.source_farmers }
+        : null,
     });
     setEditing({ mode: 'edit', option });
   };
 
+  // Publishing a name and place that is already published replaces that row instead of duplicating it.
   const handleSave = async (input: PredefinedInput) => {
     if (!editing || !user) return;
+    const existing = publishedByKey.get(predefinedKey({
+      decision_type: input.decisionType,
+      option_name: input.values.name,
+      province: input.province,
+      municipality: input.municipality,
+    }));
+    const targetId = editing.mode === 'edit' ? editing.option.id : existing?.id;
     setSaving(true);
     try {
-      if (editing.mode === 'create') await createPredefinedOption(input, user.id);
-      else await updatePredefinedOption(editing.option.id, input);
+      if (targetId) await updatePredefinedOption(targetId, input, user.id);
+      else await createPredefinedOption(input, user.id);
       setEditing(null);
-      notify.success(editing.mode === 'create' ? 'Option added' : 'Option updated');
+      notify.success(editing.mode === 'edit' ? 'Option updated' : existing ? 'Published values replaced' : 'Option published');
       reload();
     } catch (err) {
       console.error('Failed to save predefined option:', err);
@@ -86,22 +145,72 @@ export default function ResearcherInputsScreen() {
     const option = editing.option;
     setEditing(null);
     const confirmed = await confirm({
-      title: 'Delete this option?',
-      message: `Farmers will no longer be able to load "${option.option_name}". Decisions already made with it are not affected.`,
-      confirmText: 'Delete',
+      title: 'Unpublish this option?',
+      message: `Farmers will no longer be able to load "${option.option_name}". Decisions already made with it are not affected, and the farmer average stays in the From farmers list.`,
+      confirmText: 'Unpublish',
       tone: 'destructive',
       icon: 'trash-outline',
     });
     if (!confirmed) return;
     try {
       await deletePredefinedOption(option.id);
-      notify.success('Option deleted');
+      notify.success('Option unpublished');
       reload();
     } catch (err) {
       console.error('Failed to delete predefined option:', err);
-      notify.error('Could not delete option', getActionErrorMessage(err, 'Please try again.'));
+      notify.error('Could not unpublish option', getActionErrorMessage(err, 'Please try again.'));
     }
   };
+
+  const typeLabel = (t: string) => DECISION_LABELS[t as DecisionType] ?? t;
+
+  const renderAverage = (a: OptionAverage) => {
+    const pub = publishedByKey.get(predefinedKey(a));
+    const stale = !!pub && !!a.latest_entry && Date.parse(a.latest_entry) > Date.parse(pub.updated_at);
+    return (
+      <TouchableOpacity
+        key={rowKey(a)}
+        style={s.row}
+        onPress={() => openPublish(a)}
+        activeOpacity={0.75}
+        accessibilityLabel={`Review ${a.option_name} average for ${placeLabel(a)}`}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={s.rowName} numberOfLines={1}>{a.option_name}</Text>
+          <Text style={s.rowMeta} numberOfLines={1}>{typeLabel(a.decision_type)} · {placeLabel(a)}</Text>
+          <View style={s.tagRow}>
+            <Text style={s.rowCount}>
+              {a.total_entries} {a.total_entries === 1 ? 'entry' : 'entries'} · {a.farmer_count} {a.farmer_count === 1 ? 'farmer' : 'farmers'}
+            </Text>
+            {pub && (
+              <View style={[s.tag, stale && s.tagWarn]}>
+                <Text style={[s.tagText, stale && s.tagWarnText]}>{stale ? 'New entries since published' : 'Published'}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+        <Text style={s.rowPrice}>{formatCurrency(a.price)}/kg</Text>
+        <Ionicons name="chevron-forward" size={18} color={C.textFaint} />
+      </TouchableOpacity>
+    );
+  };
+
+  const renderPublished = (o: PredefinedOption) => (
+    <TouchableOpacity key={o.id} style={s.row} onPress={() => openEdit(o)} activeOpacity={0.75}>
+      <View style={{ flex: 1 }}>
+        <Text style={s.rowName} numberOfLines={1}>{o.option_name}</Text>
+        <Text style={s.rowMeta} numberOfLines={1}>{typeLabel(o.decision_type)} · {placeLabel(o)}</Text>
+        <Text style={s.rowCount}>
+          {o.source_entries != null ? `From ${o.source_entries} ${o.source_entries === 1 ? 'entry' : 'entries'}` : 'Entered by a researcher'}
+        </Text>
+      </View>
+      <Text style={s.rowPrice}>{formatCurrency(o.price)}/kg</Text>
+      <Ionicons name="chevron-forward" size={18} color={C.textFaint} />
+    </TouchableOpacity>
+  );
+
+  const list = tab === 'farmers' ? filteredAverages : filteredPublished;
+  const total = tab === 'farmers' ? averages.length : published.length;
 
   return (
     <SafeAreaView style={s.safe}>
@@ -112,16 +221,40 @@ export default function ResearcherInputsScreen() {
         onRetry={reload}
         errorMessage="Couldn't load predefined inputs. Check your connection."
       >
-        <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={s.headerRow}>
             <View style={{ flex: 1 }}>
               <Text style={s.title}>Inputs</Text>
-              <Text style={s.subtitle}>Predefined values farmers can load into a decision</Text>
+              <Text style={s.subtitle}>Review what farmers entered, then publish values others can load</Text>
             </View>
             <TouchableOpacity style={s.addBtn} onPress={openCreate} accessibilityLabel="Add predefined option">
               <Ionicons name="add" size={20} color={C.accentDeepText} />
               <Text style={s.addText}>Add</Text>
             </TouchableOpacity>
+          </View>
+
+          <View style={s.segment}>
+            {([['farmers', 'From farmers', averages.length], ['published', 'Published', published.length]] as const).map(([key, label, count]) => (
+              <TouchableOpacity
+                key={key}
+                style={[s.segmentBtn, tab === key && s.segmentBtnActive]}
+                onPress={() => setTab(key)}
+                accessibilityState={{ selected: tab === key }}
+              >
+                <Text style={[s.segmentText, tab === key && s.segmentTextActive]}>{label} ({count})</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={s.searchBox}>
+            <Ionicons name="search" size={16} color={C.textFaint} />
+            <TextInput
+              style={s.searchInput}
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Option, municipality, or province"
+              placeholderTextColor={C.textMuted}
+            />
           </View>
 
           <View style={s.filterRow}>
@@ -135,25 +268,24 @@ export default function ResearcherInputsScreen() {
             ))}
           </View>
 
-          {filtered.length === 0 ? (
-            <EmptyState
-              icon="options-outline"
-              title={options.length === 0 ? 'No predefined inputs yet.' : 'None for this decision type.'}
-              subtitle="Tap Add to create values farmers can load instead of typing them."
-            />
+          {list.length === 0 ? (
+            tab === 'farmers' ? (
+              <EmptyState
+                icon="people-outline"
+                title={total === 0 ? 'No farmer entries yet.' : 'No matches.'}
+                subtitle="Averages appear here once signed-in farmers sync decisions."
+              />
+            ) : (
+              <EmptyState
+                icon="options-outline"
+                title={total === 0 ? 'Nothing published yet.' : 'No matches.'}
+                subtitle="Open a farmer average to review and publish it."
+              />
+            )
+          ) : tab === 'farmers' ? (
+            filteredAverages.map(renderAverage)
           ) : (
-            filtered.map((o) => (
-              <TouchableOpacity key={o.id} style={s.row} onPress={() => openEdit(o)} activeOpacity={0.75}>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.rowName} numberOfLines={1}>{o.option_name}</Text>
-                  <Text style={s.rowMeta}>
-                    {DECISION_LABELS[o.decision_type as DecisionType] ?? o.decision_type} · {o.province?.trim() || 'All provinces'}
-                  </Text>
-                </View>
-                <Text style={s.rowPrice}>{formatCurrency(o.price)}/kg</Text>
-                <Ionicons name="chevron-forward" size={18} color={C.textFaint} />
-              </TouchableOpacity>
-            ))
+            filteredPublished.map(renderPublished)
           )}
           <View style={{ height: 20 }} />
         </ScrollView>
@@ -163,7 +295,9 @@ export default function ResearcherInputsScreen() {
         visible={editing !== null}
         mode={editing?.mode ?? 'create'}
         initial={formInitial}
-        knownProvinces={provinces}
+        knownPlaces={places}
+        publishedIds={publishedIds}
+        editingId={editing?.mode === 'edit' ? editing.option.id : undefined}
         saving={saving}
         onCancel={() => setEditing(null)}
         onSave={handleSave}
@@ -183,6 +317,15 @@ const s = StyleSheet.create({
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 42, paddingHorizontal: 14, borderRadius: 12, backgroundColor: C.accentStrong },
   addText: { fontSize: 14, fontWeight: '800', color: C.accentDeepText },
 
+  segment: { flexDirection: 'row', backgroundColor: C.card, borderRadius: 12, padding: 4, marginBottom: 12 },
+  segmentBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 9 },
+  segmentBtnActive: { backgroundColor: C.accentStrong },
+  segmentText: { fontSize: 13, fontWeight: '600', color: C.textSoft },
+  segmentTextActive: { color: C.accentDeepText, fontWeight: '800' },
+
+  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.card, borderRadius: 12, paddingHorizontal: 12, height: 44, marginBottom: 12 },
+  searchInput: { flex: 1, fontSize: 14, color: C.text, height: '100%' },
+
   filterRow: { flexDirection: 'row', gap: 7, marginBottom: 18, flexWrap: 'wrap' },
   filterChip: { backgroundColor: C.card, borderRadius: 999, paddingHorizontal: 13, paddingVertical: 7 },
   filterChipActive: { backgroundColor: C.accentStrong },
@@ -192,5 +335,11 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: 14, padding: 14, marginBottom: 9 },
   rowName: { fontSize: 15.5, fontWeight: '700', color: C.text },
   rowMeta: { fontSize: 12.5, color: C.textSoft, marginTop: 3 },
+  rowCount: { fontSize: 12, color: C.textFaint, marginTop: 4 },
   rowPrice: { fontSize: 13.5, fontWeight: '800', color: C.accent },
+  tagRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+  tag: { marginTop: 4, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: C.accentStrong },
+  tagText: { fontSize: 11, fontWeight: '700', color: C.accentDeepText },
+  tagWarn: { backgroundColor: C.amberBg },
+  tagWarnText: { color: C.amberText },
 });

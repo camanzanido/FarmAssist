@@ -2,7 +2,7 @@ import { CLIMATES, DECISIONS, DecisionType } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import type { PredefinedInput } from '@/src/database/repositories/predefined';
 import { formatNumberDisplay, normalizeNumberInput } from '@/src/utils/numberInput';
-import { emptyFormValues, OptionFormValues, validateOptionForm } from '@/src/utils/predefinedOptions';
+import { emptyFormValues, OptionFormValues, predefinedKey, validateOptionForm } from '@/src/utils/predefinedOptions';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
@@ -16,19 +16,31 @@ const GROUPS: { key: Group; label: string; money: boolean }[] = [
   { key: 'addCost', label: 'Add\'l /ha', money: true },
 ];
 
+export type PredefinedFormMode = 'create' | 'edit' | 'publish';
+
 export interface PredefinedFormInitial {
   decisionType: DecisionType;
   province: string;
+  municipality: string;
   values: OptionFormValues;
+  source: { entries: number; farmers: number } | null;
 }
 
+const TITLES: Record<PredefinedFormMode, string> = {
+  create: 'New predefined option',
+  edit: 'Edit predefined option',
+  publish: 'Review farmer average',
+};
+
 export function PredefinedFormSheet({
-  visible, mode, initial, knownProvinces, saving, onCancel, onSave, onDelete,
+  visible, mode, initial, knownPlaces, publishedIds, editingId, saving, onCancel, onSave, onDelete,
 }: {
   visible: boolean;
-  mode: 'create' | 'edit';
+  mode: PredefinedFormMode;
   initial: PredefinedFormInitial;
-  knownProvinces: string[];
+  knownPlaces: Record<string, string[]>;
+  publishedIds: Map<string, string>;
+  editingId?: string;
   saving: boolean;
   onCancel: () => void;
   onSave: (input: PredefinedInput) => void;
@@ -36,6 +48,7 @@ export function PredefinedFormSheet({
 }) {
   const [decisionType, setDecisionType] = useState<DecisionType>(initial.decisionType);
   const [province, setProvince] = useState(initial.province);
+  const [municipality, setMunicipality] = useState(initial.municipality);
   const [values, setValues] = useState<OptionFormValues>(initial.values);
   const [submitted, setSubmitted] = useState(false);
 
@@ -43,9 +56,24 @@ export function PredefinedFormSheet({
     if (!visible) return;
     setDecisionType(initial.decisionType);
     setProvince(initial.province);
+    setMunicipality(initial.municipality);
     setValues(initial.values);
     setSubmitted(false);
   }, [visible, initial]);
+
+  const knownProvinces = Object.keys(knownPlaces).sort((a, b) => a.localeCompare(b));
+  const provinceKey = knownProvinces.find((p) => p.toLowerCase() === province.trim().toLowerCase());
+  const knownCities = provinceKey ? knownPlaces[provinceKey] : [];
+
+  const changeProvince = (next: string) => {
+    if (next.trim().toLowerCase() !== province.trim().toLowerCase()) setMunicipality('');
+    setProvince(next);
+  };
+
+  const effectiveMunicipality = province.trim() ? municipality : '';
+  const clashId = publishedIds.get(predefinedKey({ decision_type: decisionType, option_name: values.name, province, municipality: effectiveMunicipality }));
+  const clashesWithOther = mode === 'edit' && !!clashId && clashId !== editingId;
+  const replacesExisting = mode !== 'edit' && !!clashId;
 
   const errors = validateOptionForm(values);
   const show = (e?: string) => (submitted ? e : undefined);
@@ -59,8 +87,8 @@ export function PredefinedFormSheet({
 
   const save = () => {
     setSubmitted(true);
-    if (Object.keys(errors).length > 0) return;
-    onSave({ decisionType, province, values });
+    if (Object.keys(errors).length > 0 || clashesWithOther) return;
+    onSave({ decisionType, province, municipality: effectiveMunicipality, values, source: initial.source });
   };
 
   return (
@@ -70,8 +98,20 @@ export function PredefinedFormSheet({
         <View style={s.sheet}>
           <View style={s.grabber} />
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            <Text style={s.title}>{mode === 'create' ? 'New predefined option' : 'Edit predefined option'}</Text>
-            <Text style={s.subtitle}>Signed-in farmers can load these values into their decision.</Text>
+            <Text style={s.title}>{TITLES[mode]}</Text>
+            <Text style={s.subtitle}>
+              {mode === 'publish'
+                ? 'Fix anything that looks wrong, then publish so signed-in farmers can load these values.'
+                : 'Signed-in farmers can load these values into their decision.'}
+            </Text>
+            {initial.source && (
+              <View style={s.sourceNote}>
+                <Ionicons name="people-outline" size={16} color={C.accent} />
+                <Text style={s.sourceText}>
+                  Averaged from {initial.source.entries} {initial.source.entries === 1 ? 'entry' : 'entries'} by {initial.source.farmers} {initial.source.farmers === 1 ? 'farmer' : 'farmers'}
+                </Text>
+              </View>
+            )}
 
             <Text style={s.label}>DECISION TYPE</Text>
             <View style={s.chipRow}>
@@ -101,23 +141,49 @@ export function PredefinedFormSheet({
             <TextInput
               style={s.input}
               value={province}
-              onChangeText={setProvince}
+              onChangeText={changeProvince}
               placeholder="All provinces"
               placeholderTextColor={C.textMuted}
             />
             <View style={[s.chipRow, { marginTop: 8 }]}>
-              <TouchableOpacity style={[s.chip, !province.trim() && s.chipActive]} onPress={() => setProvince('')}>
+              <TouchableOpacity style={[s.chip, !province.trim() && s.chipActive]} onPress={() => changeProvince('')}>
                 <Text style={[s.chipText, !province.trim() && s.chipTextActive]}>All provinces</Text>
               </TouchableOpacity>
               {knownProvinces.map((p) => {
                 const active = province.trim().toLowerCase() === p.toLowerCase();
                 return (
-                  <TouchableOpacity key={p} style={[s.chip, active && s.chipActive]} onPress={() => setProvince(p)}>
+                  <TouchableOpacity key={p} style={[s.chip, active && s.chipActive]} onPress={() => changeProvince(p)}>
                     <Text style={[s.chipText, active && s.chipTextActive]}>{p}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
+
+            {province.trim() !== '' && (
+              <>
+                <Text style={s.label}>CITY / MUNICIPALITY</Text>
+                <TextInput
+                  style={s.input}
+                  value={municipality}
+                  onChangeText={setMunicipality}
+                  placeholder="Whole province"
+                  placeholderTextColor={C.textMuted}
+                />
+                <View style={[s.chipRow, { marginTop: 8 }]}>
+                  <TouchableOpacity style={[s.chip, !municipality.trim() && s.chipActive]} onPress={() => setMunicipality('')}>
+                    <Text style={[s.chipText, !municipality.trim() && s.chipTextActive]}>Whole province</Text>
+                  </TouchableOpacity>
+                  {knownCities.map((c) => {
+                    const active = municipality.trim().toLowerCase() === c.toLowerCase();
+                    return (
+                      <TouchableOpacity key={c} style={[s.chip, active && s.chipActive]} onPress={() => setMunicipality(c)}>
+                        <Text style={[s.chipText, active && s.chipTextActive]}>{c}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </>
+            )}
 
             <Text style={s.label}>SELLING PRICE (PER KG)</Text>
             <View style={[s.input, s.moneyRow, show(errors.price) && s.inputError]}>
@@ -158,6 +224,16 @@ export function PredefinedFormSheet({
             ))}
             {show(errors.scenarios) && <Text style={s.error}>{errors.scenarios}</Text>}
 
+            {clashesWithOther && (
+              <Text style={[s.error, { marginTop: 14 }]}>Another published option already uses this name and place.</Text>
+            )}
+            {replacesExisting && (
+              <View style={[s.sourceNote, s.replaceNote]}>
+                <Ionicons name="swap-horizontal-outline" size={16} color={C.amberText} />
+                <Text style={[s.sourceText, { color: C.amberText }]}>Already published for this place. Publishing replaces those values.</Text>
+              </View>
+            )}
+
             <View style={s.actions}>
               {mode === 'edit' && onDelete && (
                 <TouchableOpacity style={s.deleteBtn} onPress={onDelete} disabled={saving} accessibilityLabel="Delete option">
@@ -168,7 +244,7 @@ export function PredefinedFormSheet({
                 <Text style={s.cancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[s.saveBtn, saving && s.disabled]} onPress={save} disabled={saving}>
-                {saving ? <ActivityIndicator color={C.accentDeepText} /> : <Text style={s.saveText}>Save</Text>}
+                {saving ? <ActivityIndicator color={C.accentDeepText} /> : <Text style={s.saveText}>{mode === 'edit' ? 'Save' : 'Publish'}</Text>}
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -181,7 +257,9 @@ export function PredefinedFormSheet({
 export const blankPredefinedForm = (decisionType: DecisionType = 'crop_choice'): PredefinedFormInitial => ({
   decisionType,
   province: '',
+  municipality: '',
   values: emptyFormValues(),
+  source: null,
 });
 
 const s = StyleSheet.create({
@@ -194,6 +272,9 @@ const s = StyleSheet.create({
   grabber: { width: 38, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.24)', alignSelf: 'center', marginBottom: 18 },
   title: { fontSize: 21, fontWeight: '800', color: C.text, marginBottom: 4 },
   subtitle: { fontSize: 13.5, color: C.textSoft, marginBottom: 18 },
+  sourceNote: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.card, borderRadius: 12, padding: 12, marginBottom: 4 },
+  sourceText: { flex: 1, fontSize: 13, fontWeight: '600', color: C.textSoft },
+  replaceNote: { backgroundColor: C.amberBg, marginTop: 14 },
 
   label: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint, marginTop: 14, marginBottom: 8 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },

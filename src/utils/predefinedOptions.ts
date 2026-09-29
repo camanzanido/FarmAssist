@@ -2,14 +2,32 @@ import { buildOptionClimateFields, type OptionClimateFields } from '../database/
 import { climateFieldsTo5 } from '../rcda/decisionTree';
 import { expandScenario5to7 } from '../rcda/financials';
 
+// Researcher-reviewed values farmers can load (public.predefined_options).
 export interface PredefinedOption extends OptionClimateFields {
   id: string;
   option_name: string;
   decision_type: string;
   price: number;
-  province: string | null; // null = every province
-  user_id: string;
+  province: string | null;     // null = every province
+  municipality: string | null; // null = the whole province
+  source_entries: number | null;
+  source_farmers: number | null;
+  published_by: string | null;
   created_at: string;
+  updated_at: string;
+}
+
+// One row of the option_averages_by_location view: what farmers in a municipality entered, averaged.
+export interface OptionAverage extends OptionClimateFields {
+  decision_type: string;
+  option_key: string;
+  option_name: string;
+  province: string;
+  municipality: string;
+  total_entries: number;
+  farmer_count: number;
+  latest_entry: string | null;
+  price: number;
 }
 
 // What the forms edit: plain number strings (see numberInput.ts), 5 scenarios each.
@@ -29,7 +47,7 @@ export const emptyFormValues = (): OptionFormValues => ({
   addCost: ['', '', '', '', ''],
 });
 
-export function predefinedToFormValues(o: PredefinedOption): OptionFormValues {
+export function climateRowToFormValues(o: OptionClimateFields & { option_name: string; price: number }): OptionFormValues {
   const five = climateFieldsTo5(o);
   const str = (n: number) => String(n ?? '');
   return {
@@ -63,17 +81,36 @@ export function validateOptionForm(v: OptionFormValues): FormErrors {
   return errors;
 }
 
-export function normalizeProvince(p: string | null | undefined): string {
+export function normalizePlace(p: string | null | undefined): string {
   return (p ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
-// A farmer sees options for their own province first, then ones meant for every province.
-export function predefinedForProvince(options: PredefinedOption[], province: string | null | undefined): PredefinedOption[] {
-  const mine = normalizeProvince(province);
+// Mirrors predefined_options_unique_place_idx, so the app can tell when a publish would replace an existing row.
+export function predefinedKey(o: { decision_type: string; option_name: string; province: string | null; municipality: string | null }): string {
+  return [o.decision_type, normalizePlace(o.option_name), normalizePlace(o.province), normalizePlace(o.municipality)].join('|');
+}
+
+export function placeLabel(o: { province: string | null; municipality: string | null }, everywhere = 'All provinces'): string {
+  const province = o.province?.trim();
+  const municipality = o.municipality?.trim();
+  if (municipality && province) return `${municipality}, ${province}`;
+  return province || everywhere;
+}
+
+// Farmers see their municipality first, then their province, then everywhere; other provinces are hidden.
+export function predefinedForLocation(
+  options: PredefinedOption[],
+  location: { city: string | null; province: string | null } | null
+): PredefinedOption[] {
+  const myProvince = normalizePlace(location?.province);
+  const myCity = normalizePlace(location?.city);
   const rank = (o: PredefinedOption) => {
-    const p = normalizeProvince(o.province);
-    if (!p) return 1;
-    return mine && p === mine ? 0 : -1;
+    const province = normalizePlace(o.province);
+    const city = normalizePlace(o.municipality);
+    if (!province) return 3;
+    if (!myProvince || province !== myProvince) return -1;
+    if (!city) return 1;
+    return myCity && city === myCity ? 0 : 2;
   };
   return options
     .filter((o) => rank(o) >= 0)

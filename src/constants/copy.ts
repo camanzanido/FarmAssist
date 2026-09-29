@@ -24,7 +24,7 @@ export const predefinedCopy = {
   useSaved: 'Use saved values',
   goOnline: 'Go online to use saved values',
   pickerTitle: 'Saved values',
-  pickerSubtitle: 'Values prepared by researchers. You can still change them before continuing.',
+  pickerSubtitle: 'Prepared by researchers from what farmers entered. You can still change them before continuing.',
   allProvinces: 'All provinces',
   empty: 'No saved values for this decision type yet.',
   loadError: "Couldn't load saved values. Check your connection.",
@@ -33,6 +33,12 @@ export const predefinedCopy = {
   loaded: (name: string) => `Loaded ${name}`,
   loadedBody: 'Yield, cost and price are filled in. Check them on the next steps.',
   loadedTag: 'Saved values loaded',
+  removeLabel: 'Remove saved values',
+  showSavedLabel: 'Saved values loaded. Show saved values',
+  current: 'Loaded here',
+  removed: 'Saved values removed',
+  usedByFirst: 'Used for first option',
+  usedBySecond: 'Used for second option',
 };
 
 export const dataEntryCopy = {
