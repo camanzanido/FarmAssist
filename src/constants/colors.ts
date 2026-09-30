@@ -1,15 +1,15 @@
 
 export const Colors = {
-  bg: '#F5F0E8',
+  bg: '#FFFFFF',
   surface: '#FFFFFF',
-  border: '#E8E2D6',
-  borderStrong: '#E0D9CE',
-  divider: '#F0EBE0',
+  border: '#E2EAE5',
+  borderStrong: '#D3DDD7',
+  divider: '#EDF2EF',
 
   ink: '#0A3B28',
   inkSoft: '#6B7B6E',
-  inkFaint: '#8A8070',
-  placeholder: '#B0A898',
+  inkFaint: '#7A8A7F',
+  placeholder: '#A7B3AB',
 
   accent: '#2E7D52',
   accentSoft: '#5A9A6E',
@@ -36,7 +36,7 @@ export const Colors = {
   disabled: '#B0C4B8',
 
   inkMuted: '#5C6B60',
-  inkDim: '#A39A8B',
+  inkDim: '#95A39A',
   onDarkBody: '#C8DFD0',
   amberOnDark: '#E0C68F',
   amberDeepText: '#8A6B2E',
@@ -44,8 +44,8 @@ export const Colors = {
   dangerBorder: '#EFC6C0',
   dangerText: '#8A3A30',
   tabInactive: '#9AA79D',
-  barMuted: '#C5BFB3',
-  surfaceAlt: '#F8F5F0',
+  barMuted: '#C9D3CD',
+  surfaceAlt: '#F3F8F5',
 } as const;
 
 // Researcher side: same hues, inverted — forest is the surface, not the accent.
@@ -100,3 +100,10 @@ export const BrandGradient = ['#006D5B', '#0F7E66', '#58D09B'] as const;
 
 export const brandGradientCss = (angle = 90) =>
   `linear-gradient(${angle}deg, ${BrandGradient[0]} 0%, ${BrandGradient[1]} 50%, ${BrandGradient[2]} 100%)`;
+
+// See-through brand gradient, for pressed states where dark text must stay readable.
+export const brandGradientSoftCss = (angle = 90) =>
+  `linear-gradient(${angle}deg, rgba(0,109,91,0.14) 0%, rgba(15,126,102,0.12) 50%, rgba(88,208,155,0.18) 100%)`;
+
+// Drop shadow for white cards on the white page.
+export const cardShadow = { shadowColor: '#0A3B28', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 } as const;

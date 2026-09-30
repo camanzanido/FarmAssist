@@ -1,4 +1,4 @@
-import { Colors, ForecastColors } from '@/src/constants/colors';
+import { cardShadow, Colors, ForecastColors } from '@/src/constants/colors';
 import { treeCopy as copy } from '@/src/constants/copy';
 import type { DecisionTree as Tree, OutcomeKey, TreeBranch } from '@/src/rcda/decisionTree';
 import React from 'react';
@@ -129,7 +129,7 @@ const ROOT_SIZE = 18;
 const INDENT = 22;
 
 const s = StyleSheet.create({
-  card: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, marginBottom: 14 },
+  card: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 18, padding: 18, marginBottom: 14, ...cardShadow },
   heading: { fontSize: 14, fontWeight: '800', color: Colors.ink },
   subtitle: { fontSize: 13, color: Colors.inkSoft, lineHeight: 18, marginTop: 4, marginBottom: 16 },
 
@@ -146,7 +146,7 @@ const s = StyleSheet.create({
   branchHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     borderRadius: 12, paddingVertical: 8, paddingHorizontal: 10,
-    backgroundColor: Colors.bg,
+    backgroundColor: Colors.surfaceAlt,
   },
   branchHeaderBest: { backgroundColor: Colors.accentTint },
   chanceNode: { width: 16, height: 16, borderRadius: 8, borderWidth: 3, backgroundColor: Colors.surface },

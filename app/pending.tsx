@@ -1,5 +1,5 @@
 import { useAuth } from '@/src/auth/AuthContext';
-import { Colors } from '@/src/constants/colors';
+import { cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect } from 'expo-router';
@@ -103,7 +103,7 @@ const s = StyleSheet.create({
   body: { fontSize: 14.5, lineHeight: 21, color: Colors.inkSoft, textAlign: 'center', marginBottom: 26 },
   card: {
     backgroundColor: Colors.surface, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: Colors.border, marginBottom: 26,
+    borderWidth: 1, borderColor: Colors.border, marginBottom: 26, ...cardShadow,
   },
   cardLabel: { fontSize: 11, fontWeight: '700', color: Colors.inkFaint, letterSpacing: 0.6, marginBottom: 5 },
   cardValue: { fontSize: 16, fontWeight: '700', color: Colors.ink },

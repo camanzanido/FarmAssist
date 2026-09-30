@@ -4,7 +4,7 @@ import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
-import { ClimateColors, Colors, ForecastColors } from '@/src/constants/colors';
+import { cardShadow, ClimateColors, Colors, ForecastColors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy, predefinedCopy } from '@/src/constants/copy';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
@@ -648,14 +648,14 @@ const s = StyleSheet.create({
 
   // Naming step
   namingGroup: { gap: 12 },
-  namingCard: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 1, borderWidth: 1.5, borderColor: 'transparent' },
+  namingCard: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, ...cardShadow, borderWidth: 1.5, borderColor: Colors.border },
   namingCardInvalid: { borderColor: Colors.danger },
   badge: { alignSelf: 'flex-start', backgroundColor: Colors.accentTint, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 12 },
   badgeText: { fontSize: 13, fontWeight: '700', color: Colors.ink, letterSpacing: 0.4 },
   namingInput: { fontSize: 19, fontWeight: '700', color: Colors.ink, paddingVertical: 8, borderBottomWidth: 2, borderBottomColor: Colors.ink },
   useSavedRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   useSavedBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.accentTintStrong, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
-  useSavedBtnDisabled: { borderColor: Colors.border, backgroundColor: Colors.bg },
+  useSavedBtnDisabled: { borderColor: Colors.border, backgroundColor: Colors.surfaceAlt },
   useSavedText: { fontSize: 13, fontWeight: '700', color: Colors.accent },
   useSavedTextDisabled: { color: Colors.inkFaint, fontWeight: '600' },
   loadedBtn: { backgroundColor: Colors.accent, borderColor: Colors.accent, paddingVertical: 0, paddingHorizontal: 0, gap: 0 },
@@ -670,18 +670,19 @@ const s = StyleSheet.create({
   priceBlock: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: Colors.surface, borderRadius: 16, padding: 15,
-    marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 5, elevation: 1,
+    borderWidth: 1, borderColor: Colors.border,
+    marginBottom: 14, ...cardShadow,
   },
   priceLabel: { fontSize: 15, fontWeight: '700', color: Colors.ink },
   priceUnit: { fontSize: 12, color: Colors.inkFaint },
-  priceInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.bg, borderWidth: 1.5, borderColor: Colors.ink, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 },
+  priceInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.surfaceAlt, borderWidth: 1.5, borderColor: Colors.ink, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 },
   priceSymbol: { fontSize: 15, color: Colors.inkFaint },
   priceInput: { fontSize: 18, fontWeight: '800', color: Colors.ink, minWidth: 64 },
   priceErrorText: { fontSize: 12, color: Colors.danger, fontWeight: '600', marginTop: -8, marginBottom: 12, marginLeft: 4 },
 
   scenariosHeading: { fontSize: 13, fontWeight: '700', letterSpacing: 0.6, color: Colors.inkFaint, marginBottom: 10, marginLeft: 2 },
 
-  scenarioCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 15, marginBottom: 10, borderLeftWidth: 5 },
+  scenarioCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 15, marginBottom: 12, borderWidth: 1, borderColor: Colors.border, borderLeftWidth: 5, ...cardShadow },
   scenarioHeader: { marginBottom: 12 },
   scenarioName: { fontSize: 16, fontWeight: '800', color: Colors.ink },
   scenarioFields: { flexDirection: 'row', gap: 8 },
@@ -689,7 +690,7 @@ const s = StyleSheet.create({
   scenarioFieldLabel: { fontSize: 11, fontWeight: '600', color: Colors.inkSoft, marginBottom: 5 },
   scenarioFieldUnit: { color: Colors.inkDim },
   scenarioInput: {
-    backgroundColor: Colors.bg, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 9,
+    backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 9,
     paddingVertical: 11, textAlign: 'center', fontSize: 15, fontWeight: '700', color: Colors.ink,
   },
   moneyInputWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 0, paddingHorizontal: 6 },
@@ -709,7 +710,7 @@ const s = StyleSheet.create({
   errorText: { color: Colors.danger, fontSize: 12, textAlign: 'center', marginTop: 12, fontWeight: '600' },
 
   // Climate step
-  climateCard: { backgroundColor: Colors.surface, borderRadius: 20, padding: 20, marginBottom: 16 },
+  climateCard: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 20, padding: 20, marginBottom: 16, ...cardShadow },
   climateBar: { flexDirection: 'row', height: 64, borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
   climateBarSeg: { alignItems: 'center', justifyContent: 'center' },
   climateBarPct: { fontSize: 20, fontWeight: '800', color: Colors.onDark },
@@ -728,7 +729,7 @@ const s = StyleSheet.create({
   stepperValue: { fontSize: 20, fontWeight: '800', color: Colors.ink, minWidth: 40, textAlign: 'center' },
   stepperInput: {
     fontSize: 20, fontWeight: '800', color: Colors.ink, minWidth: 48, textAlign: 'center',
-    paddingVertical: 6, paddingHorizontal: 4, backgroundColor: Colors.bg,
+    paddingVertical: 6, paddingHorizontal: 4, backgroundColor: Colors.surfaceAlt,
     borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 8,
   },
   autoValue: { fontSize: 20, fontWeight: '800', color: Colors.accentSoft, backgroundColor: Colors.divider, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 16 },

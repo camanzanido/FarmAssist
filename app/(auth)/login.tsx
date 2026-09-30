@@ -8,7 +8,7 @@ import { getAuthErrorMessage, isInvalidCredentialsError } from '@/src/utils/erro
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 
@@ -56,15 +56,18 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <View style={s.container}>
         <TouchableOpacity onPress={() => router.back()} style={s.closeBtn}>
-          <Ionicons name="close" size={22} color={Colors.onDark} />
+          <Ionicons name="close" size={22} color={Colors.ink} />
         </TouchableOpacity>
 
-        <View style={s.brandIcon}>
-          <Ionicons name="leaf" size={28} color={Colors.dark} />
-        </View>
+        <Image
+          source={require('@/assets/images/FarmAssist-logo.png')}
+          style={s.logo}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+        />
         <Text style={s.brand}>{copy.brand}</Text>
         <Text style={s.subtitle}>{copy.loginSubtitle}</Text>
 
@@ -73,7 +76,7 @@ export default function LoginScreen() {
           <TextInput
             style={[s.input, touched && errors.email && s.inputError]}
             placeholder="you@email.com"
-            placeholderTextColor="rgba(255,255,255,0.35)"
+            placeholderTextColor={Colors.placeholder}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -90,10 +93,10 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
-              placeholderTextColor="rgba(255,255,255,0.35)"
+              placeholderTextColor={Colors.placeholder}
             />
             <TouchableOpacity onPress={() => setShowPassword(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={21} color={Colors.onDarkFaint} />
+              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={21} color={Colors.inkFaint} />
             </TouchableOpacity>
           </View>
           {touched && errors.password && <Text style={s.errorText}>{errors.password}</Text>}
@@ -128,7 +131,7 @@ export default function LoginScreen() {
             <View style={s.orLine} />
           </View>
           <TouchableOpacity onPress={() => router.back()} style={s.offlineBtn} activeOpacity={0.8}>
-            <Ionicons name="phone-portrait-outline" size={19} color={Colors.onDarkSoft} />
+            <Ionicons name="phone-portrait-outline" size={19} color={Colors.ink} />
             <Text style={s.offlineBtnText}>{copy.continueOffline}</Text>
           </TouchableOpacity>
         </View>
@@ -138,48 +141,48 @@ export default function LoginScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.dark },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   container: { ...contentColumn, flex: 1, paddingHorizontal: 24, paddingTop: 10 },
   closeBtn: {
     alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center',
     marginBottom: 24,
   },
-  brandIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  brand: { fontSize: 32, fontWeight: '800', color: Colors.onDark, letterSpacing: -0.6, marginBottom: 6 },
-  subtitle: { fontSize: 15, color: Colors.onDarkFaint, lineHeight: 21, marginBottom: 30 },
+  logo: { width: 64, height: 64, marginBottom: 20 },
+  brand: { fontSize: 32, fontWeight: '800', color: Colors.ink, letterSpacing: -0.6, marginBottom: 6 },
+  subtitle: { fontSize: 15, color: Colors.inkSoft, lineHeight: 21, marginBottom: 30 },
 
   field: { marginBottom: 18 },
-  label: { fontSize: 13, fontWeight: '700', color: Colors.onDarkFaint, marginBottom: 8 },
+  label: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8 },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.18)',
-    borderRadius: 14, height: 56, paddingHorizontal: 16, fontSize: 16, color: Colors.onDark,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.borderStrong,
+    borderRadius: 14, height: 56, paddingHorizontal: 16, fontSize: 16, color: Colors.ink,
   },
   passwordRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.borderStrong,
     borderRadius: 14, height: 56, paddingHorizontal: 16,
   },
-  passwordInput: { flex: 1, fontSize: 16, color: Colors.onDark },
+  passwordInput: { flex: 1, fontSize: 16, color: Colors.ink },
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 6 },
 
-  signInBtn: { backgroundColor: Colors.accentTintStrong, borderRadius: 16, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
+  signInBtn: { backgroundColor: Colors.ink, borderRadius: 16, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
   signInBtnDisabled: { opacity: 0.6 },
-  signInBtnText: { fontSize: 17, fontWeight: '800', color: Colors.dark },
-  throttleText: { fontSize: 13, color: Colors.amberOnDark, textAlign: 'center', marginTop: -4, marginBottom: 14 },
+  signInBtnText: { fontSize: 17, fontWeight: '800', color: Colors.onDark },
+  throttleText: { fontSize: 13, color: Colors.amberText, textAlign: 'center', marginTop: -4, marginBottom: 14 },
 
   noAccountRow: { alignItems: 'center' },
-  noAccountText: { fontSize: 15, color: Colors.onDarkFaint },
-  noAccountLink: { color: Colors.onDark, fontWeight: '700' },
+  noAccountText: { fontSize: 15, color: Colors.inkSoft },
+  noAccountLink: { color: Colors.accent, fontWeight: '700' },
 
   bottomBlock: { marginTop: 'auto', marginBottom: 30 },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
-  orLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.15)' },
-  orText: { fontSize: 12, color: Colors.onDarkMuted },
+  orLine: { flex: 1, height: 1, backgroundColor: Colors.divider },
+  orText: { fontSize: 12, color: Colors.inkFaint },
   offlineBtn: {
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.25)', borderRadius: 16, height: 56,
+    borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 16, height: 56,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9,
   },
-  offlineBtnText: { fontSize: 15, fontWeight: '700', color: Colors.onDarkSoft },
+  offlineBtnText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
 });

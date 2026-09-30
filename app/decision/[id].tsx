@@ -65,10 +65,10 @@ export default function DecisionDetailScreen() {
   if (state.status !== 'ready') {
     return (
       <SafeAreaView style={s.safe}>
-        <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
         <View style={s.banner}>
           <TouchableOpacity onPress={() => router.back()} style={heroTopStyles.backBtn} accessibilityLabel={copy.back}>
-            <Ionicons name="arrow-back" size={22} color={Colors.onDark} />
+            <Ionicons name="arrow-back" size={22} color={Colors.ink} />
           </TouchableOpacity>
           <Text style={s.bannerTitle}>{copy.title}</Text>
           <View style={{ width: 40 }} />
@@ -99,16 +99,16 @@ export default function DecisionDetailScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
       <DecisionResultView
         summary={state.summary}
         heroTop={
           <>
             <TouchableOpacity onPress={() => router.back()} style={heroTopStyles.backBtn} accessibilityLabel={copy.back}>
-              <Ionicons name="arrow-back" size={22} color={Colors.onDark} />
+              <Ionicons name="arrow-back" size={22} color={Colors.ink} />
             </TouchableOpacity>
             <View style={heroTopStyles.pill}>
-              <Ionicons name="time-outline" size={15} color={Colors.onDarkSoft} />
+              <Ionicons name="time-outline" size={15} color={Colors.accent} />
               <Text style={heroTopStyles.pillText} numberOfLines={1}>
                 {date ? `${typeLabel} · ${date}` : typeLabel}
               </Text>
@@ -123,11 +123,11 @@ export default function DecisionDetailScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   banner: {
-    backgroundColor: Colors.dark,
+    backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.divider,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,
   },
-  bannerTitle: { fontSize: 17, fontWeight: '700', color: Colors.onDark },
+  bannerTitle: { fontSize: 17, fontWeight: '700', color: Colors.ink },
   centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 12 },
   message: { fontSize: 14, color: Colors.inkSoft, textAlign: 'center' },
   actionBtn: { marginTop: 4, backgroundColor: Colors.ink, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 20 },

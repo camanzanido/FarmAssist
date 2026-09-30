@@ -1,7 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { DECISIONS } from '@/src/constants';
 import { GradientText } from '@/src/components/ui/gradient-text';
-import { BrandGradient, brandGradientCss, Colors } from '@/src/constants/colors';
+import { BrandGradient, brandGradientCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { homeCopy as copy } from '@/src/constants/copy';
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
@@ -131,8 +131,6 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const cardShadow = { shadowColor: '#0A3B28', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 } as const;
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },

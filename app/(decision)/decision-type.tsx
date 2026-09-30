@@ -1,7 +1,7 @@
 import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { DECISIONS, DecisionType } from '@/src/constants';
-import { Colors } from '@/src/constants/colors';
+import { cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { decisionTypeCopy as copy } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
@@ -79,9 +79,9 @@ const s = StyleSheet.create({
   card: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface, borderRadius: 18,
+    borderWidth: 1, borderColor: Colors.border,
     padding: 18, gap: 14,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+    ...cardShadow,
   },
   iconWrap: {
     width: 48, height: 48, borderRadius: 14,

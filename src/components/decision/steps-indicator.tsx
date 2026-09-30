@@ -3,12 +3,12 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 const s = StyleSheet.create({
-  wrap: { flex: 1 },
-  track: { flexDirection: 'row', gap: 5, marginBottom: 6 },
+  wrap: { flex: 1, alignItems: 'flex-end' },
+  track: { flexDirection: 'row', gap: 5, marginBottom: 6, width: 110 },
   segment: { flex: 1, height: 5, borderRadius: 3, backgroundColor: Colors.borderStrong },
   segmentDone: { backgroundColor: Colors.accentSoft },
   segmentActive: { backgroundColor: Colors.ink },
-  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1.1, color: Colors.inkFaint },
+  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1.1, color: Colors.inkFaint, textAlign: 'right' },
 });
 
 export default function StepIndicator({
@@ -30,7 +30,7 @@ export default function StepIndicator({
           />
         ))}
       </View>
-      <Text style={s.label}>
+      <Text style={s.label} numberOfLines={1}>
         {`STEP ${current + 1} OF ${total}`}
         {context ? ` · ${context.toUpperCase()}` : ''}
       </Text>

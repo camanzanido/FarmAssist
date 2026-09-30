@@ -131,7 +131,7 @@ const s = StyleSheet.create({
   retryText: { color: Colors.onDark, fontWeight: '700', fontSize: 13 },
 
   list: { flexGrow: 0 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 14, padding: 14, marginBottom: 8 },
   rowTaken: { opacity: 0.5 },
   rowCurrent: { borderWidth: 1.5, borderColor: Colors.accent },
   currentText: { fontSize: 12, fontWeight: '700', color: Colors.accent, marginTop: 6 },

@@ -158,10 +158,10 @@ export default function ResultScreen() {
 
   const renderFallback = (message: string) => (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
       <View style={s.banner}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={Colors.onDark} />
+          <Ionicons name="arrow-back" size={22} color={Colors.ink} />
         </TouchableOpacity>
         <Text style={s.bannerTitle}>Analysis Result</Text>
         <View style={{ width: 40 }} />
@@ -189,13 +189,13 @@ export default function ResultScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
 
       {!result ? (
         <>
           <View style={s.banner}>
             <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-              <Ionicons name="arrow-back" size={22} color={Colors.onDark} />
+              <Ionicons name="arrow-back" size={22} color={Colors.ink} />
             </TouchableOpacity>
             <Text style={s.bannerTitle}>Analysis Result</Text>
             <View style={{ width: 40 }} />
@@ -211,10 +211,10 @@ export default function ResultScreen() {
           heroTop={
             <>
               <TouchableOpacity onPress={() => router.back()} style={heroTopStyles.backBtn}>
-                <Ionicons name="arrow-back" size={22} color={Colors.onDark} />
+                <Ionicons name="arrow-back" size={22} color={Colors.ink} />
               </TouchableOpacity>
               <View style={[heroTopStyles.pill, saveError && heroTopStyles.pillError]}>
-                <Ionicons name={saveError ? 'warning-outline' : 'save-outline'} size={15} color={Colors.onDarkSoft} />
+                <Ionicons name={saveError ? 'warning-outline' : 'save-outline'} size={15} color={Colors.accent} />
                 <Text style={heroTopStyles.pillText}>{savedPill}</Text>
               </View>
             </>
@@ -250,17 +250,17 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
 
   banner: {
-    backgroundColor: Colors.dark,
+    backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.divider,
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,
   },
   backBtn: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: Colors.accentTint,
     alignItems: 'center', justifyContent: 'center',
   },
-  bannerTitle: { fontSize: 17, fontWeight: '700', color: Colors.onDark },
+  bannerTitle: { fontSize: 17, fontWeight: '700', color: Colors.ink },
 
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 },
   loadingText: { fontSize: 14, color: Colors.inkSoft },

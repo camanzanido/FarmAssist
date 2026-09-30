@@ -1,7 +1,8 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
-import { Colors } from '@/src/constants/colors';
+import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
+import { brandGradientSoftCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { historyCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
@@ -13,6 +14,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   SectionList,
   StatusBar,
@@ -98,6 +100,11 @@ export default function HistoryScreen() {
     [decisions, filter]
   );
 
+  const filterOptions = useMemo(
+    () => [{ value: 'all' as const, label: copy.filterAll }, ...DECISIONS.map(d => ({ value: d.id, label: d.label }))],
+    []
+  );
+
   const sections = useMemo(() => {
     const groups = new Map<string, Decision[]>();
     for (const d of filtered) {
@@ -142,21 +149,12 @@ export default function HistoryScreen() {
 
       {decisions.length > 0 && (
         <View style={s.filterRow}>
-          <TouchableOpacity
-            style={[s.chip, filter === 'all' && s.chipActive]}
-            onPress={() => setFilter('all')}
-          >
-            <Text style={[s.chipText, filter === 'all' && s.chipTextActive]}>{copy.filterAll}</Text>
-          </TouchableOpacity>
-          {DECISIONS.map(d => (
-            <TouchableOpacity
-              key={d.id}
-              style={[s.chip, filter === d.id && s.chipActive]}
-              onPress={() => setFilter(d.id)}
-            >
-              <Text style={[s.chipText, filter === d.id && s.chipTextActive]}>{d.label}</Text>
-            </TouchableOpacity>
-          ))}
+          <AnimatedFilterBar
+            options={filterOptions}
+            selected={filter}
+            onSelect={setFilter}
+            style={s.filterContent}
+          />
         </View>
       )}
 
@@ -200,14 +198,13 @@ export default function HistoryScreen() {
           renderItem={({ item }) => {
             const isPending = pendingIds.has(item.id);
             return (
-              <View style={s.card}>
-                <TouchableOpacity
-                  style={s.cardMain}
-                  onPress={() => router.push({ pathname: '/decision/[id]', params: { id: item.id } })}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityHint={copy.openHint}
-                >
+              <Pressable
+                style={({ pressed }) => [s.card, pressed && s.cardPressed]}
+                onPress={() => router.push({ pathname: '/decision/[id]', params: { id: item.id } })}
+                accessibilityRole="button"
+                accessibilityHint={copy.openHint}
+              >
+                <View style={s.cardMain}>
                   <View style={s.cardIconWrap}>
                     <Ionicons name={decisionTypeIcon(item.decision_type)} size={21} color={Colors.ink} />
                   </View>
@@ -229,7 +226,7 @@ export default function HistoryScreen() {
                       </View>
                     </View>
                   </View>
-                </TouchableOpacity>
+                </View>
                 <TouchableOpacity
                   style={s.deleteBtn}
                   onPress={() => confirmDelete(item)}
@@ -242,7 +239,7 @@ export default function HistoryScreen() {
                     <Ionicons name="trash-outline" size={18} color={Colors.danger} />
                   )}
                 </TouchableOpacity>
-              </View>
+              </Pressable>
             );
           }}
         />
@@ -258,11 +255,8 @@ const s = StyleSheet.create({
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
   subtitle: { fontSize: 14, color: Colors.inkSoft, marginTop: 3 },
 
-  filterRow: { ...contentColumn, flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
-  chip: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  chipActive: { backgroundColor: Colors.ink, borderColor: Colors.ink },
-  chipText: { fontSize: 13, fontWeight: '600', color: Colors.inkMuted },
-  chipTextActive: { color: Colors.onDark, fontWeight: '700' },
+  filterRow: { ...contentColumn, paddingTop: 16, paddingBottom: 4 },
+  filterContent: { paddingHorizontal: 24 },
 
   centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
   emptyText: { fontSize: 15, fontWeight: '700', color: Colors.ink, marginTop: 4 },
@@ -280,9 +274,12 @@ const s = StyleSheet.create({
   card: {
     flexDirection: 'row', alignItems: 'flex-start',
     backgroundColor: Colors.surface, borderRadius: 16,
+    borderWidth: 1, borderColor: Colors.border,
     padding: 16, gap: 13,
-    marginBottom: 9,
+    marginBottom: 11,
+    ...cardShadow,
   },
+  cardPressed: { experimental_backgroundImage: brandGradientSoftCss(135), borderColor: Colors.accentTintStrong },
   cardMain: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 13 },
   cardIconWrap: {
     width: 44, height: 44, borderRadius: 13,

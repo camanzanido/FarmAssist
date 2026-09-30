@@ -2,7 +2,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
-import { Colors } from '@/src/constants/colors';
+import { cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { profileCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
@@ -251,7 +251,7 @@ const s = StyleSheet.create({
   username: { fontSize: 14, color: Colors.inkSoft, marginTop: 2 },
 
   statsRow: { flexDirection: 'row', gap: 9, marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: Colors.surface, borderRadius: 14, padding: 14 },
+  statCard: { flex: 1, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 14, padding: 14, ...cardShadow },
   statValue: { fontSize: 22, fontWeight: '800', color: Colors.ink },
   statLabel: { fontSize: 12, color: Colors.inkFaint, marginTop: 2 },
 
@@ -274,7 +274,7 @@ const s = StyleSheet.create({
   loadErrorBody: { fontSize: 13.5, color: Colors.dangerText, lineHeight: 19, marginBottom: 12 },
 
   sectionHeading: { fontSize: 12, fontWeight: '700', letterSpacing: 0.9, color: Colors.inkFaint, marginBottom: 10 },
-  listCard: { backgroundColor: Colors.surface, borderRadius: 16, overflow: 'hidden', marginBottom: 20 },
+  listCard: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 16, marginBottom: 20, ...cardShadow },
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 15 },
   listRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.divider },
   listRowIconWrap: { width: 38, height: 38, borderRadius: 11, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },

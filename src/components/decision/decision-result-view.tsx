@@ -1,4 +1,5 @@
-import { Colors } from '@/src/constants/colors';
+import { GradientText } from '@/src/components/ui/gradient-text';
+import { BrandGradient, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { resultCopy as copy } from '@/src/constants/copy';
 import { CLIMATE_LABELS, RcdaSummary } from '@/src/rcda/summary';
@@ -34,7 +35,7 @@ export function DecisionResultView({ summary, heroTop, banner, footer }: Props) 
           <Text style={s.answerEyebrow}>{copy.answerEyebrow}</Text>
           <Text style={s.verdict}>{copy.verdict(winner)}</Text>
           <View style={s.deltaRow}>
-            <Text style={s.deltaValue}>+₱{summary.profitIncrease.toLocaleString()}</Text>
+            <GradientText text={`+₱${summary.profitIncrease.toLocaleString()}`} colors={BrandGradient} style={s.deltaValue} />
             <Text style={s.deltaUnit}>{copy.perHectare}</Text>
           </View>
           <Text style={s.verdictDetail}>{copy.verdictDetail(winner, loser)}</Text>
@@ -129,19 +130,19 @@ const s = StyleSheet.create({
   scroll: { paddingBottom: 0 },
 
   // Hero
-  hero: { backgroundColor: Colors.dark, paddingTop: 50, paddingHorizontal: 22, paddingBottom: 26, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  hero: { backgroundColor: Colors.surface, paddingTop: 16, paddingHorizontal: 22, paddingBottom: 22, borderBottomWidth: 1, borderBottomColor: Colors.divider },
   heroInner: contentColumn,
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 },
-  answerEyebrow: { fontSize: 12, fontWeight: '700', letterSpacing: 1.2, color: Colors.onDarkFaint, marginBottom: 10 },
-  verdict: { fontSize: 32, fontWeight: '800', color: Colors.onDark, lineHeight: 38, letterSpacing: -0.6 },
+  answerEyebrow: { fontSize: 12, fontWeight: '700', letterSpacing: 1.2, color: Colors.accent, marginBottom: 10 },
+  verdict: { fontSize: 32, fontWeight: '800', color: Colors.ink, lineHeight: 38, letterSpacing: -0.6 },
   deltaRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 18, marginBottom: 6 },
-  deltaValue: { fontSize: 40, fontWeight: '800', color: Colors.onDarkSoft, lineHeight: 40 },
-  deltaUnit: { fontSize: 14, color: Colors.onDarkFaint, paddingBottom: 6 },
-  verdictDetail: { fontSize: 15, color: Colors.onDarkBody, lineHeight: 21 },
+  deltaValue: { fontSize: 40, fontWeight: '800', lineHeight: 44 },
+  deltaUnit: { fontSize: 14, color: Colors.inkSoft, paddingBottom: 8 },
+  verdictDetail: { fontSize: 15, color: Colors.inkMuted, lineHeight: 21 },
 
   body: { ...contentColumn, padding: 20, paddingTop: 20 },
 
-  card: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, marginBottom: 14 },
+  card: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 18, padding: 18, marginBottom: 14, ...cardShadow },
   cardTitle: { fontSize: 14, fontWeight: '800', color: Colors.ink, marginBottom: 14 },
 
   earningsRow: { marginBottom: 14 },
@@ -165,12 +166,12 @@ const s = StyleSheet.create({
 
   disclosureRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: Colors.surface, borderRadius: 18, padding: 16, paddingHorizontal: 18,
-    marginBottom: 14,
+    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 18, padding: 16, paddingHorizontal: 18,
+    marginBottom: 14, ...cardShadow,
   },
   disclosureText: { flex: 1, fontSize: 15, fontWeight: '700', color: Colors.ink },
 
-  table: { backgroundColor: Colors.surface, borderRadius: 14, overflow: 'hidden', marginBottom: 14 },
+  table: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 14, overflow: 'hidden', marginBottom: 14 },
   tableRow: { flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 12 },
   tableRowAlt: { backgroundColor: Colors.surfaceAlt },
   tableCell: { flex: 1, fontSize: 12, color: Colors.ink, textAlign: 'center' },
@@ -184,8 +185,8 @@ const s = StyleSheet.create({
 
 /** Hero-top styles shared by screens that render into `heroTop`. */
 export const heroTopStyles = StyleSheet.create({
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  pillError: { backgroundColor: 'rgba(192,57,43,0.25)' },
-  pillText: { fontSize: 12, fontWeight: '600', color: Colors.onDarkSoft },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  pillError: { backgroundColor: Colors.dangerBg },
+  pillText: { fontSize: 12, fontWeight: '600', color: Colors.accent },
 });
