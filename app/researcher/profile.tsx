@@ -1,6 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
-import { ResearcherColors as C } from '@/src/constants/colors';
+import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
 import { profileCopy } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +35,7 @@ export default function ResearcherProfileScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={C.bg} />
+      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <Text style={s.eyebrow}>RESEARCHER</Text>
@@ -89,15 +89,15 @@ const s = StyleSheet.create({
 
   header: { marginBottom: 22 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: C.textFaint, marginBottom: 5 },
-  title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
+  title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
 
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },
-  avatar: { width: 60, height: 60, borderRadius: 18, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 60, height: 60, borderRadius: 18, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 21, fontWeight: '800', color: C.accentDeepText },
   name: { fontSize: 20, fontWeight: '800', color: C.text, letterSpacing: -0.3 },
   username: { fontSize: 13.5, color: C.textSoft, marginTop: 2 },
 
-  card: { backgroundColor: C.card, borderRadius: 16, overflow: 'hidden', marginBottom: 24 },
+  card: { backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.cardBorder, marginBottom: 24, ...cardShadow },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 15 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: C.divider },
   rowLabel: { fontSize: 14.5, fontWeight: '600', color: C.text },

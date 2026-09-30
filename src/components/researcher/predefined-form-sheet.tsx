@@ -3,10 +3,11 @@ import { ResearcherColors as C } from '@/src/constants/colors';
 import type { PredefinedInput } from '@/src/database/repositories/predefined';
 import { formatNumberDisplay, normalizeNumberInput } from '@/src/utils/numberInput';
 import { emptyFormValues, OptionFormValues, predefinedKey, validateOptionForm } from '@/src/utils/predefinedOptions';
+import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,
+  ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 
 type Group = 'yield' | 'cost' | 'addCost';
@@ -92,12 +93,7 @@ export function PredefinedFormSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <KeyboardAvoidingView style={s.backdrop} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onCancel} />
-        <View style={s.sheet}>
-          <View style={s.grabber} />
-          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <BottomSheet visible={visible} onClose={onCancel} avoidKeyboard style={s.sheet} scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
             <Text style={s.title}>{TITLES[mode]}</Text>
             <Text style={s.subtitle}>
               {mode === 'publish'
@@ -247,10 +243,7 @@ export function PredefinedFormSheet({
                 {saving ? <ActivityIndicator color={C.accentDeepText} /> : <Text style={s.saveText}>{mode === 'edit' ? 'Save' : 'Publish'}</Text>}
               </TouchableOpacity>
             </View>
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    </BottomSheet>
   );
 }
 
@@ -263,16 +256,10 @@ export const blankPredefinedForm = (decisionType: DecisionType = 'crop_choice'):
 });
 
 const s = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' },
-  sheet: {
-    backgroundColor: C.sheet, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, paddingBottom: 30, maxHeight: '94%',
-    width: '100%', maxWidth: 640, alignSelf: 'center',
-  },
-  grabber: { width: 38, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.24)', alignSelf: 'center', marginBottom: 18 },
+  sheet: { paddingBottom: 30, maxHeight: '94%' },
   title: { fontSize: 21, fontWeight: '800', color: C.text, marginBottom: 4 },
   subtitle: { fontSize: 13.5, color: C.textSoft, marginBottom: 18 },
-  sourceNote: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.card, borderRadius: 12, padding: 12, marginBottom: 4 },
+  sourceNote: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.accentTint, borderRadius: 12, padding: 12, marginBottom: 4 },
   sourceText: { flex: 1, fontSize: 13, fontWeight: '600', color: C.textSoft },
   replaceNote: { backgroundColor: C.amberBg, marginTop: 14 },
 
@@ -300,7 +287,7 @@ const s = StyleSheet.create({
   cellInput: { flexShrink: 1, fontSize: 14, fontWeight: '700', color: C.text, textAlign: 'center', height: '100%' },
 
   actions: { flexDirection: 'row', gap: 10, marginTop: 22 },
-  deleteBtn: { width: 52, height: 52, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(224,133,133,0.4)', alignItems: 'center', justifyContent: 'center' },
+  deleteBtn: { width: 52, height: 52, borderRadius: 14, borderWidth: 1, borderColor: C.dangerBorder, alignItems: 'center', justifyContent: 'center' },
   cancelBtn: { flex: 1, height: 52, borderRadius: 14, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
   cancelText: { fontSize: 15, fontWeight: '700', color: C.text },
   saveBtn: { flex: 1.4, height: 52, borderRadius: 14, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },

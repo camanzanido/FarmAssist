@@ -1,5 +1,5 @@
 import { HapticTab } from '@/src/components/ui/haptic-tab';
-import { ResearcherColors } from '@/src/constants/colors';
+import { Colors } from '@/src/constants/colors';
 import { useTabBarFrame } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
@@ -13,12 +13,13 @@ export default function ResearcherLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
+          freezeOnBlur: true,
           tabBarButton: HapticTab,
-          tabBarActiveTintColor: ResearcherColors.accent,
-          tabBarInactiveTintColor: ResearcherColors.textMuted,
+          tabBarActiveTintColor: Colors.ink,
+          tabBarInactiveTintColor: Colors.tabInactive,
           tabBarStyle: {
-            backgroundColor: ResearcherColors.tabBg,
-            borderTopColor: ResearcherColors.divider,
+            backgroundColor: Colors.surface,
+            borderTopColor: Colors.border,
             ...tabBarFrame,
           },
           tabBarLabelStyle: { fontSize: 10.5, fontWeight: '700' },

@@ -1,4 +1,4 @@
-import { fetchAllRows, paginate } from '../../src/utils/pagination';
+import { fetchAllRows, pageRange, pageWindow } from '../../src/utils/pagination';
 
 function fakeTable(size: number, serverCap = Infinity) {
   const rows = Array.from({ length: size }, (_, i) => i);
@@ -35,25 +35,32 @@ describe('fetchAllRows', () => {
   });
 });
 
-describe('paginate', () => {
-  const items = Array.from({ length: 45 }, (_, i) => i + 1);
-
-  it('returns the requested page with its range', () => {
-    const p = paginate(items, 2, 20);
-    expect(p.items[0]).toBe(21);
-    expect(p).toMatchObject({ page: 2, pageCount: 3, start: 21, end: 40, total: 45 });
+describe('pageRange', () => {
+  it('maps a 1-based page to inclusive row offsets', () => {
+    expect(pageRange(1, 15)).toEqual({ from: 0, to: 14 });
+    expect(pageRange(3, 25)).toEqual({ from: 50, to: 74 });
   });
 
-  it('returns a short last page', () => {
-    expect(paginate(items, 3, 20)).toMatchObject({ start: 41, end: 45 });
+  it('treats page 0 or below as the first page', () => {
+    expect(pageRange(0, 15)).toEqual({ from: 0, to: 14 });
+  });
+});
+
+describe('pageWindow', () => {
+  it('describes a middle page', () => {
+    expect(pageWindow(2, 20, 45, 20)).toEqual({ page: 2, pageCount: 3, start: 21, end: 40, total: 45 });
+  });
+
+  it('describes a short last page', () => {
+    expect(pageWindow(3, 20, 45, 5)).toMatchObject({ start: 41, end: 45 });
   });
 
   it('clamps a page that no longer exists, e.g. after a delete or a narrower filter', () => {
-    expect(paginate(items.slice(0, 5), 3, 20)).toMatchObject({ page: 1, start: 1, end: 5 });
-    expect(paginate(items, 0, 20).page).toBe(1);
+    expect(pageWindow(3, 20, 5, 0)).toMatchObject({ page: 1, pageCount: 1 });
+    expect(pageWindow(0, 20, 45, 20).page).toBe(1);
   });
 
-  it('reports one empty page for no items', () => {
-    expect(paginate([], 1, 20)).toMatchObject({ items: [], page: 1, pageCount: 1, start: 0, end: 0, total: 0 });
+  it('reports one empty page for no rows', () => {
+    expect(pageWindow(1, 15, 0, 0)).toEqual({ page: 1, pageCount: 1, start: 0, end: 0, total: 0 });
   });
 });

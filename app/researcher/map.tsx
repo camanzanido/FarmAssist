@@ -1,119 +1,68 @@
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
-import { ResearcherColors as C } from '@/src/constants/colors';
+import { LeafletMap, type LeafletMapHandle, type MapPin } from '@/src/components/researcher/leaflet-map';
+import { MAP_HEIGHT_RATIO, MapSkeleton } from '@/src/components/researcher/skeletons';
+import { cardShadow, Colors } from '@/src/constants/colors';
 import { wideColumn } from '@/src/constants/layout';
 import { cityCoordinateKey, ensureCoordinates, type CityCoordinate } from '@/src/database/repositories/cityCoordinates';
-import { type Decision } from '@/src/database/repositories/decisions';
-import { type Location } from '@/src/database/repositories/locations';
-import { fetchAllDecisions, fetchAllLocations } from '@/src/database/repositories/researcher';
+import { fetchCityStats, type CityStats } from '@/src/database/repositories/researcher';
+import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { formatCurrency } from '@/src/utils/formatters';
-import { median } from '@/src/utils/researcherStats';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator, FlatList, Platform, Pressable, RefreshControl, StatusBar, StyleSheet, Text, TextInput,
+  TouchableOpacity, useWindowDimensions, View,
+} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function buildMapHtml(pins: {
-  city: string; lat: number; lng: number; count: number; farmers: number; medianGainLabel: string;
-}[]): string {
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-<style>
-  html, body, #map { height: 100%; margin: 0; padding: 0; background: #0C3324; }
-  .leaflet-popup-content { font-family: -apple-system, Roboto, sans-serif; font-size: 13px; line-height: 1.5; }
-  .farmassist-pin { background: transparent; border: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.45)); }
-</style>
-</head>
-<body>
-<div id="map"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script>
-  var pins = ${JSON.stringify(pins)};
-  var map = L.map('map', { zoomControl: true }).setView([12.8797, 121.7740], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 18,
-  }).addTo(map);
+const ROW_HEIGHT = 62;
+const ROW_GAP = 8;
+const EMPTY: CityStats[] = [];
 
-  function pinSvg(size, count) {
-    var h = Math.round(size * 1.3);
-    return '<svg width="' + size + '" height="' + h + '" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">' +
-      '<path d="M20 0C9 0 0 8.9 0 19.8 0 34 20 52 20 52S40 34 40 19.8C40 8.9 31 0 20 0Z" fill="#3FA36B" stroke="#173B27" stroke-width="2.5"/>' +
-      '<circle cx="20" cy="19.5" r="13" fill="#0C3324"/>' +
-      '<text x="20" y="24.5" font-size="15" font-weight="700" fill="#EAF7EE" text-anchor="middle" font-family="Arial, sans-serif">' + count + '</text>' +
-    '</svg>';
-  }
+type CityRow = CityStats & { key: string; coord: CityCoordinate | undefined };
 
-  var bounds = [];
-  pins.forEach(function (p) {
-    var size = Math.min(40 + p.count * 4, 76);
-    var height = Math.round(size * 1.3);
-    var icon = L.divIcon({
-      html: pinSvg(size, p.count),
-      className: 'farmassist-pin',
-      iconSize: [size, height],
-      iconAnchor: [size / 2, height],
-      popupAnchor: [0, -height],
-    });
-    var marker = L.marker([p.lat, p.lng], { icon: icon }).addTo(map);
-    marker.bindPopup(
-      '<b>' + p.city + '</b><br/>' +
-      p.count + ' decision' + (p.count === 1 ? '' : 's') + '<br/>' +
-      p.farmers + ' farmer' + (p.farmers === 1 ? '' : 's') + '<br/>' +
-      'Median gain: ' + p.medianGainLabel
-    );
-    bounds.push([p.lat, p.lng]);
-  });
-  if (bounds.length > 0) {
-    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
-  }
-</script>
-</body>
-</html>`;
+function describeCity(row: CityStats): string {
+  return `${row.decisions} decision${row.decisions === 1 ? '' : 's'} · ${row.farmers} farmer${row.farmers === 1 ? '' : 's'} · median ${formatCurrency(row.median_gain)}`;
 }
 
-const EMPTY = { decisions: [] as Decision[], locations: [] as Location[] };
+function CityListRow({ row, selected, onPress }: { row: CityRow; selected: boolean; onPress: (row: CityRow) => void }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [s.row, selected && s.rowSelected, pressed && s.rowPressed]}
+      onPress={() => onPress(row)}
+      accessibilityRole="button"
+      accessibilityHint="Shows this municipality on the map"
+    >
+      <View style={[s.rowDot, !row.coord && s.rowDotMissing]} />
+      <View style={s.rowPlace}>
+        <Text style={s.rowCity} numberOfLines={1}>{row.city}</Text>
+        <Text style={s.rowProvince} numberOfLines={1}>{row.province}</Text>
+      </View>
+      <View style={s.rowStats}>
+        <Text style={s.rowCount}>{row.decisions} <Text style={s.rowUnit}>dec</Text> · {row.farmers} <Text style={s.rowUnit}>farmers</Text></Text>
+        <Text style={s.rowGain}>{formatCurrency(row.median_gain)}</Text>
+      </View>
+    </Pressable>
+  );
+}
 
 export default function ResearcherMapScreen() {
-  const fetchMapData = useCallback(async () => {
-    const [decisions, locations] = await Promise.all([fetchAllDecisions(), fetchAllLocations()]);
-    return { decisions, locations };
-  }, []);
-  const { data: { decisions, locations }, isLoading, error, reload } = useResearcherFetch(fetchMapData, EMPTY);
+  const { data: byCity, isLoading, isRefreshing, error, reload, refresh } = useResearcherFetch(fetchCityStats, EMPTY);
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const mapRef = useRef<LeafletMapHandle>(null);
+  const listRef = useRef<FlatList<CityRow>>(null);
 
   const [coords, setCoords] = useState<Map<string, CityCoordinate>>(new Map());
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodeFailed, setGeocodeFailed] = useState(false);
+  const [mapFailed, setMapFailed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const debouncedQuery = useDebouncedValue(searchQuery.trim().toLowerCase(), 300);
 
-  const byCity = useMemo(() => {
-    const locById = new Map(locations.map(l => [l.id, l]));
-    const groups = new Map<string, { city: string; province: string; decisions: Decision[] }>();
-    for (const d of decisions) {
-      const loc = locById.get(d.location_id);
-      if (!loc?.city || !loc.province) continue;
-      const key = cityCoordinateKey(loc.city, loc.province);
-      if (!groups.has(key)) groups.set(key, { city: loc.city, province: loc.province, decisions: [] });
-      groups.get(key)!.decisions.push(d);
-    }
-    const arr = Array.from(groups.values()).map(g => ({
-      city: g.city,
-      province: g.province,
-      count: g.decisions.length,
-      farmers: new Set(g.decisions.map(d => d.user_id)).size,
-      medianGain: median(g.decisions.map(d => d.profit_increase)),
-    }));
-    arr.sort((a, b) => b.count - a.count);
-    return arr;
-  }, [decisions, locations]);
-
-  // Resolve pin coordinates for whichever cities are actually in use —
-  // geocodes only cache misses, cached results are reused across sessions.
   useEffect(() => {
     if (byCity.length === 0) return;
     let cancelled = false;
@@ -129,81 +78,69 @@ export default function ResearcherMapScreen() {
     return () => { cancelled = true; };
   }, [byCity]);
 
-  const filteredByCity = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return byCity;
-    return byCity.filter(row =>
-      row.city.toLowerCase().includes(q) || row.province.toLowerCase().includes(q)
-    );
-  }, [byCity, searchQuery]);
+  const rows: CityRow[] = useMemo(() => byCity.map(c => {
+    const key = cityCoordinateKey(c.city, c.province);
+    return { ...c, key, coord: coords.get(key) };
+  }), [byCity, coords]);
 
-  const pins = useMemo(() => {
-    return filteredByCity
-      .map(row => {
-        const c = coords.get(cityCoordinateKey(row.city, row.province));
-        if (!c) return null;
-        return {
-          city: row.city,
-          lat: c.lat,
-          lng: c.lng,
-          count: row.count,
-          farmers: row.farmers,
-          medianGainLabel: formatCurrency(row.medianGain),
-        };
-      })
-      .filter((p): p is NonNullable<typeof p> => p !== null);
-  }, [filteredByCity, coords]);
+  const filtered = useMemo(() => {
+    if (!debouncedQuery) return rows;
+    return rows.filter(r => r.city.toLowerCase().includes(debouncedQuery) || r.province.toLowerCase().includes(debouncedQuery));
+  }, [rows, debouncedQuery]);
 
-  const mapHtml = useMemo(() => buildMapHtml(pins), [pins]);
+  const pins: MapPin[] = useMemo(() => filtered.flatMap(r => r.coord
+    ? [{ key: r.key, city: r.city, lat: r.coord.lat, lng: r.coord.lng, details: describeCity(r) }]
+    : []), [filtered]);
+
+  const focusRow = useCallback((row: CityRow) => {
+    setSelectedKey(row.key);
+    if (row.coord) mapRef.current?.focus(row.key);
+  }, []);
+
+  const onPinPress = useCallback((key: string) => {
+    setSelectedKey(key);
+    const index = filtered.findIndex(r => r.key === key);
+    if (index >= 0) listRef.current?.scrollToIndex({ index, viewPosition: 0.1, animated: true });
+  }, [filtered]);
+
+  const mapHeight = Math.round(height * MAP_HEIGHT_RATIO);
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={C.bg} />
+    <SafeAreaView style={s.safe} edges={['left', 'right']}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <ResearcherAsyncState
         isLoading={isLoading}
         error={error}
         onRetry={reload}
         errorMessage="Couldn't load the map. Check your connection."
+        skeleton={<MapSkeleton />}
       >
-        <>
-          <View style={s.header}>
-            <View style={s.searchRow}>
-              <Ionicons name="search-outline" size={19} color={C.textFaint} />
-              <TextInput
-                style={s.searchInput}
-                placeholder="Search municipality"
-                placeholderTextColor={C.textFaint}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoCorrect={false}
-                returnKeyType="search"
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={8}>
-                  <Ionicons name="close-circle" size={18} color={C.textFaint} />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          <View style={s.mapWrap}>
-            <WebView
-              source={{ html: mapHtml }}
-              style={s.map}
-              originWhitelist={['*']}
-              javaScriptEnabled
-              domStorageEnabled
+        <View style={s.fill}>
+          <View style={{ height: mapHeight }}>
+            <LeafletMap
+              ref={mapRef}
+              pins={pins}
+              selectedKey={selectedKey}
+              topInset={insets.top}
+              onPinPress={onPinPress}
+              onLoadError={() => setMapFailed(true)}
             />
+
             {isGeocoding && (
-              <View style={s.mapLoadingBadge}>
-                <ActivityIndicator size="small" color={C.accent} />
-                <Text style={s.mapLoadingText}>Locating…</Text>
+              <View style={[s.badge, { top: insets.top + 10 }]}>
+                <ActivityIndicator size="small" color={Colors.accent} />
+                <Text style={s.badgeText}>Locating…</Text>
               </View>
             )}
-            {!isGeocoding && byCity.length > 0 && pins.length === 0 && (
-              <View style={s.mapNotice}>
-                <Ionicons name="alert-circle-outline" size={16} color={C.textFaint} />
-                <Text style={s.mapNoticeText}>
+            {mapFailed ? (
+              <View style={s.notice}>
+                <Ionicons name="cloud-offline-outline" size={16} color={Colors.inkFaint} />
+                <Text style={s.noticeText}>Couldn&apos;t load the map — check your internet connection.</Text>
+              </View>
+            ) : !isGeocoding && filtered.length > 0 && pins.length === 0 && (
+              <View style={s.notice}>
+                <Ionicons name="alert-circle-outline" size={16} color={Colors.inkFaint} />
+                <Text style={s.noticeText}>
                   {geocodeFailed
                     ? "Couldn't place pins — check your internet connection."
                     : "Couldn't find map coordinates for these locations."}
@@ -212,74 +149,98 @@ export default function ResearcherMapScreen() {
             )}
           </View>
 
-          <ScrollView contentContainerStyle={s.list} showsVerticalScrollIndicator={false}>
-            {filteredByCity.length === 0 ? (
-              <EmptyState
-                icon={byCity.length === 0 ? 'map-outline' : 'search-outline'}
-                title={byCity.length === 0 ? 'No locations with decisions yet.' : 'No municipalities match your search.'}
-                subtitle={byCity.length === 0 ? undefined : 'Try a different city or province.'}
+          <View style={s.searchWrap}>
+            <View style={s.searchRow}>
+              <Ionicons name="search-outline" size={19} color={Colors.inkFaint} />
+              <TextInput
+                style={s.searchInput}
+                placeholder="Search municipality or province"
+                placeholderTextColor={Colors.placeholder}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCorrect={false}
+                returnKeyType="search"
               />
-            ) : filteredByCity.map(row => (
-              <View key={cityCoordinateKey(row.city, row.province)} style={s.cityCard}>
-                <View style={s.cityHeader}>
-                  <Text style={s.cityName}>{row.city}</Text>
-                  <Text style={s.cityCount}>{row.count} decisions</Text>
-                </View>
-                <View style={s.cityStatRow}>
-                  <View style={s.cityStat}>
-                    <Text style={s.cityStatValue}>{row.farmers}</Text>
-                    <Text style={s.cityStatLabel}>Farmers</Text>
-                  </View>
-                  <View style={s.cityStat}>
-                    <Text style={[s.cityStatValue, { color: C.accent }]}>{formatCurrency(row.medianGain)}</Text>
-                    <Text style={s.cityStatLabel}>Median gain</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </>
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={8} accessibilityLabel="Clear search">
+                  <Ionicons name="close-circle" size={18} color={Colors.inkFaint} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          <FlatList
+            ref={listRef}
+            style={s.fill}
+            data={filtered}
+            keyExtractor={r => r.key}
+            renderItem={({ item }) => <CityListRow row={item} selected={item.key === selectedKey} onPress={focusRow} />}
+            extraData={selectedKey}
+            getItemLayout={(_, index) => ({ length: ROW_HEIGHT + ROW_GAP, offset: (ROW_HEIGHT + ROW_GAP) * index, index })}
+            ListEmptyComponent={
+              <EmptyState
+                icon={rows.length === 0 ? 'map-outline' : 'search-outline'}
+                title={rows.length === 0 ? 'No locations with decisions yet.' : 'No municipalities match your search.'}
+                subtitle={rows.length === 0 ? undefined : 'Try a different city or province.'}
+              />
+            }
+            contentContainerStyle={s.list}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            initialNumToRender={10}
+            windowSize={7}
+            removeClippedSubviews={Platform.OS === 'android'}
+            refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor={Colors.ink} colors={[Colors.accent]} />}
+          />
+        </View>
       </ResearcherAsyncState>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: C.bg },
+  safe: { flex: 1, backgroundColor: Colors.bg },
+  fill: { flex: 1 },
 
-  header: { backgroundColor: C.headerBg, paddingTop: 52, paddingHorizontal: 20, paddingBottom: 16 },
-  searchRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: 'rgba(4,26,18,0.9)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 13, height: 48, paddingHorizontal: 14,
-  },
-  searchInput: { flex: 1, fontSize: 15, color: C.text, padding: 0 },
-
-  mapWrap: { height: 420 },
-  map: { flex: 1, backgroundColor: C.headerBg },
-  mapLoadingBadge: {
-    position: 'absolute', top: 10, right: 10,
+  badge: {
+    position: 'absolute', right: 12,
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(4,26,18,0.9)', borderRadius: 999,
-    paddingHorizontal: 10, paddingVertical: 6,
+    backgroundColor: Colors.surface, borderRadius: 999,
+    paddingHorizontal: 10, paddingVertical: 6, ...cardShadow,
   },
-  mapLoadingText: { fontSize: 11.5, color: C.textFaint, fontWeight: '600' },
-  mapNotice: {
+  badgeText: { fontSize: 11.5, color: Colors.inkSoft, fontWeight: '600' },
+  notice: {
     position: 'absolute', bottom: 12, left: 12, right: 12,
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(4,26,18,0.92)', borderRadius: 12,
-    paddingHorizontal: 12, paddingVertical: 10,
+    backgroundColor: Colors.surface, borderRadius: 12,
+    paddingHorizontal: 12, paddingVertical: 10, ...cardShadow,
   },
-  mapNoticeText: { flex: 1, fontSize: 12, color: C.textFaint, lineHeight: 16 },
+  noticeText: { flex: 1, fontSize: 12, color: Colors.inkSoft, lineHeight: 16 },
 
-  list: { ...wideColumn, padding: 20, gap: 10 },
+  searchWrap: { ...wideColumn, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  searchRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderStrong,
+    borderRadius: 13, height: 46, paddingHorizontal: 14,
+  },
+  searchInput: { flex: 1, fontSize: 15, color: Colors.ink, padding: 0 },
 
-  cityCard: { backgroundColor: C.card, borderRadius: 16, padding: 16, marginBottom: 10 },
-  cityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 },
-  cityName: { fontSize: 17, fontWeight: '800', color: C.text },
-  cityCount: { fontSize: 12.5, color: C.textFaint },
-  cityStatRow: { flexDirection: 'row', gap: 10 },
-  cityStat: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 12 },
-  cityStatValue: { fontSize: 18, fontWeight: '800', color: C.text },
-  cityStatLabel: { fontSize: 11.5, color: C.textSoft, marginTop: 2 },
+  list: { ...wideColumn, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 20 },
+  row: {
+    height: ROW_HEIGHT, marginBottom: ROW_GAP,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: Colors.surface, borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: 14,
+  },
+  rowSelected: { borderColor: Colors.accent, backgroundColor: Colors.accentTint },
+  rowPressed: { backgroundColor: Colors.surfaceAlt },
+  rowDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.accent },
+  rowDotMissing: { backgroundColor: Colors.barMuted },
+  rowPlace: { flex: 1 },
+  rowCity: { fontSize: 15, fontWeight: '800', color: Colors.ink },
+  rowProvince: { fontSize: 12, color: Colors.inkFaint, marginTop: 1 },
+  rowStats: { alignItems: 'flex-end' },
+  rowCount: { fontSize: 12.5, fontWeight: '700', color: Colors.ink },
+  rowUnit: { fontWeight: '500', color: Colors.inkSoft },
+  rowGain: { fontSize: 13, fontWeight: '800', color: Colors.accent, marginTop: 2 },
 });

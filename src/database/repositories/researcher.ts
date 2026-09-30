@@ -1,4 +1,5 @@
-import { fetchAllRows } from '../../utils/pagination';
+import { fetchAllRows, pageRange } from '../../utils/pagination';
+import { ilikeAny, sanitizeSearchTerm } from '../../utils/search';
 import { withTimeout } from '../../utils/withTimeout';
 import { supabase } from '../supabase/supabase';
 import type { Decision } from './decisions';
@@ -33,6 +34,162 @@ export async function fetchAllLocations(): Promise<Location[]> {
     .order('id', { ascending: true })
     .range(from, to)
     .abortSignal(signal));
+}
+
+export interface PagedRows<T> {
+  rows: T[];
+  total: number;
+}
+
+export interface ResearcherDecisionRow extends Decision {
+  farmer_name: string | null;
+  farmer_username: string | null;
+  city: string | null;
+  province: string | null;
+}
+
+export interface ResearcherUserRow extends User {
+  is_pending: boolean;
+}
+
+type PageError = { code?: string } | null;
+
+const isPastEnd = (error: PageError) => error?.code === 'PGRST103';
+
+export async function fetchDecisionsPage(params: {
+  page: number;
+  pageSize: number;
+  type: string | null;
+  query: string;
+}): Promise<PagedRows<ResearcherDecisionRow>> {
+  const term = sanitizeSearchTerm(params.query);
+  const build = (head: boolean) => {
+    let q = supabase.from('researcher_decisions').select('*', { count: 'exact', head });
+    if (params.type) q = q.eq('decision_type', params.type);
+    if (term) q = q.or(ilikeAny(['result', 'farmer_name', 'farmer_username', 'city', 'province'], term));
+    return q;
+  };
+  const { from, to } = pageRange(params.page, params.pageSize);
+  const { data, count, error } = await withTimeout((signal) => build(false)
+    .order('datetime', { ascending: false })
+    .order('id', { ascending: true })
+    .range(from, to)
+    .abortSignal(signal));
+  if (isPastEnd(error)) return { rows: [], total: await countOnly(build) };
+  if (error) throw error;
+  return { rows: (data ?? []) as ResearcherDecisionRow[], total: count ?? 0 };
+}
+
+export async function fetchUsersPage(params: {
+  page: number;
+  pageSize: number;
+  role: string | null;
+  query: string;
+}): Promise<PagedRows<ResearcherUserRow>> {
+  const term = sanitizeSearchTerm(params.query);
+  const build = (head: boolean) => {
+    let q = supabase.from('researcher_users').select('*', { count: 'exact', head });
+    if (params.role) q = q.eq('user_type', params.role);
+    if (term) q = q.or(ilikeAny(['name', 'username'], term));
+    return q;
+  };
+  const { from, to } = pageRange(params.page, params.pageSize);
+  const { data, count, error } = await withTimeout((signal) => build(false)
+    .order('is_pending', { ascending: false })
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true })
+    .range(from, to)
+    .abortSignal(signal));
+  if (isPastEnd(error)) return { rows: [], total: await countOnly(build) };
+  if (error) throw error;
+  return { rows: (data ?? []) as ResearcherUserRow[], total: count ?? 0 };
+}
+
+async function countOnly(build: (head: boolean) => { abortSignal: (s: AbortSignal) => PromiseLike<{ count: number | null; error: unknown }> }): Promise<number> {
+  const { count, error } = await withTimeout((signal) => build(true).abortSignal(signal));
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export interface UserCounts {
+  all: number;
+  farmer: number;
+  researcher: number;
+}
+
+export async function fetchUserCounts(): Promise<UserCounts> {
+  const count = (role?: string) => withTimeout(async (signal) => {
+    let q = supabase.from('users').select('id', { count: 'exact', head: true });
+    if (role) q = q.eq('user_type', role);
+    const { count: n, error } = await q.abortSignal(signal);
+    if (error) throw error;
+    return n ?? 0;
+  });
+  const [all, farmer, researcher] = await Promise.all([count(), count('farmer'), count('researcher')]);
+  return { all, farmer, researcher };
+}
+
+export interface Overview {
+  total: number;
+  this_month: number;
+  active_farmers: number;
+  new_farmers_this_month: number;
+  researchers: number;
+  median_gain: number;
+  range_total: number;
+  per_month: { month: string; count: number }[];
+  by_type: { decision_type: string; count: number }[];
+  top_cities: { city: string; count: number }[];
+}
+
+export const deviceTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+export async function fetchOverview(since: Date | null): Promise<Overview> {
+  const { data, error } = await withTimeout((signal) => supabase
+    .rpc('researcher_overview', { p_since: since?.toISOString() ?? null, p_tz: deviceTimeZone() })
+    .abortSignal(signal));
+  if (error) throw error;
+  return data as Overview;
+}
+
+export interface CityStats {
+  city: string;
+  province: string;
+  decisions: number;
+  farmers: number;
+  median_gain: number;
+}
+
+export async function fetchCityStats(): Promise<CityStats[]> {
+  const { data, error } = await withTimeout((signal) => supabase.rpc('researcher_city_stats').abortSignal(signal));
+  if (error) throw error;
+  return (data ?? []) as CityStats[];
+}
+
+function applyRange<Q extends { gte: (c: string, v: string) => Q; lt: (c: string, v: string) => Q }>(
+  query: Q,
+  bounds: { start: Date | null; end: Date | null }
+): Q {
+  let q = query;
+  if (bounds.start) q = q.gte('datetime', bounds.start.toISOString());
+  if (bounds.end) q = q.lt('datetime', bounds.end.toISOString());
+  return q;
+}
+
+export async function countDecisionsInRange(bounds: { start: Date | null; end: Date | null }): Promise<number> {
+  const { count, error } = await withTimeout((signal) =>
+    applyRange(supabase.from('decisions').select('id', { count: 'exact', head: true }), bounds).abortSignal(signal));
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function fetchDecisionsInRange(bounds: { start: Date | null; end: Date | null }): Promise<Decision[]> {
+  return fetchAllRows<Decision>((from, to, signal) =>
+    applyRange(supabase.from('decisions').select('*'), bounds)
+      .order('datetime', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to)
+      .abortSignal(signal));
 }
 
 // Null only when the row is missing; throws on network/RLS errors so "missing" and "unknown" differ.

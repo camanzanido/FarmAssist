@@ -2,11 +2,13 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
+import { ListScreenSkeleton } from '@/src/components/researcher/skeletons';
+import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import {
   blankPredefinedForm, PredefinedFormInitial, PredefinedFormMode, PredefinedFormSheet,
 } from '@/src/components/researcher/predefined-form-sheet';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
-import { ResearcherColors as C } from '@/src/constants/colors';
+import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
 import { wideColumn } from '@/src/constants/layout';
 import {
   createPredefinedOption, deletePredefinedOption, fetchOptionAverages, fetchPredefinedOptions, PredefinedInput, updatePredefinedOption,
@@ -20,7 +22,7 @@ import {
 } from '@/src/utils/predefinedOptions';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Tab = 'farmers' | 'published';
@@ -51,6 +53,10 @@ function placesFrom(locations: { city: string; province: string }[]): Record<str
   return places;
 }
 
+type ListItem =
+  | { key: string; kind: 'average'; average: OptionAverage }
+  | { key: string; kind: 'published'; option: PredefinedOption };
+
 const rowKey = (a: OptionAverage) => [a.decision_type, a.option_key, a.province, a.municipality].join('|');
 
 export default function ResearcherInputsScreen() {
@@ -63,12 +69,13 @@ export default function ResearcherInputsScreen() {
     ]);
     return { published, averages, places: placesFrom(locations) };
   }, []);
-  const { data: { published, averages, places }, isLoading, error, reload } = useResearcherFetch(fetchAll, EMPTY);
+  const { data: { published, averages, places }, isLoading, isRefreshing, error, reload, refresh } = useResearcherFetch(fetchAll, EMPTY);
 
   const [tab, setTab] = useState<Tab>('farmers');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<Editing | null>(null);
+  const [sheetMode, setSheetMode] = useState<PredefinedFormMode>('create');
   const [formInitial, setFormInitial] = useState<PredefinedFormInitial>(() => blankPredefinedForm());
   const [saving, setSaving] = useState(false);
 
@@ -88,6 +95,7 @@ export default function ResearcherInputsScreen() {
   const openCreate = () => {
     setFormInitial(blankPredefinedForm(typeFilter === 'all' ? 'crop_choice' : typeFilter));
     setEditing({ mode: 'create' });
+    setSheetMode('create');
   };
 
   const openPublish = (average: OptionAverage) => {
@@ -99,6 +107,7 @@ export default function ResearcherInputsScreen() {
       source: { entries: average.total_entries, farmers: average.farmer_count },
     });
     setEditing({ mode: 'publish' });
+    setSheetMode('publish');
   };
 
   const openEdit = (option: PredefinedOption) => {
@@ -112,6 +121,7 @@ export default function ResearcherInputsScreen() {
         : null,
     });
     setEditing({ mode: 'edit', option });
+    setSheetMode('edit');
   };
 
   // Publishing a name and place that is already published replaces that row instead of duplicating it.
@@ -164,6 +174,11 @@ export default function ResearcherInputsScreen() {
 
   const typeLabel = (t: string) => DECISION_LABELS[t as DecisionType] ?? t;
 
+  const filterOptions = useMemo(
+    () => [{ value: 'all' as const, label: 'All' }, ...DECISIONS.map(d => ({ value: d.id, label: d.label }))],
+    []
+  );
+
   const renderAverage = (a: OptionAverage) => {
     const pub = publishedByKey.get(predefinedKey(a));
     const stale = !!pub && !!a.latest_entry && Date.parse(a.latest_entry) > Date.parse(pub.updated_at);
@@ -209,91 +224,101 @@ export default function ResearcherInputsScreen() {
     </TouchableOpacity>
   );
 
-  const list = tab === 'farmers' ? filteredAverages : filteredPublished;
   const total = tab === 'farmers' ? averages.length : published.length;
+  const items: ListItem[] = useMemo(
+    () => tab === 'farmers'
+      ? filteredAverages.map(a => ({ key: `a:${rowKey(a)}`, kind: 'average' as const, average: a }))
+      : filteredPublished.map(o => ({ key: `p:${o.id}`, kind: 'published' as const, option: o })),
+    [tab, filteredAverages, filteredPublished]
+  );
+
+  const header = (
+    <View>
+      <View style={s.headerRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={s.title}>Inputs</Text>
+          <Text style={s.subtitle}>Review what farmers entered, then publish values others can load</Text>
+        </View>
+        <TouchableOpacity style={s.addBtn} onPress={openCreate} accessibilityLabel="Add predefined option">
+          <Ionicons name="add" size={20} color={C.accentDeepText} />
+          <Text style={s.addText}>Add</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={s.segment}>
+        {([['farmers', 'From farmers', averages.length], ['published', 'Published', published.length]] as const).map(([key, label, count]) => (
+          <TouchableOpacity
+            key={key}
+            style={[s.segmentBtn, tab === key && s.segmentBtnActive]}
+            onPress={() => setTab(key)}
+            accessibilityState={{ selected: tab === key }}
+          >
+            <Text style={[s.segmentText, tab === key && s.segmentTextActive]}>{label} ({count})</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={s.searchBox}>
+        <Ionicons name="search" size={16} color={C.textFaint} />
+        <TextInput
+          style={s.searchInput}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Option, municipality, or province"
+          placeholderTextColor={C.textMuted}
+        />
+      </View>
+
+      <View style={s.filterRow}>
+        <AnimatedFilterBar options={filterOptions} selected={typeFilter} onSelect={setTypeFilter} />
+      </View>
+    </View>
+  );
+
+  const empty = tab === 'farmers' ? (
+    <EmptyState
+      icon="people-outline"
+      title={total === 0 ? 'No farmer entries yet.' : 'No matches.'}
+      subtitle="Averages appear here once signed-in farmers sync decisions."
+    />
+  ) : (
+    <EmptyState
+      icon="options-outline"
+      title={total === 0 ? 'Nothing published yet.' : 'No matches.'}
+      subtitle="Open a farmer average to review and publish it."
+    />
+  );
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={C.bg} />
+      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
       <ResearcherAsyncState
         isLoading={isLoading}
         error={error}
         onRetry={reload}
         errorMessage="Couldn't load predefined inputs. Check your connection."
+        skeleton={<ListScreenSkeleton />}
       >
-        <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View style={s.headerRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.title}>Inputs</Text>
-              <Text style={s.subtitle}>Review what farmers entered, then publish values others can load</Text>
-            </View>
-            <TouchableOpacity style={s.addBtn} onPress={openCreate} accessibilityLabel="Add predefined option">
-              <Ionicons name="add" size={20} color={C.accentDeepText} />
-              <Text style={s.addText}>Add</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={s.segment}>
-            {([['farmers', 'From farmers', averages.length], ['published', 'Published', published.length]] as const).map(([key, label, count]) => (
-              <TouchableOpacity
-                key={key}
-                style={[s.segmentBtn, tab === key && s.segmentBtnActive]}
-                onPress={() => setTab(key)}
-                accessibilityState={{ selected: tab === key }}
-              >
-                <Text style={[s.segmentText, tab === key && s.segmentTextActive]}>{label} ({count})</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={s.searchBox}>
-            <Ionicons name="search" size={16} color={C.textFaint} />
-            <TextInput
-              style={s.searchInput}
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Option, municipality, or province"
-              placeholderTextColor={C.textMuted}
-            />
-          </View>
-
-          <View style={s.filterRow}>
-            <TouchableOpacity style={[s.filterChip, typeFilter === 'all' && s.filterChipActive]} onPress={() => setTypeFilter('all')}>
-              <Text style={[s.filterChipText, typeFilter === 'all' && s.filterChipTextActive]}>All</Text>
-            </TouchableOpacity>
-            {DECISIONS.map((d) => (
-              <TouchableOpacity key={d.id} style={[s.filterChip, typeFilter === d.id && s.filterChipActive]} onPress={() => setTypeFilter(d.id)}>
-                <Text style={[s.filterChipText, typeFilter === d.id && s.filterChipTextActive]}>{d.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {list.length === 0 ? (
-            tab === 'farmers' ? (
-              <EmptyState
-                icon="people-outline"
-                title={total === 0 ? 'No farmer entries yet.' : 'No matches.'}
-                subtitle="Averages appear here once signed-in farmers sync decisions."
-              />
-            ) : (
-              <EmptyState
-                icon="options-outline"
-                title={total === 0 ? 'Nothing published yet.' : 'No matches.'}
-                subtitle="Open a farmer average to review and publish it."
-              />
-            )
-          ) : tab === 'farmers' ? (
-            filteredAverages.map(renderAverage)
-          ) : (
-            filteredPublished.map(renderPublished)
-          )}
-          <View style={{ height: 20 }} />
-        </ScrollView>
+        <FlatList
+          data={items}
+          keyExtractor={item => item.key}
+          renderItem={({ item }) => item.kind === 'average' ? renderAverage(item.average) : renderPublished(item.option)}
+          ListHeaderComponent={header}
+          ListEmptyComponent={empty}
+          ListFooterComponent={<View style={{ height: 20 }} />}
+          contentContainerStyle={s.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          initialNumToRender={8}
+          windowSize={7}
+          removeClippedSubviews={Platform.OS === 'android'}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor={C.text} colors={[C.accent]} />}
+        />
       </ResearcherAsyncState>
 
       <PredefinedFormSheet
         visible={editing !== null}
-        mode={editing?.mode ?? 'create'}
+        mode={sheetMode}
         initial={formInitial}
         knownPlaces={places}
         publishedIds={publishedIds}
@@ -312,34 +337,30 @@ const s = StyleSheet.create({
   content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
 
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
-  subtitle: { fontSize: 12.5, color: C.textFaint, marginTop: 3 },
+  title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
+  subtitle: { fontSize: 13.5, color: C.textSoft, marginTop: 3 },
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 42, paddingHorizontal: 14, borderRadius: 12, backgroundColor: C.accentStrong },
   addText: { fontSize: 14, fontWeight: '800', color: C.accentDeepText },
 
-  segment: { flexDirection: 'row', backgroundColor: C.card, borderRadius: 12, padding: 4, marginBottom: 12 },
+  segment: { flexDirection: 'row', backgroundColor: C.fill, borderRadius: 12, padding: 4, marginBottom: 12 },
   segmentBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 9 },
   segmentBtnActive: { backgroundColor: C.accentStrong },
   segmentText: { fontSize: 13, fontWeight: '600', color: C.textSoft },
   segmentTextActive: { color: C.accentDeepText, fontWeight: '800' },
 
-  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.card, borderRadius: 12, paddingHorizontal: 12, height: 44, marginBottom: 12 },
+  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorderStrong, borderRadius: 13, paddingHorizontal: 12, height: 44, marginBottom: 12 },
   searchInput: { flex: 1, fontSize: 14, color: C.text, height: '100%' },
 
-  filterRow: { flexDirection: 'row', gap: 7, marginBottom: 18, flexWrap: 'wrap' },
-  filterChip: { backgroundColor: C.card, borderRadius: 999, paddingHorizontal: 13, paddingVertical: 7 },
-  filterChipActive: { backgroundColor: C.accentStrong },
-  filterChipText: { fontSize: 12.5, fontWeight: '600', color: C.textSoft },
-  filterChipTextActive: { color: C.accentDeepText, fontWeight: '700' },
+  filterRow: { marginBottom: 18 },
 
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: 14, padding: 14, marginBottom: 9 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.cardBorder, padding: 16, marginBottom: 11, ...cardShadow },
   rowName: { fontSize: 15.5, fontWeight: '700', color: C.text },
   rowMeta: { fontSize: 12.5, color: C.textSoft, marginTop: 3 },
   rowCount: { fontSize: 12, color: C.textFaint, marginTop: 4 },
   rowPrice: { fontSize: 13.5, fontWeight: '800', color: C.accent },
   tagRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-  tag: { marginTop: 4, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: C.accentStrong },
-  tagText: { fontSize: 11, fontWeight: '700', color: C.accentDeepText },
+  tag: { marginTop: 4, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: C.accentTint },
+  tagText: { fontSize: 11, fontWeight: '700', color: C.accent },
   tagWarn: { backgroundColor: C.amberBg },
   tagWarnText: { color: C.amberText },
 });

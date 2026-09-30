@@ -21,8 +21,10 @@ export async function fetchAllRows<T>(
   }
 }
 
-export interface Page<T> {
-  items: T[];
+export const PAGE_SIZES = [15, 25, 50] as const;
+export type PageSize = (typeof PAGE_SIZES)[number];
+
+export interface PageWindow {
   page: number;      // 1-based, clamped to the available pages
   pageCount: number; // at least 1
   start: number;     // 1-based index of the first item shown, 0 when empty
@@ -30,18 +32,20 @@ export interface Page<T> {
   total: number;
 }
 
-export function paginate<T>(all: T[], page: number, pageSize: number): Page<T> {
-  const total = all.length;
+export function pageRange(page: number, pageSize: number): { from: number; to: number } {
+  const from = (Math.max(1, Math.floor(page)) - 1) * pageSize;
+  return { from, to: from + pageSize - 1 };
+}
+
+export function pageWindow(page: number, pageSize: number, total: number, shown: number): PageWindow {
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const current = Math.min(Math.max(1, Math.floor(page)), pageCount);
   const offset = (current - 1) * pageSize;
-  const items = all.slice(offset, offset + pageSize);
   return {
-    items,
     page: current,
     pageCount,
-    start: items.length === 0 ? 0 : offset + 1,
-    end: offset + items.length,
+    start: shown === 0 ? 0 : offset + 1,
+    end: offset + shown,
     total,
   };
 }

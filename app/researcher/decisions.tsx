@@ -1,25 +1,27 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
+import { Pager } from '@/src/components/researcher/pager';
+import { ListRowsSkeleton, ListScreenSkeleton } from '@/src/components/researcher/skeletons';
+import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
-import { ResearcherColors as C } from '@/src/constants/colors';
+import { cardShadow, Colors } from '@/src/constants/colors';
 import { wideColumn } from '@/src/constants/layout';
-import { type Decision } from '@/src/database/repositories/decisions';
-import { type Location } from '@/src/database/repositories/locations';
-import { deleteDecisionRemote, fetchAllDecisions, fetchAllLocations, fetchAllUsers } from '@/src/database/repositories/researcher';
-import { type User } from '@/src/database/repositories/users';
-import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
+import { deleteDecisionRemote, fetchDecisionsPage, type ResearcherDecisionRow } from '@/src/database/repositories/researcher';
+import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
+import { useResearcherPage } from '@/src/hooks/use-researcher-page';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { formatCurrency } from '@/src/utils/formatters';
-import { paginate } from '@/src/utils/pagination';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator, FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TypeFilter = 'all' | DecisionType;
 
-const PAGE_SIZE = 20;
+const DECISION_ICONS = Object.fromEntries(DECISIONS.map(d => [d.id, d.icon])) as Record<DecisionType, keyof typeof Ionicons.glyphMap>;
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
@@ -27,54 +29,71 @@ function formatDate(iso: string): string {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-const EMPTY = { decisions: [] as Decision[], users: [] as User[], locations: [] as Location[] };
+function DecisionRow({ decision: d, isDeleting, onDelete }: {
+  decision: ResearcherDecisionRow;
+  isDeleting: boolean;
+  onDelete: (d: ResearcherDecisionRow) => void;
+}) {
+  return (
+    <View style={s.card}>
+      <View style={s.iconWrap}>
+        <Ionicons name={DECISION_ICONS[d.decision_type as DecisionType] ?? 'help-circle-outline'} size={21} color={Colors.ink} />
+      </View>
+      <View style={s.cardBody}>
+        <Text style={s.cardResult} numberOfLines={1}>{d.result}</Text>
+        <Text style={s.cardMeta} numberOfLines={1}>
+          {DECISION_LABELS[d.decision_type as DecisionType] ?? d.decision_type}
+          {d.farmer_name ? ` · ${d.farmer_name}` : ''}
+          {d.city ? ` · ${d.city}` : ''}
+        </Text>
+        <View style={s.cardMetaRow}>
+          <Text style={s.cardProfit}>+{formatCurrency(d.profit_increase)}</Text>
+          <Text style={s.cardDate}>{formatDate(d.datetime)}</Text>
+        </View>
+      </View>
+      <TouchableOpacity
+        style={s.deleteBtn}
+        onPress={() => onDelete(d)}
+        disabled={isDeleting}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        accessibilityLabel={`Remove ${d.result}`}
+      >
+        {isDeleting
+          ? <ActivityIndicator size="small" color={Colors.danger} />
+          : <Ionicons name="trash-outline" size={18} color={Colors.danger} />}
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export default function ResearcherDecisionsScreen() {
-  const fetchAll = useCallback(async () => {
-    const [decisions, users, locations] = await Promise.all([
-      fetchAllDecisions(),
-      fetchAllUsers(),
-      fetchAllLocations(),
-    ]);
-    return { decisions, users, locations };
-  }, []);
-  const { data: { decisions, users, locations }, isLoading, error, reload } = useResearcherFetch(fetchAll, EMPTY);
-
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const scrollRef = useRef<ScrollView>(null);
+  const listRef = useRef<FlatList<ResearcherDecisionRow>>(null);
   const { confirm, notify } = useFeedback();
 
-  const usersById = useMemo(() => new Map(users.map(u => [u.id, u])), [users]);
-  const locationsById = useMemo(() => new Map(locations.map(l => [l.id, l])), [locations]);
+  const debouncedQuery = useDebouncedValue(query.trim());
+  const filters = useMemo(
+    () => ({ type: typeFilter === 'all' ? null : typeFilter, query: debouncedQuery }),
+    [typeFilter, debouncedQuery]
+  );
+  const {
+    rows, pageInfo, pageSize, isLoading, isPageLoading, isRefreshing, error, setPage, setPageSize, reload, refresh, retry,
+  } = useResearcherPage(fetchDecisionsPage, filters);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return decisions.filter(d => {
-      if (typeFilter !== 'all' && d.decision_type !== typeFilter) return false;
-      if (!q) return true;
-      const farmer = usersById.get(d.user_id);
-      const loc = locationsById.get(d.location_id);
-      const haystack = [d.result, farmer?.name, farmer?.username, loc?.city, loc?.province]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-      return haystack.includes(q);
-    });
-  }, [decisions, typeFilter, query, usersById, locationsById]);
+  const filterOptions = useMemo(
+    () => [{ value: 'all' as const, label: 'All' }, ...DECISIONS.map(d => ({ value: d.id, label: d.label }))],
+    []
+  );
+  const isFiltered = typeFilter !== 'all' || debouncedQuery.length > 0;
 
-  const paged = useMemo(() => paginate(filtered, page, PAGE_SIZE), [filtered, page]);
-
-  const changeQuery = (q: string) => { setQuery(q); setPage(1); };
-  const changeType = (t: TypeFilter) => { setTypeFilter(t); setPage(1); };
   const goToPage = (p: number) => {
     setPage(p);
-    scrollRef.current?.scrollTo({ y: 0, animated: false });
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
   };
 
-  const confirmDelete = async (decision: Decision) => {
+  const confirmDelete = async (decision: ResearcherDecisionRow) => {
     const confirmed = await confirm({
       title: 'Remove this decision?',
       message: `This permanently deletes "${decision.result}" from the database. This can't be undone.`,
@@ -87,7 +106,7 @@ export default function ResearcherDecisionsScreen() {
     setDeletingId(decision.id);
     try {
       await deleteDecisionRemote(decision.id);
-      reload();
+      await reload();
       notify.success('Decision removed');
     } catch (err) {
       console.error('Failed to delete decision:', err);
@@ -97,154 +116,117 @@ export default function ResearcherDecisionsScreen() {
     }
   };
 
+  const header = (
+    <View>
+      <View style={s.header}>
+        <Text style={s.title}>Decisions</Text>
+        <Text style={s.subtitle}>
+          {isFiltered ? `${pageInfo.total.toLocaleString()} match` : `${pageInfo.total.toLocaleString()} total`}
+        </Text>
+      </View>
+
+      <View style={s.searchRow}>
+        <Ionicons name="search-outline" size={19} color={Colors.inkFaint} />
+        <TextInput
+          style={s.searchInput}
+          placeholder="Farmer, result, or municipality"
+          placeholderTextColor={Colors.placeholder}
+          value={query}
+          onChangeText={setQuery}
+          autoCorrect={false}
+          returnKeyType="search"
+        />
+        {query.length > 0 && (
+          <TouchableOpacity onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Clear search">
+            <Ionicons name="close-circle" size={18} color={Colors.inkFaint} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={s.filterRow}>
+        <AnimatedFilterBar options={filterOptions} selected={typeFilter} onSelect={setTypeFilter} />
+      </View>
+    </View>
+  );
+
+  const empty = isPageLoading ? (
+    <ListRowsSkeleton rows={Math.min(pageSize, 6)} />
+  ) : (
+    <EmptyState
+      icon={isFiltered ? 'search-outline' : 'document-text-outline'}
+      title={isFiltered ? 'No decisions match this search.' : 'No decisions recorded yet.'}
+      subtitle={isFiltered ? 'Try a different search term or type filter.' : undefined}
+    />
+  );
+
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={C.bg} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <ResearcherAsyncState
         isLoading={isLoading}
         error={error}
-        onRetry={reload}
+        onRetry={retry}
         errorMessage="Couldn't load decisions. Check your connection."
+        skeleton={<ListScreenSkeleton />}
       >
-        <ScrollView ref={scrollRef} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-          <Text style={s.title}>Decisions</Text>
-          <Text style={s.subtitle}>
-            {filtered.length === decisions.length ? `${decisions.length} total` : `${filtered.length} of ${decisions.length} match`}
-          </Text>
-
-          <View style={s.searchRow}>
-            <Ionicons name="search-outline" size={19} color={C.textFaint} />
-            <TextInput
-              style={s.searchInput}
-              placeholder="Farmer, result, or municipality"
-              placeholderTextColor={C.textFaint}
-              value={query}
-              onChangeText={changeQuery}
-            />
-            {query.length > 0 && (
-              <TouchableOpacity onPress={() => changeQuery('')} hitSlop={8}>
-                <Ionicons name="close-circle" size={18} color={C.textFaint} />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={s.filterRow}>
-            <TouchableOpacity style={[s.filterChip, typeFilter === 'all' && s.filterChipActive]} onPress={() => changeType('all')}>
-              <Text style={[s.filterChipText, typeFilter === 'all' && s.filterChipTextActive]}>All</Text>
-            </TouchableOpacity>
-            {DECISIONS.map(d => (
-              <TouchableOpacity
-                key={d.id}
-                style={[s.filterChip, typeFilter === d.id && s.filterChipActive]}
-                onPress={() => changeType(d.id)}
-              >
-                <Text style={[s.filterChipText, typeFilter === d.id && s.filterChipTextActive]}>{d.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {filtered.length === 0 ? (
-            <EmptyState
-              icon={decisions.length === 0 ? 'document-text-outline' : 'search-outline'}
-              title={decisions.length === 0 ? 'No decisions recorded yet.' : 'No decisions match this search.'}
-              subtitle={decisions.length === 0 ? undefined : 'Try a different search term or type filter.'}
-            />
-          ) : (
-            paged.items.map(d => {
-              const farmer = usersById.get(d.user_id);
-              const loc = locationsById.get(d.location_id);
-              return (
-                <View key={d.id} style={s.row}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.rowResult} numberOfLines={1}>{d.result}</Text>
-                    <Text style={s.rowMeta}>
-                      {DECISION_LABELS[d.decision_type as DecisionType] ?? d.decision_type}
-                      {farmer ? ` · ${farmer.name}` : ''}
-                      {loc ? ` · ${loc.city}` : ''}
-                    </Text>
-                    <View style={s.rowBottomRow}>
-                      <Text style={s.rowProfit}>+{formatCurrency(d.profit_increase)}</Text>
-                      <Text style={s.rowDate}>{formatDate(d.datetime)}</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    style={s.deleteBtn}
-                    onPress={() => confirmDelete(d)}
-                    disabled={deletingId === d.id}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons name="trash-outline" size={18} color={C.danger} />
-                  </TouchableOpacity>
-                </View>
-              );
-            })
+        <FlatList
+          ref={listRef}
+          data={isPageLoading ? [] : rows}
+          keyExtractor={d => d.id}
+          renderItem={({ item }) => (
+            <DecisionRow decision={item} isDeleting={deletingId === item.id} onDelete={confirmDelete} />
           )}
-
-          {paged.pageCount > 1 && (
-            <View style={s.pager}>
-              <TouchableOpacity
-                style={[s.pagerBtn, paged.page === 1 && s.pagerBtnDisabled]}
-                onPress={() => goToPage(paged.page - 1)}
-                disabled={paged.page === 1}
-                accessibilityLabel="Previous page"
-              >
-                <Ionicons name="chevron-back" size={18} color={C.text} />
-                <Text style={s.pagerBtnText}>Prev</Text>
-              </TouchableOpacity>
-              <View style={s.pagerInfo}>
-                <Text style={s.pagerRange}>{paged.start}–{paged.end} of {paged.total}</Text>
-                <Text style={s.pagerPage}>Page {paged.page} of {paged.pageCount}</Text>
-              </View>
-              <TouchableOpacity
-                style={[s.pagerBtn, paged.page === paged.pageCount && s.pagerBtnDisabled]}
-                onPress={() => goToPage(paged.page + 1)}
-                disabled={paged.page === paged.pageCount}
-                accessibilityLabel="Next page"
-              >
-                <Text style={s.pagerBtnText}>Next</Text>
-                <Ionicons name="chevron-forward" size={18} color={C.text} />
-              </TouchableOpacity>
+          extraData={deletingId}
+          ListHeaderComponent={header}
+          ListEmptyComponent={empty}
+          ListFooterComponent={
+            <View style={s.footer}>
+              <Pager info={pageInfo} pageSize={pageSize} disabled={isPageLoading} onPage={goToPage} onPageSize={setPageSize} />
             </View>
-          )}
-
-          <View style={{ height: 20 }} />
-        </ScrollView>
+          }
+          contentContainerStyle={s.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          initialNumToRender={8}
+          windowSize={7}
+          removeClippedSubviews={Platform.OS === 'android'}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor={Colors.ink} colors={[Colors.accent]} />}
+        />
       </ResearcherAsyncState>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: C.bg },
+  safe: { flex: 1, backgroundColor: Colors.bg },
   content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
+  footer: { paddingBottom: 20 },
 
-  title: { fontSize: 25, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
-  subtitle: { fontSize: 12.5, color: C.textFaint, marginTop: 3, marginBottom: 16 },
+  header: { marginBottom: 16 },
+  title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
+  subtitle: { fontSize: 14, color: Colors.inkSoft, marginTop: 3 },
 
-  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14 },
-  searchInput: { flex: 1, fontSize: 15, color: C.text },
+  searchRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderStrong,
+    borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14,
+  },
+  searchInput: { flex: 1, fontSize: 15, color: Colors.ink, padding: 0 },
 
-  filterRow: { flexDirection: 'row', gap: 7, marginBottom: 18, flexWrap: 'wrap' },
-  filterChip: { backgroundColor: C.card, borderRadius: 999, paddingHorizontal: 13, paddingVertical: 7 },
-  filterChipActive: { backgroundColor: C.accentStrong },
-  filterChipText: { fontSize: 12.5, fontWeight: '600', color: C.textSoft },
-  filterChipTextActive: { color: C.accentDeepText, fontWeight: '700' },
+  filterRow: { marginBottom: 18 },
 
+  card: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 13,
+    backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
+    padding: 16, marginBottom: 11, ...cardShadow,
+  },
+  iconWrap: { width: 44, height: 44, borderRadius: 13, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+  cardBody: { flex: 1 },
+  cardResult: { fontSize: 17, fontWeight: '800', color: Colors.ink },
+  cardMeta: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
+  cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 9 },
+  cardProfit: { fontSize: 14, fontWeight: '800', color: Colors.accent },
+  cardDate: { fontSize: 12, color: Colors.inkDim },
 
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.card, borderRadius: 14, padding: 14, marginBottom: 9 },
-  rowResult: { fontSize: 15.5, fontWeight: '700', color: C.text },
-  rowMeta: { fontSize: 12.5, color: C.textSoft, marginTop: 3 },
-  rowBottomRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 },
-  rowProfit: { fontSize: 13.5, fontWeight: '800', color: C.accent },
-  rowDate: { fontSize: 11.5, color: C.textFaint },
-
-  pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 8 },
-  pagerBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 42, paddingHorizontal: 14, borderRadius: 11, borderWidth: 1, borderColor: C.cardBorderStrong },
-  pagerBtnDisabled: { opacity: 0.35 },
-  pagerBtnText: { fontSize: 13.5, fontWeight: '700', color: C.text },
-  pagerInfo: { alignItems: 'center' },
-  pagerRange: { fontSize: 13.5, fontWeight: '700', color: C.text },
-  pagerPage: { fontSize: 11.5, color: C.textFaint, marginTop: 2 },
-
-  deleteBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(224,133,133,0.14)' },
+  deleteBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.dangerBg },
 });

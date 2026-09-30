@@ -48,35 +48,38 @@ export const Colors = {
   surfaceAlt: '#F3F8F5',
 } as const;
 
-// Researcher side: same hues, inverted — forest is the surface, not the accent.
 export const ResearcherColors = {
-  bg: '#062318',
-  tabBg: '#041A12',
-  card: 'rgba(255,255,255,0.06)',
-  cardBorder: 'rgba(255,255,255,0.12)',
-  cardBorderStrong: 'rgba(255,255,255,0.2)',
-  divider: 'rgba(255,255,255,0.08)',
+  bg: Colors.bg,
+  tabBg: Colors.surface,
+  card: Colors.surface,
+  fill: Colors.surfaceAlt,
+  cardBorder: Colors.border,
+  cardBorderStrong: Colors.borderStrong,
+  divider: Colors.divider,
 
-  text: '#FFFFFF',
-  textSoft: '#8FB9A1',
-  textFaint: '#5E9C79',
-  textMuted: '#4E7561',
+  text: Colors.ink,
+  textSoft: Colors.inkSoft,
+  textFaint: Colors.inkFaint,
+  textMuted: Colors.placeholder,
 
-  accent: '#7FD69E',
-  accentStrong: '#A8D4B4',
-  accentDeepText: '#062318',
+  accent: Colors.accent,
+  accentStrong: Colors.ink,
+  accentDeepText: Colors.onDark,
+  accentTint: Colors.accentTint,
 
-  amber: '#E0A93F',
-  amberBg: 'rgba(184,121,31,0.16)',
-  amberBorder: 'rgba(224,169,63,0.35)',
-  amberText: '#E0C68F',
+  amber: Colors.amber,
+  amberBg: Colors.amberBg,
+  amberBorder: Colors.amberBorder,
+  amberText: Colors.amberText,
 
-  danger: '#E08585',
+  danger: Colors.danger,
+  dangerBg: Colors.dangerBg,
+  dangerBorder: Colors.dangerBorder,
 
-  textBody: '#C8DFD0',
-  avatar: '#2F6B52',
-  sheet: '#0B2E20',
-  headerBg: '#0C3324',
+  textBody: Colors.inkMuted,
+  avatar: Colors.accentTint,
+  sheet: Colors.surface,
+  headerBg: Colors.surface,
 } as const;
 
 export const ClimateColors = {
