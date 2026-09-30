@@ -20,18 +20,6 @@ connectivity is restored.
 - Reports and analytics
 
 ## Technology Stack
-React Native
-
-↓
-
-SQLite
-
-↓
-
-PowerSync
-
-↓
-
-Supabase
+React Native, SQLite, PowerSync, and Supabase
 
 
