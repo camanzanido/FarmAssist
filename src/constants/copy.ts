@@ -60,25 +60,28 @@ export const dataEntryCopy = {
 };
 
 export const climateCopy = {
-  title: 'How often does\neach scenario happen?',
-  subtitle: 'Out of 10 years, how many are dry vs wet? If unsure, leave it at 33 / 34 / 33.',
-  dryYears: 'Dry years',
-  dryYearsSub: 'Below-average rainfall',
-  averageYears: 'Average years',
+  title: 'How likely is each\nscenario this season?',
+  subtitle: 'Use the seasonal outlook (e.g. El Niño or La Niña) if you have one. If unsure, leave it at 33 / 34 / 33.',
+  dryYears: 'Driest',
+  dryYearsSub: 'Below-normal rainfall (El Niño)',
+  averageYears: 'Average',
   averageYearsSub: 'Calculated automatically',
-  wetYears: 'Wet years',
-  wetYearsSub: 'Above-average rainfall',
+  wetYears: 'Wettest',
+  wetYearsSub: 'Above-normal rainfall (La Niña)',
   offlineNote: 'Calculated right here on your phone. No internet needed.',
-  submit: 'Show my answer',
+  submit: 'Calculate Now',
   errorOver100: 'Total cannot exceed 100%',
   errorNoAverage: 'Leave at least 1% for average years.',
 };
+
+// A saved decision with no recommended option (both options lose money) stores result = ''.
+export const decisionResultLabel = (result: string) => result || 'Both options lose money';
 
 export const resultCopy = {
   savingPill: 'Saving…',
   savedPill: 'Saved',
   notSavedPill: 'Not saved',
-  answerEyebrow: 'THE ANSWER',
+  answerEyebrow: 'THE RESULT',
   verdict: (winner: string) => `${winner} is the\nbetter choice.`,
   perHectare: 'per hectare',
   verdictDetail: (winner: string, loser: string) =>
@@ -87,9 +90,16 @@ export const resultCopy = {
   keepInMindHeading: 'But keep in mind',
   keepInMindBody: (favorCount: number, total: number, winner: string, loser: string) =>
     favorCount === total
-      ? `${winner} earns more in every climate scenario used here.`
-      : `In ${favorCount} of ${total} climate scenarios, ${winner} earns more. In the rest, ${loser} does better.`,
+      ? `${winner} earns more in every kind of year this forecast allows.`
+      : `${winner} earns more in ${favorCount} of ${total} kinds of year. In the rest, ${loser} does better.`,
+  bothNegativeVerdict: 'Both options are\nexpected to lose money.',
+  bothNegativeDetail: (a: string, b: string) =>
+    `Neither ${a} nor ${b} is expected to make a profit across this year's likely climate.`,
   detailTable: 'Detailed table',
+  seeDetails: 'See details',
+  fullBreakdown: 'See full breakdown',
+  hideBreakdown: 'Hide full breakdown',
+  recommendedTag: 'Recommended',
   newComparison: 'Go home',
   loading: 'Computing decision…',
   paramsError: "We couldn't load this decision. Please start a new analysis.",
@@ -177,6 +187,21 @@ export const profileCopy = {
   accountType: 'Account type',
   about: 'About FarmAssist',
   viewIntro: 'View introduction',
+  editProfile: 'Edit profile',
+  editTitle: 'Edit profile',
+  editSubtitle: 'Update the name and email on your account.',
+  nameLabel: 'NAME',
+  namePlaceholder: 'Your full name',
+  emailLabel: 'EMAIL',
+  emailOfflineHint: 'Connect to the internet to change your email.',
+  emailConfirmHint: "We'll email a confirmation link. Your current email keeps working until you confirm.",
+  editCancel: 'Cancel',
+  editSave: 'Save',
+  editSaveFailed: "Couldn't save your profile. Please try again.",
+  profileUpdated: 'Profile updated',
+  emailConfirmTitle: 'Confirm your new email',
+  emailConfirmBody: (email: string) => `Open the link we sent to ${email}. If a link also went to your current email, open that one too.`,
+  pendingEmail: (email: string) => `Waiting for you to confirm ${email}`,
 };
 
 export const onboardingCopy = {
@@ -232,7 +257,7 @@ export const aboutCopy = {
   contactHeading: 'CONTACT',
   contactLabel: 'Send feedback',
   contactEmail: 'camanzanido@up.edu.ph',
-  footer: 'Made for farmers and extension workers.',
+  footer: 'Made for farmers, extension workers, and researchers.',
 } as const;
 
 export const authCopy = {

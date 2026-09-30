@@ -6,6 +6,7 @@ import { ListRowsSkeleton, ListScreenSkeleton } from '@/src/components/researche
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { cardShadow, Colors } from '@/src/constants/colors';
+import { decisionResultLabel } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
 import { deleteDecisionRemote, fetchDecisionsPage, type ResearcherDecisionRow } from '@/src/database/repositories/researcher';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
@@ -40,14 +41,14 @@ function DecisionRow({ decision: d, isDeleting, onDelete }: {
         <Ionicons name={DECISION_ICONS[d.decision_type as DecisionType] ?? 'help-circle-outline'} size={21} color={Colors.ink} />
       </View>
       <View style={s.cardBody}>
-        <Text style={s.cardResult} numberOfLines={1}>{d.result}</Text>
+        <Text style={s.cardResult} numberOfLines={1}>{decisionResultLabel(d.result)}</Text>
         <Text style={s.cardMeta} numberOfLines={1}>
           {DECISION_LABELS[d.decision_type as DecisionType] ?? d.decision_type}
           {d.farmer_name ? ` · ${d.farmer_name}` : ''}
           {d.city ? ` · ${d.city}` : ''}
         </Text>
         <View style={s.cardMetaRow}>
-          <Text style={s.cardProfit}>+{formatCurrency(d.profit_increase)}</Text>
+          {d.result !== '' && <Text style={s.cardProfit}>+{formatCurrency(d.profit_increase)}</Text>}
           <Text style={s.cardDate}>{formatDate(d.datetime)}</Text>
         </View>
       </View>
@@ -56,7 +57,7 @@ function DecisionRow({ decision: d, isDeleting, onDelete }: {
         onPress={() => onDelete(d)}
         disabled={isDeleting}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        accessibilityLabel={`Remove ${d.result}`}
+        accessibilityLabel={`Remove ${decisionResultLabel(d.result)}`}
       >
         {isDeleting
           ? <ActivityIndicator size="small" color={Colors.danger} />
@@ -96,7 +97,7 @@ export default function ResearcherDecisionsScreen() {
   const confirmDelete = async (decision: ResearcherDecisionRow) => {
     const confirmed = await confirm({
       title: 'Remove this decision?',
-      message: `This permanently deletes "${decision.result}" from the database. This can't be undone.`,
+      message: `This permanently deletes "${decisionResultLabel(decision.result)}" from the database. This can't be undone.`,
       confirmText: 'Remove',
       tone: 'destructive',
       icon: 'trash-outline',
@@ -216,11 +217,11 @@ const s = StyleSheet.create({
   filterRow: { marginBottom: 18 },
 
   card: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 13,
+    flexDirection: 'row', alignItems: 'center', gap: 13,
     backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
     padding: 16, marginBottom: 11, ...cardShadow,
   },
-  iconWrap: { width: 44, height: 44, borderRadius: 13, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+  iconWrap: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   cardBody: { flex: 1 },
   cardResult: { fontSize: 17, fontWeight: '800', color: Colors.ink },
   cardMeta: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },

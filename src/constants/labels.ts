@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import type { ImageSourcePropType } from 'react-native';
 
 // --- Types ---
 export type DecisionType = 'crop_choice' | 'harvest' | 'protect';
@@ -9,6 +10,12 @@ export const PLACEHOLDERS: Record<DecisionType, [string, string]> = {
   crop_choice: ['e.g. Rice IR64', 'e.g. Corn OPV'],
   harvest: ['e.g. Harvest Now', 'e.g. Delay 2 Weeks'],
   protect: ['e.g. Protect', 'e.g. Do Not Protect'],
+};
+
+export const DECISION_IMAGES: Record<DecisionType, ImageSourcePropType> = {
+  crop_choice: require('@/assets/images/crop_choice.jpg'),
+  harvest: require('@/assets/images/harvest_decision.webp'),
+  protect: require('@/assets/images/apply_or_not_apply.jpg'),
 };
 
 export const DECISION_LABELS: Record<DecisionType, string> = {

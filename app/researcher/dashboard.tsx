@@ -2,6 +2,7 @@ import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { ExportSheet } from '@/src/components/researcher/export-sheet';
 import { ChartCardsSkeleton, OverviewSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
+import { OdometerText } from '@/src/components/ui/odometer-text';
 import { DECISIONS, DecisionType } from '@/src/constants';
 import { cardShadow, Colors } from '@/src/constants/colors';
 import { useIsWide, wideColumn } from '@/src/constants/layout';
@@ -21,6 +22,9 @@ const TYPE_COLORS: Record<DecisionType, string> = {
 };
 
 type Range = 'season' | 'year' | 'all';
+
+const INK = [Colors.ink] as const;
+const ACCENT = [Colors.accent] as const;
 
 const RANGE_OPTIONS: { value: Range; label: string }[] = [
   { value: 'season', label: 'This season' },
@@ -108,23 +112,23 @@ export default function ResearcherDashboardScreen() {
           <View style={isWide && s.statGridWide}>
             <View style={[s.statRow, isWide && s.statRowWide]}>
               <View style={s.statCard}>
-                <Text style={s.statValue}>{overview.total.toLocaleString()}</Text>
+                <OdometerText text={overview.total.toLocaleString()} colors={INK} style={s.statValue} />
                 <Text style={s.statLabel}>Decisions</Text>
                 <Text style={s.statDelta}>+{overview.this_month} this month</Text>
               </View>
               <View style={s.statCard}>
-                <Text style={s.statValue}>{overview.active_farmers.toLocaleString()}</Text>
+                <OdometerText text={overview.active_farmers.toLocaleString()} colors={INK} style={s.statValue} />
                 <Text style={s.statLabel}>Active farmers</Text>
                 <Text style={s.statDelta}>+{overview.new_farmers_this_month} this month</Text>
               </View>
             </View>
             <View style={[s.statRow, isWide && s.statRowWide]}>
               <View style={s.statCard}>
-                <Text style={s.statValue}>{overview.researchers}</Text>
+                <OdometerText text={overview.researchers.toLocaleString()} colors={INK} style={s.statValue} />
                 <Text style={s.statLabel}>Researchers</Text>
               </View>
               <View style={s.statCard}>
-                <Text style={[s.statValue, { color: Colors.accent }]}>{formatCurrency(overview.median_gain)}</Text>
+                <OdometerText text={formatCurrency(overview.median_gain)} colors={ACCENT} style={s.statValue} />
                 <Text style={s.statLabel}>Median gain/ha</Text>
               </View>
             </View>
@@ -228,7 +232,7 @@ const s = StyleSheet.create({
   statGridWide: { flexDirection: 'row', gap: 10 },
   statRowWide: { flex: 1 },
   statCard: { flex: 1, backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1, borderColor: Colors.border, padding: 16, ...cardShadow },
-  statValue: { fontSize: 28, fontWeight: '800', color: Colors.ink, letterSpacing: -0.5 },
+  statValue: { fontSize: 28, lineHeight: 34, fontWeight: '800', color: Colors.ink, letterSpacing: -0.5 },
   statLabel: { fontSize: 12.5, color: Colors.inkSoft, marginTop: 3 },
   statDelta: { fontSize: 11.5, fontWeight: '700', color: Colors.accent, marginTop: 7 },
 

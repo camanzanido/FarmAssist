@@ -8,7 +8,8 @@ import { RcdaSummary, summarizeRcda } from '@/src/rcda/summary';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ResultSkeleton } from '@/src/components/skeletons/app-skeletons';
+import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type LoadState =
@@ -41,9 +42,10 @@ export default function DecisionDetailScreen() {
         return;
       }
       const summary = summarizeRcda(computeRcda(inputs), inputs.optionNames, inputs.climate);
-      if (inputs.optionNames[summary.recommendedOption] !== decision.result) {
+      const recomputed = summary.bothNegative ? '' : inputs.optionNames[summary.recommendedOption];
+      if (recomputed !== decision.result) {
         console.warn('[decision detail] recomputed result differs from saved result', {
-          id, saved: decision.result, recomputed: inputs.optionNames[summary.recommendedOption],
+          id, saved: decision.result, recomputed,
         });
       }
       setState({ status: 'ready', summary, decisionType: decision.decision_type, datetime: decision.datetime });
@@ -73,23 +75,21 @@ export default function DecisionDetailScreen() {
           <Text style={s.bannerTitle}>{copy.title}</Text>
           <View style={{ width: 40 }} />
         </View>
-        <View style={s.centerWrap}>
-          {state.status === 'loading' ? (
-            <ActivityIndicator size="large" color={Colors.ink} />
-          ) : (
-            <>
-              <Ionicons name="warning-outline" size={32} color={Colors.danger} />
-              <Text style={s.message}>{state.message}</Text>
-              <TouchableOpacity
-                style={s.actionBtn}
-                onPress={state.canRetry ? load : () => router.back()}
-                activeOpacity={0.8}
-              >
-                <Text style={s.actionBtnText}>{state.canRetry ? copy.retry : copy.back}</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
+        {state.status === 'loading' ? (
+          <ResultSkeleton withTopRow={false} />
+        ) : (
+          <View style={s.centerWrap}>
+            <Ionicons name="warning-outline" size={32} color={Colors.danger} />
+            <Text style={s.message}>{state.message}</Text>
+            <TouchableOpacity
+              style={s.actionBtn}
+              onPress={state.canRetry ? load : () => router.back()}
+              activeOpacity={0.8}
+            >
+              <Text style={s.actionBtnText}>{state.canRetry ? copy.retry : copy.back}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </SafeAreaView>
     );
   }
@@ -102,6 +102,7 @@ export default function DecisionDetailScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
       <DecisionResultView
         summary={state.summary}
+        decisionType={state.decisionType}
         heroTop={
           <>
             <TouchableOpacity onPress={() => router.back()} style={heroTopStyles.backBtn} accessibilityLabel={copy.back}>

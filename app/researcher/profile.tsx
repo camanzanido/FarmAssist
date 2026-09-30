@@ -1,8 +1,10 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
+import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
 import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
 import { profileCopy } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
+import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -19,6 +21,7 @@ export default function ResearcherProfileScreen() {
   const { user, signOut } = useAuth();
   const { confirm } = useFeedback();
   const router = useRouter();
+  const edit = useEditProfile();
 
   async function handleLogout() {
     const confirmed = await confirm({
@@ -53,10 +56,20 @@ export default function ResearcherProfileScreen() {
         </View>
 
         <View style={s.card}>
-          <View style={[s.row, s.rowBorder]}>
+          <TouchableOpacity style={[s.row, s.rowBorder]} onPress={edit.open} activeOpacity={0.7} accessibilityRole="button">
+            <Ionicons name="create-outline" size={19} color={C.textSoft} />
+            <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.editProfile}</Text>
+            <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
+          </TouchableOpacity>
+          <View style={[s.row, s.rowBorder, s.rowTop]}>
             <Ionicons name="mail-outline" size={19} color={C.textSoft} />
-            <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Email</Text>
-            <Text style={s.rowValue}>{user.email}</Text>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <View style={s.emailRow}>
+                <Text style={s.rowLabel}>Email</Text>
+                <Text style={[s.rowValue, s.emailValue]} numberOfLines={1}>{user.email}</Text>
+              </View>
+              {edit.pendingEmail && <Text style={s.pendingEmail}>{profileCopy.pendingEmail(edit.pendingEmail)}</Text>}
+            </View>
           </View>
           <View style={[s.row, s.rowBorder]}>
             <Ionicons name="shield-checkmark-outline" size={19} color={C.textSoft} />
@@ -79,6 +92,7 @@ export default function ResearcherProfileScreen() {
           <Text style={s.logoutText}>Log out</Text>
         </TouchableOpacity>
       </ScrollView>
+      <EditProfileSheet visible={edit.isOpen} canChangeEmail onClose={edit.close} onSaved={edit.onSaved} />
     </SafeAreaView>
   );
 }
@@ -102,6 +116,10 @@ const s = StyleSheet.create({
   rowBorder: { borderBottomWidth: 1, borderBottomColor: C.divider },
   rowLabel: { fontSize: 14.5, fontWeight: '600', color: C.text },
   rowValue: { fontSize: 13.5, color: C.textSoft, maxWidth: '45%', textAlign: 'right' },
+  rowTop: { alignItems: 'flex-start' },
+  emailRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  emailValue: { flex: 1, maxWidth: undefined },
+  pendingEmail: { fontSize: 12.5, color: C.amberText, marginTop: 6, lineHeight: 17 },
 
   logoutRow: { alignItems: 'center', paddingVertical: 10 },
   logoutText: { fontSize: 15, fontWeight: '700', color: C.danger },

@@ -6,7 +6,8 @@ import { formatCurrency } from '@/src/utils/formatters';
 import { normalizePlace, placeLabel, PredefinedOption, predefinedForLocation } from '@/src/utils/predefinedOptions';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { PickerRowsSkeleton } from '@/src/components/skeletons/app-skeletons';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type State =
   | { status: 'loading' }
@@ -53,7 +54,7 @@ export function PredefinedPicker({
           <Text style={s.subtitle}>{copy.pickerSubtitle}</Text>
 
           {state.status === 'loading' && (
-            <View style={s.center}><ActivityIndicator color={Colors.ink} /></View>
+            <PickerRowsSkeleton />
           )}
           {state.status === 'error' && (
             <View style={s.center}>

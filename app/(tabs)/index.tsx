@@ -3,7 +3,7 @@ import { DECISIONS } from '@/src/constants';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import { BrandGradient, brandGradientCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { homeCopy as copy } from '@/src/constants/copy';
+import { decisionResultLabel, homeCopy as copy } from '@/src/constants/copy';
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { formatCurrency } from '@/src/utils/formatters';
@@ -98,7 +98,7 @@ export default function HomeScreen() {
             >
               {({ pressed }) => (
                 <>
-                  <View style={[s.decisionIconWrap, pressed && s.decisionIconWrapPressed]}>
+                  <View style={s.decisionIconWrap}>
                     <Ionicons name={d.icon} size={25} color={pressed ? Colors.onDark : Colors.ink} />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -117,10 +117,10 @@ export default function HomeScreen() {
             <Text style={s.lastDecisionHeading}>{copy.lastDecisionHeading}</Text>
             <View style={s.lastDecisionCard}>
               <View style={{ flex: 1 }}>
-                <Text style={s.lastDecisionResult} numberOfLines={1}>{lastDecision.result}</Text>
+                <Text style={s.lastDecisionResult} numberOfLines={1}>{decisionResultLabel(lastDecision.result)}</Text>
                 <Text style={s.lastDecisionMeta}>{formatDate(lastDecision.datetime)} · saved on this phone</Text>
               </View>
-              <Text style={s.lastDecisionProfit}>+{formatCurrency(lastDecision.profit_increase)}</Text>
+              {lastDecision.result !== '' && <Text style={s.lastDecisionProfit}>+{formatCurrency(lastDecision.profit_increase)}</Text>}
             </View>
           </View>
         )}
@@ -136,7 +136,7 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
   content: { ...contentColumn, flexGrow: 1, padding: 22, paddingTop: 32, paddingBottom: 40 },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   // On tall screens the free space splits 1:2 above/below, so the content sits a little above centre instead of hugging the top.
   topSpacer: { flexGrow: 1 },
   bottomSpacer: { flexGrow: 2 },
@@ -144,7 +144,7 @@ const s = StyleSheet.create({
   offlineIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
 
   heading: { fontSize: 32, fontWeight: '800', color: Colors.ink, lineHeight: 38, letterSpacing: -0.6, marginBottom: 8 },
-  subtitle: { fontSize: 14, color: Colors.accent, marginBottom: 24 },
+  subtitle: { fontSize: 14, color: Colors.ink, marginBottom: 24 },
 
   loadErrorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.dangerBg, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: 12, padding: 12, marginBottom: 18 },
   loadErrorText: { flex: 1, fontSize: 12.5, fontWeight: '600', color: Colors.dangerText },
@@ -153,8 +153,7 @@ const s = StyleSheet.create({
   decisionList: { gap: 11, marginBottom: 24 },
   decisionRow: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 18, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14, ...cardShadow },
   decisionRowPressed: { experimental_backgroundImage: brandGradientCss(135), borderColor: 'transparent' },
-  decisionIconWrap: { width: 48, height: 48, borderRadius: 14, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
-  decisionIconWrapPressed: { backgroundColor: 'rgba(255,255,255,0.18)' },
+  decisionIconWrap: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   decisionLabel: { fontSize: 16, fontWeight: '800', color: Colors.ink },
   decisionDesc: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
   textOnGradient: { color: Colors.onDark },

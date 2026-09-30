@@ -1,10 +1,11 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
+import { HistorySkeleton } from '@/src/components/skeletons/app-skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { brandGradientSoftCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { historyCopy as copy } from '@/src/constants/copy';
+import { decisionResultLabel, historyCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { deleteDecision, getDecisionsByUser, getStagedDecisionIds, type Decision } from '@/src/database/repositories/decisions';
 import { formatCurrency } from '@/src/utils/formatters';
@@ -118,7 +119,7 @@ export default function HistoryScreen() {
   const confirmDelete = async (decision: Decision) => {
     const confirmed = await confirm({
       title: copy.deleteTitle,
-      message: copy.deleteBody(decision.result),
+      message: copy.deleteBody(decisionResultLabel(decision.result)),
       confirmText: copy.deleteConfirm,
       cancelText: copy.deleteCancel,
       tone: 'destructive',
@@ -159,9 +160,7 @@ export default function HistoryScreen() {
       )}
 
       {isLoading ? (
-        <View style={s.centerWrap}>
-          <ActivityIndicator size="large" color={Colors.ink} />
-        </View>
+        <HistorySkeleton withHeader={false} />
       ) : loadError ? (
         <View style={s.centerWrap}>
           <Ionicons name="warning-outline" size={32} color={Colors.danger} />
@@ -209,10 +208,10 @@ export default function HistoryScreen() {
                     <Ionicons name={decisionTypeIcon(item.decision_type)} size={21} color={Colors.ink} />
                   </View>
                   <View style={s.cardBody}>
-                    <Text style={s.cardResult} numberOfLines={1}>{item.result}</Text>
+                    <Text style={s.cardResult} numberOfLines={1}>{decisionResultLabel(item.result)}</Text>
                     <Text style={s.cardType}>{decisionTypeLabel(item.decision_type)}</Text>
                     <View style={s.cardMetaRow}>
-                      <Text style={s.cardProfit}>+{formatCurrency(item.profit_increase)}</Text>
+                      {item.result !== '' && <Text style={s.cardProfit}>+{formatCurrency(item.profit_increase)}</Text>}
                       <Text style={s.cardDate}>{formatDate(item.datetime)}</Text>
                       <View style={[s.syncChip, isPending ? s.syncChipPending : s.syncChipSent]}>
                         <Ionicons
@@ -272,7 +271,7 @@ const s = StyleSheet.create({
   sectionHeader: { fontSize: 12, fontWeight: '700', letterSpacing: 0.9, color: Colors.inkFaint, marginTop: 18, marginBottom: 10 },
 
   card: {
-    flexDirection: 'row', alignItems: 'flex-start',
+    flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface, borderRadius: 16,
     borderWidth: 1, borderColor: Colors.border,
     padding: 16, gap: 13,
@@ -280,10 +279,10 @@ const s = StyleSheet.create({
     ...cardShadow,
   },
   cardPressed: { experimental_backgroundImage: brandGradientSoftCss(135), borderColor: Colors.accentTintStrong },
-  cardMain: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 13 },
+  cardMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 13 },
   cardIconWrap: {
-    width: 44, height: 44, borderRadius: 13,
-    backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center',
+    width: 44, height: 44,
+    alignItems: 'center', justifyContent: 'center',
   },
   cardBody: { flex: 1 },
   cardResult: { fontSize: 17, fontWeight: '800', color: Colors.ink },

@@ -14,7 +14,7 @@ function mix(a: string, b: string, t: number): string {
 }
 
 
-function colorAt(stops: readonly string[], t: number): string {
+export function colorAt(stops: readonly string[], t: number): string {
   if (stops.length === 1) return stops[0];
   const scaled = t * (stops.length - 1);
   const i = Math.min(Math.floor(scaled), stops.length - 2);
@@ -25,13 +25,14 @@ type Props = {
   text: string;
   colors: readonly string[];
   style?: TextStyle;
+  numberOfLines?: number;
 };
 
-export function GradientText({ text, colors, style }: Props) {
+export function GradientText({ text, colors, style, numberOfLines }: Props) {
   const chars = Array.from(text);
   const last = Math.max(chars.length - 1, 1);
   return (
-    <Text style={style}>
+    <Text style={style} numberOfLines={numberOfLines}>
       {chars.map((ch, i) => (
         <Text key={i} style={{ color: colorAt(colors, i / last) }}>{ch}</Text>
       ))}

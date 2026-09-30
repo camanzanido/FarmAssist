@@ -1,5 +1,5 @@
 import { useAuth } from '@/src/auth/AuthContext';
-import { Colors } from '@/src/constants/colors';
+import { brandGradientCss, Colors } from '@/src/constants/colors';
 import { onboardingCopy as copy } from '@/src/constants/copy';
 import { CONTENT_MAX_WIDTH } from '@/src/constants/layout';
 import { useOnboarding } from '@/src/onboarding/OnboardingContext';
@@ -138,7 +138,7 @@ export default function OnboardingScreen() {
         </View>
 
         <TouchableOpacity
-          style={s.primaryBtn}
+          style={[s.primaryBtn, isLast && s.primaryBtnGradient]}
           onPress={isLast ? finish : () => goTo(index + 1)}
           activeOpacity={0.85}
           accessibilityRole="button"
@@ -186,6 +186,7 @@ const s = StyleSheet.create({
   dotActive: { width: 24, backgroundColor: Colors.accent },
 
   primaryBtn: { backgroundColor: Colors.ink, borderRadius: 14, minHeight: 54, alignItems: 'center', justifyContent: 'center' },
+  primaryBtnGradient: { experimental_backgroundImage: brandGradientCss(90) },
   primaryBtnText: { color: Colors.onDark, fontSize: 16, fontWeight: '800' },
 
   secondaryRow: { minHeight: 52, justifyContent: 'center' },

@@ -60,6 +60,8 @@ const TooltipModal = forwardRef<TooltipModalRef, TooltipModalProps>(
   }
 );
 
+TooltipModal.displayName = 'TooltipModal';
+
 export default TooltipModal;
 
 const styles = StyleSheet.create({

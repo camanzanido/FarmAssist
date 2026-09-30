@@ -1,10 +1,11 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { PredefinedPicker } from '@/src/components/decision/predefined-picker';
 import { wizardHeader } from '@/src/components/decision/wizard-styles';
+import { GradientText } from '@/src/components/ui/gradient-text';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
-import { cardShadow, ClimateColors, Colors, ForecastColors } from '@/src/constants/colors';
+import { BrandGradient, brandGradientCss, cardShadow, ClimateColors, Colors, ForecastColors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy, predefinedCopy } from '@/src/constants/copy';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
@@ -32,7 +33,7 @@ const CLIMATE_COLOR_LIST = [
   ClimateColors.average,
   ClimateColors.above_ave,
   ClimateColors.wettest,
-];
+].map(c => `${c}73`);
 
 export default function DecisionInputFlow() {
   const router = useRouter();
@@ -504,7 +505,7 @@ export default function DecisionInputFlow() {
 
             <View style={s.footer}>
               <TouchableOpacity
-                style={[s.nextBtn, !isWeatherValid && s.nextBtnDisabled]}
+                style={[s.nextBtn, isWeatherValid ? s.calcBtn : s.nextBtnDisabled]}
                 onPress={handleNext}
                 disabled={!isWeatherValid}>
                 <Text style={s.nextBtnText}>{climateCopy.submit}</Text>
@@ -538,7 +539,7 @@ export default function DecisionInputFlow() {
           </View>
 
           <View style={s.titleBlock}>
-            <Text style={s.title} numberOfLines={1}>{optionName}</Text>
+            <GradientText text={optionName} colors={BrandGradient} style={s.optionTitle} numberOfLines={1} />
             <Text style={s.subtitle}>Enter values for each climate scenario.</Text>
           </View>
 
@@ -675,15 +676,16 @@ const s = StyleSheet.create({
   },
   priceLabel: { fontSize: 15, fontWeight: '700', color: Colors.ink },
   priceUnit: { fontSize: 12, color: Colors.inkFaint },
-  priceInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.surfaceAlt, borderWidth: 1.5, borderColor: Colors.ink, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 },
+  priceInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 },
   priceSymbol: { fontSize: 15, color: Colors.inkFaint },
   priceInput: { fontSize: 18, fontWeight: '800', color: Colors.ink, minWidth: 64 },
   priceErrorText: { fontSize: 12, color: Colors.danger, fontWeight: '600', marginTop: -8, marginBottom: 12, marginLeft: 4 },
 
   scenariosHeading: { fontSize: 13, fontWeight: '700', letterSpacing: 0.6, color: Colors.inkFaint, marginBottom: 10, marginLeft: 2 },
 
-  scenarioCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 15, marginBottom: 12, borderWidth: 1, borderColor: Colors.border, borderLeftWidth: 5, ...cardShadow },
+  scenarioCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 15, marginBottom: 12, borderWidth: 1, borderColor: Colors.border, borderLeftWidth: 3, ...cardShadow },
   scenarioHeader: { marginBottom: 12 },
+  optionTitle: { ...wizardHeader.title, fontSize: 30, lineHeight: 36, marginBottom: 6 },
   scenarioName: { fontSize: 16, fontWeight: '800', color: Colors.ink },
   scenarioFields: { flexDirection: 'row', gap: 8 },
   scenarioField: { flex: 1 },
@@ -704,6 +706,7 @@ const s = StyleSheet.create({
   errorTextInline: { fontSize: 12, color: Colors.danger, fontWeight: '600' },
   nextBtn: { backgroundColor: Colors.ink, borderRadius: 14, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   nextBtnDisabled: { backgroundColor: Colors.disabled },
+  calcBtn: { experimental_backgroundImage: brandGradientCss(90) },
   nextBtnText: { fontSize: 15, fontWeight: '700', color: Colors.onDark },
   hintText: { textAlign: 'center', fontSize: 12, color: Colors.inkFaint, marginTop: 9 },
 
@@ -711,10 +714,10 @@ const s = StyleSheet.create({
 
   // Climate step
   climateCard: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 20, padding: 20, marginBottom: 16, ...cardShadow },
-  climateBar: { flexDirection: 'row', height: 64, borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
+  climateBar: { flexDirection: 'row', height: 46, borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
   climateBarSeg: { alignItems: 'center', justifyContent: 'center' },
-  climateBarPct: { fontSize: 20, fontWeight: '800', color: Colors.onDark },
-  climateBarLabel: { fontSize: 11, fontWeight: '600', color: Colors.onDark, opacity: 0.9 },
+  climateBarPct: { fontSize: 16, fontWeight: '800', color: Colors.onDark },
+  climateBarLabel: { fontSize: 10, fontWeight: '600', color: Colors.onDark, opacity: 0.9 },
 
   climateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12 },
   climateRowInfo: { flexDirection: 'row', alignItems: 'center', gap: 10 },

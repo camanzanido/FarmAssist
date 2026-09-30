@@ -1,15 +1,20 @@
+import { OverviewSkeleton } from '@/src/components/researcher/skeletons';
 import { HapticTab } from '@/src/components/ui/haptic-tab';
 import { Colors } from '@/src/constants/colors';
 import { useTabBarFrame } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RoleGuard } from '../../src/auth/guards/RoleGuard';
 
 export default function ResearcherLayout() {
   const tabBarFrame = useTabBarFrame();
 
   return (
-    <RoleGuard allowedRoles={['researcher']}>
+    <RoleGuard
+      allowedRoles={['researcher']}
+      fallback={<SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }}><OverviewSkeleton /></SafeAreaView>}
+    >
       <Tabs
         screenOptions={{
           headerShown: false,

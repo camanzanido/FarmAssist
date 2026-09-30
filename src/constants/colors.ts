@@ -7,9 +7,9 @@ export const Colors = {
   divider: '#EDF2EF',
 
   ink: '#0A3B28',
-  inkSoft: '#6B7B6E',
-  inkFaint: '#7A8A7F',
-  placeholder: '#A7B3AB',
+  inkSoft: '#3D4541',
+  inkFaint: '#4B534E',
+  placeholder: '#8A928D',
 
   accent: '#2E7D52',
   accentSoft: '#5A9A6E',
@@ -35,15 +35,15 @@ export const Colors = {
 
   disabled: '#B0C4B8',
 
-  inkMuted: '#5C6B60',
-  inkDim: '#95A39A',
+  inkMuted: '#333A36',
+  inkDim: '#5A625D',
   onDarkBody: '#C8DFD0',
   amberOnDark: '#E0C68F',
   amberDeepText: '#8A6B2E',
   amberBorderStrong: '#E2CFA8',
   dangerBorder: '#EFC6C0',
   dangerText: '#8A3A30',
-  tabInactive: '#9AA79D',
+  tabInactive: '#5A625D',
   barMuted: '#C9D3CD',
   surfaceAlt: '#F3F8F5',
 } as const;

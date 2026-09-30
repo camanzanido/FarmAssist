@@ -1,5 +1,5 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
-import { Colors } from '@/src/constants/colors';
+import { brandGradientCss, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { authCopy as copy } from '@/src/constants/copy';
 import { formatLockTime } from '@/src/auth/signInThrottle';
@@ -167,7 +167,7 @@ const s = StyleSheet.create({
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 6 },
 
-  signInBtn: { backgroundColor: Colors.ink, borderRadius: 16, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
+  signInBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 16, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
   signInBtnDisabled: { opacity: 0.6 },
   signInBtnText: { fontSize: 17, fontWeight: '800', color: Colors.onDark },
   throttleText: { fontSize: 13, color: Colors.amberText, textAlign: 'center', marginTop: -4, marginBottom: 14 },

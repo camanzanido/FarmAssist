@@ -2,9 +2,9 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { DecisionResultView, heroTopStyles } from '@/src/components/decision/decision-result-view';
 import { Colors } from '@/src/constants/colors';
 import { resultCopy as copy } from '@/src/constants/copy';
+import { buildOptionClimateFields } from '@/src/database/climateFields';
 import { createDecision, OptionSnapshot } from '@/src/database/repositories/decisions';
 import { getLocationsByUser } from '@/src/database/repositories/locations';
-import { buildOptionClimateFields } from '@/src/database/climateFields';
 import { cltlgy } from '@/src/rcda/constants';
 import { computeRcda, RcdaInputs } from '@/src/rcda/decisionTree';
 import { expandScenario5to7, getcltlgyRevised } from '@/src/rcda/financials';
@@ -13,13 +13,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   StatusBar,
   StyleSheet,
   Text, TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ResultSkeleton } from '@/src/components/skeletons/app-skeletons';
 
 function computeResult(params: RcdaInputs): RcdaSummary {
   // Shared pipeline (also used by the decision tree and History detail)
@@ -48,7 +48,7 @@ function computeResult(params: RcdaInputs): RcdaSummary {
     console.log('[RCDA] ---- summary ----');
     console.log('[RCDA] profitWalk point count:', profitWalk.length);
     console.log('[RCDA] LT averages [option0, option1]:', averages[0], averages[1]);
-    console.log('[RCDA] recommendedOption:', recommendedOption);
+    console.log('[RCDA] recommendedOption:', recommendedOption, averages[0] <= 0 && averages[1] <= 0 ? '(both neg, no recommendation)' : '');
   }
 
   return summarizeRcda(computation, params.optionNames, params.climate);
@@ -109,7 +109,7 @@ export default function ResultScreen() {
           decision_type: decisionType,
           location_id: locationId,
           user_id: userId,
-          result: optionNames[computed.recommendedOption],
+          result: computed.bothNegative ? '' : optionNames[computed.recommendedOption],
           profit_increase: computed.profitIncrease,
           climate_driest: climate[0],
           climate_mid: climate[1],
@@ -200,14 +200,12 @@ export default function ResultScreen() {
             <Text style={s.bannerTitle}>Analysis Result</Text>
             <View style={{ width: 40 }} />
           </View>
-          <View style={s.loadingWrap}>
-            <ActivityIndicator size="large" color={Colors.ink} />
-            <Text style={s.loadingText}>{copy.loading}</Text>
-          </View>
+          <ResultSkeleton withTopRow={false} />
         </>
       ) : (
         <DecisionResultView
           summary={result}
+          decisionType={decisionType}
           heroTop={
             <>
               <TouchableOpacity onPress={() => router.back()} style={heroTopStyles.backBtn}>
@@ -234,7 +232,7 @@ export default function ResultScreen() {
           )}
           footer={
             <View style={s.actions}>
-              <TouchableOpacity style={s.newComparisonBtn} onPress={startOver} activeOpacity={0.8}>
+              <TouchableOpacity style={s.newComparisonBtn} onPress={startOver} activeOpacity={1}>
                 <Ionicons name="home-outline" size={16} color={Colors.ink} />
                 <Text style={s.newComparisonText}>{copy.newComparison}</Text>
               </TouchableOpacity>
@@ -256,8 +254,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 14,
   },
   backBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: Colors.accentTint,
+    width: 40, height: 40,
     alignItems: 'center', justifyContent: 'center',
   },
   bannerTitle: { fontSize: 17, fontWeight: '700', color: Colors.ink },

@@ -102,9 +102,9 @@ function Branch({ branch, isLast }: { branch: TreeBranch; isLast: boolean }) {
   );
 }
 
-export function DecisionTree({ tree }: { tree: Tree }) {
+export function DecisionTree({ tree, bare = false }: { tree: Tree; bare?: boolean }) {
   return (
-    <View style={s.card}>
+    <View style={bare ? s.bare : s.card}>
       <Text style={s.heading}>{copy.heading}</Text>
       <Text style={s.subtitle}>{copy.subtitle}</Text>
 
@@ -130,6 +130,7 @@ const INDENT = 22;
 
 const s = StyleSheet.create({
   card: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 18, padding: 18, marginBottom: 14, ...cardShadow },
+  bare: { paddingVertical: 4, marginBottom: 18 },
   heading: { fontSize: 14, fontWeight: '800', color: Colors.ink },
   subtitle: { fontSize: 13, color: Colors.inkSoft, lineHeight: 18, marginTop: 4, marginBottom: 16 },
 

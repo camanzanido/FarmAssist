@@ -1,8 +1,8 @@
 import { Colors } from '@/src/constants/colors';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View,
-  type ScrollViewProps, type StyleProp, type ViewStyle,
+  Keyboard, Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View,
+  type KeyboardEvent, type ScrollViewProps, type StyleProp, type ViewStyle,
 } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
@@ -14,6 +14,7 @@ const CLOSE = { duration: 260, easing: Easing.in(Easing.cubic) };
 const SPRING_BACK = { damping: 20, stiffness: 220 };
 const DISMISS_FRACTION = 0.25;
 const DISMISS_VELOCITY = 800;
+const MAX_HEIGHT_RATIO = 0.92;
 
 type Props = {
   visible: boolean;
@@ -33,6 +34,7 @@ export function BottomSheet({ visible, onClose, avoidKeyboard, style, scrollProp
   const sheetHeight = useSharedValue(1);
   const scrollY = useSharedValue(0);
   const dragAnchor = useSharedValue(0);
+  const keyboard = useSharedValue(0);
 
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -43,7 +45,25 @@ export function BottomSheet({ visible, onClose, avoidKeyboard, style, scrollProp
   }, [visible]);
 
   useEffect(() => {
+    if (!avoidKeyboard || !mounted) return;
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const animate = (to: number, e?: KeyboardEvent) => {
+      const duration = reduceMotion ? 0 : e?.duration || 220;
+      keyboard.value = withTiming(to, { duration, easing: Easing.out(Easing.cubic) });
+    };
+    const shown = Keyboard.addListener(showEvent, e => animate(e.endCoordinates.height, e));
+    const hidden = Keyboard.addListener(hideEvent, e => animate(0, e));
+    return () => {
+      shown.remove();
+      hidden.remove();
+      keyboard.value = 0;
+    };
+  }, [avoidKeyboard, mounted, reduceMotion, keyboard]);
+
+  useEffect(() => {
     if (!mounted) return;
+    if (!visible) Keyboard.dismiss();
     if (visible) {
       dragY.value = 0;
       progress.value = withTiming(1, reduceMotion ? { duration: 0 } : OPEN);
@@ -88,17 +108,19 @@ export function BottomSheet({ visible, onClose, avoidKeyboard, style, scrollProp
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: progress.value * Math.max(0, 1 - dragY.value / sheetHeight.value),
   }));
-  const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: (1 - progress.value) * height + dragY.value }],
-  }));
-
-  const Wrapper = avoidKeyboard ? KeyboardAvoidingView : View;
-  const wrapperProps = avoidKeyboard ? { behavior: Platform.OS === 'ios' ? ('padding' as const) : undefined } : {};
+  const sheetStyle = useAnimatedStyle(() => {
+    const lifted = keyboard.value > 0;
+    return {
+      transform: [{ translateY: (1 - progress.value) * height + dragY.value }],
+      marginBottom: keyboard.value,
+      ...(lifted ? { maxHeight: height * MAX_HEIGHT_RATIO - keyboard.value, paddingBottom: 16 } : null),
+    };
+  });
 
   return (
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <GestureHandlerRootView style={s.root}>
-        <Wrapper style={s.root} {...wrapperProps}>
+        <View style={s.root}>
           <Animated.View style={[StyleSheet.absoluteFill, s.backdrop, backdropStyle]}>
             <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
           </Animated.View>
@@ -129,7 +151,7 @@ export function BottomSheet({ visible, onClose, avoidKeyboard, style, scrollProp
               </View>
             </GestureDetector>
           </Animated.View>
-        </Wrapper>
+        </View>
       </GestureHandlerRootView>
     </Modal>
   );

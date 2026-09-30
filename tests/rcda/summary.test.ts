@@ -29,13 +29,46 @@ describe('summarizeRcda', () => {
     });
   });
 
-  it('flags the scenarios where the recommended option earns at least as much', () => {
-    const [cabbage, atsal] = summary.breakdown;
-    expect(summary.favorFlags).toEqual(atsal.map((v, i) => v >= cabbage[i]));
+  it('compares the options on the decision-tree thirds, skipping ones the forecast gives 0%', () => {
+    const [cabbage, atsal] = summary.tree.branches.map((b) => b.outcomes);
+    expect(summary.outcomeFavors).toEqual(
+      atsal.map((o, t) => ({ key: o.key, favorsWinner: o.value! >= cabbage[t].value! }))
+    );
+    const noWet = summarizeRcda(computeRcda({ ...EXAMPLE, climate: [90, 10, 0] }), EXAMPLE.optionNames, [90, 10, 0]);
+    expect(noWet.outcomeFavors.map((o) => o.key)).toEqual(['dry', 'average']);
+  });
+
+  it('is not bothNegative when at least one option has a positive score', () => {
+    expect(summary.bothNegative).toBe(false);
   });
 
   it('carries a tree that agrees with the recommendation', () => {
     expect(summary.tree.recommendedOption).toBe(summary.recommendedOption);
     expect(summary.tree.branches.map((b) => Math.round(b.expectedValue))).toEqual(summary.scores);
+  });
+});
+
+// Excel L35/L36: IF(avg<=0,"neg", ...). Only a positive average can be "MAX" and earn a gain.
+describe('summarizeRcda with losing options', () => {
+  const run = (price: number[]) => {
+    const inputs = { ...EXAMPLE, price };
+    return summarizeRcda(computeRcda(inputs), inputs.optionNames, inputs.climate);
+  };
+
+  it('still subtracts when one option is negative and the other positive (MAX minus neg)', () => {
+    const summary = run([1, 40]);
+    expect(summary.scores[0]).toBeLessThanOrEqual(0);
+    expect(summary.scores[1]).toBeGreaterThan(0);
+    expect(summary.bothNegative).toBe(false);
+    expect(summary.recommendedOption).toBe(1);
+    expect(summary.profitIncrease).toBe(Math.round(summary.tree.branches[1].expectedValue - summary.tree.branches[0].expectedValue));
+  });
+
+  it('recommends nothing and reports no gain when both options lose money', () => {
+    const summary = run([1, 1]);
+    expect(summary.scores.every((s) => s <= 0)).toBe(true);
+    expect(summary.bothNegative).toBe(true);
+    expect(summary.profitIncrease).toBe(0);
+    expect(summary.tree.branches.some((b) => b.recommended)).toBe(false);
   });
 });

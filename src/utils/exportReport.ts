@@ -1,3 +1,4 @@
+import { decisionResultLabel } from '../constants/copy';
 import type { Decision } from '../database/repositories/decisions';
 import type { Location } from '../database/repositories/locations';
 import type { User } from '../database/repositories/users';
@@ -131,7 +132,7 @@ const BASE_COLUMNS: Column[] = [
   { key: 'id', label: 'ID', raw: (d) => d.id },
   { key: 'decision_type', label: 'Type', raw: (d) => d.decision_type, display: (d, c) => c.typeLabels[d.decision_type] ?? d.decision_type },
   { key: 'datetime', label: 'Date', raw: (d) => d.datetime, display: (d) => formatDay(d.datetime) },
-  { key: 'result', label: 'Recommended', raw: (d) => d.result },
+  { key: 'result', label: 'Recommended', raw: (d) => d.result, display: (d) => decisionResultLabel(d.result) },
   { key: 'profit_increase', label: 'Gain / ha', raw: (d) => d.profit_increase, display: (d) => formatCurrency(d.profit_increase) },
 ];
 

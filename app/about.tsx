@@ -121,7 +121,7 @@ const s = StyleSheet.create({
 
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, minHeight: 56 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  iconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+  iconWrap: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   rowLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.ink },
   rowValue: { fontSize: 14, color: Colors.inkFaint, maxWidth: '50%', textAlign: 'right' },
   rowSub: { fontSize: 13, color: Colors.inkFaint, marginTop: 2 },

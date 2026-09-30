@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { PowerSyncContext } from '@powersync/react-native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import { AppStartSkeleton } from '../components/skeletons/app-skeletons';
 import { Colors } from '../constants/colors';
 import { startupCopy as copy } from '../constants/copy';
 import { db } from './powersync/powersync';
@@ -68,11 +69,15 @@ export function PowerSyncProvider({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <View style={s.center} accessibilityLiveRegion="polite">
+      <View style={s.starting} accessibilityLiveRegion="polite">
         <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
-        <ActivityIndicator size="large" color={Colors.ink} />
-        <Text style={s.title}>{isSlow ? copy.slowTitle : copy.starting}</Text>
-        {isSlow && <Text style={s.body}>{copy.slowBody}</Text>}
+        <AppStartSkeleton />
+        {isSlow && (
+          <View style={s.slowNote}>
+            <Text style={s.title}>{copy.slowTitle}</Text>
+            <Text style={s.body}>{copy.slowBody}</Text>
+          </View>
+        )}
       </View>
     );
   }
@@ -89,6 +94,8 @@ const s = StyleSheet.create({
     flex: 1, alignItems: 'center', justifyContent: 'center',
     gap: 10, paddingHorizontal: 32, backgroundColor: Colors.bg,
   },
+  starting: { flex: 1, backgroundColor: Colors.bg },
+  slowNote: { position: 'absolute', left: 24, right: 24, bottom: 110, alignItems: 'center', gap: 6 },
   title: { fontSize: 15, fontWeight: '700', color: Colors.ink, textAlign: 'center', marginTop: 4 },
   body: { fontSize: 13, color: Colors.inkSoft, textAlign: 'center', lineHeight: 19 },
   detail: { fontSize: 11, color: Colors.inkFaint, textAlign: 'center', marginTop: 8 },

@@ -8,7 +8,7 @@ const s = StyleSheet.create({
   segment: { flex: 1, height: 5, borderRadius: 3, backgroundColor: Colors.borderStrong },
   segmentDone: { backgroundColor: Colors.accentSoft },
   segmentActive: { backgroundColor: Colors.ink },
-  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1.1, color: Colors.inkFaint, textAlign: 'right' },
+  label: { fontSize: 11, fontWeight: '700', letterSpacing: 1.1, color: Colors.ink, textAlign: 'right' },
 });
 
 export default function StepIndicator({
@@ -33,6 +33,7 @@ export default function StepIndicator({
       <Text style={s.label} numberOfLines={1}>
         {`STEP ${current + 1} OF ${total}`}
         {context ? ` · ${context.toUpperCase()}` : ''}
+        {current+1 === total?` · Almost there!`: ''}
       </Text>
     </View>
   );

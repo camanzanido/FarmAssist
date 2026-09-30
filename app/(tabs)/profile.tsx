@@ -2,19 +2,21 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
-import { cardShadow, Colors } from '@/src/constants/colors';
+import { brandGradientCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { profileCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { getDecisionsByUser, getStagedDecisionIds } from '@/src/database/repositories/decisions';
 import { getLocationsByUser, type Location } from '@/src/database/repositories/locations';
 import { clearSyncErrors } from '@/src/database/repositories/syncErrors';
+import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
+import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function initials(name: string): string {
@@ -35,6 +37,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const isAuthenticated = !!user;
   const sync = useSyncStatus();
+  const edit = useEditProfile();
 
   const [decisionCount, setDecisionCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
@@ -104,6 +107,12 @@ export default function ProfileScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       {!isAuthenticated ? (
         <View style={s.signedOutWrap}>
+          <Image
+            source={require('@/assets/images/FarmAssist-logo.png')}
+            style={s.signedOutLogo}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+          />
           <Text style={s.signedOutTitle}>{copy.signedOutTitle}</Text>
           <Text style={s.signedOutSubtitle}>{copy.signedOutSubtitle}</Text>
 
@@ -204,6 +213,23 @@ export default function ProfileScreen() {
           )}
 
           <View style={s.listCard}>
+            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={edit.open} activeOpacity={0.7} accessibilityRole="button">
+              <Ionicons name="create-outline" size={20} color={Colors.ink} />
+              <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.editProfile}</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
+            </TouchableOpacity>
+            <View style={[s.listRow, s.listRowBorder, s.listRowTop]}>
+              <Ionicons name="mail-outline" size={20} color={Colors.ink} />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={s.emailRow}>
+                  <Text style={s.listRowLabel}>Email</Text>
+                  <Text style={[s.listRowValue, s.emailValue]} numberOfLines={1}>{user.email}</Text>
+                </View>
+                {edit.pendingEmail && (
+                  <Text style={s.pendingEmail}>{copy.pendingEmail(edit.pendingEmail)}</Text>
+                )}
+              </View>
+            </View>
             <View style={[s.listRow, s.listRowBorder]}>
               <Ionicons name="shield-checkmark-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.accountType}</Text>
@@ -226,6 +252,12 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </ScrollView>
       )}
+      <EditProfileSheet
+        visible={edit.isOpen}
+        canChangeEmail={sync.connected}
+        onClose={edit.close}
+        onSaved={edit.onSaved}
+      />
     </SafeAreaView>
   );
 }
@@ -236,7 +268,8 @@ const s = StyleSheet.create({
   signedOutWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
   signedOutTitle: { fontSize: 24, fontWeight: '800', color: Colors.ink, marginBottom: 10, textAlign: 'center' },
   signedOutSubtitle: { fontSize: 14, color: Colors.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
-  primaryBtn: { backgroundColor: Colors.ink, borderRadius: 14, paddingVertical: 16, width: '100%', alignItems: 'center', marginBottom: 12 },
+  signedOutLogo: { width: 84, height: 84, alignSelf: 'center', marginBottom: 16 },
+  primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 14, paddingVertical: 16, width: '100%', alignItems: 'center', marginBottom: 12 },
   primaryBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
   secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 14, paddingVertical: 16, width: '100%', alignItems: 'center' },
   secondaryBtnText: { color: Colors.ink, fontWeight: '700', fontSize: 15 },
@@ -280,6 +313,10 @@ const s = StyleSheet.create({
   listRowIconWrap: { width: 38, height: 38, borderRadius: 11, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
   listRowLabel: { fontSize: 15, fontWeight: '600', color: Colors.ink },
   listRowValue: { fontSize: 14, color: Colors.inkFaint },
+  listRowTop: { alignItems: 'flex-start' },
+  emailRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  emailValue: { flex: 1, textAlign: 'right' },
+  pendingEmail: { fontSize: 12.5, color: Colors.amberText, marginTop: 6, lineHeight: 17 },
 
   logoutRow: { alignItems: 'center', paddingVertical: 10 },
   logoutText: { fontSize: 15, fontWeight: '700', color: Colors.danger },

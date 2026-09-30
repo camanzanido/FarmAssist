@@ -84,8 +84,8 @@ const s = StyleSheet.create({
     ...cardShadow,
   },
   iconWrap: {
-    width: 48, height: 48, borderRadius: 14,
-    backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center',
+    width: 48, height: 48,
+    alignItems: 'center', justifyContent: 'center',
   },
   cardText: { flex: 1 },
   cardLabel: { fontSize: 17, fontWeight: '800', color: Colors.ink, marginBottom: 3 },
