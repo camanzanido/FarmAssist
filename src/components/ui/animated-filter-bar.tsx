@@ -1,15 +1,7 @@
 import { brandGradientCss, Colors } from '@/src/constants/colors';
 import React, { useEffect, useRef, useState } from 'react';
-import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, {
-  Easing,
-  interpolateColor,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-  type SharedValue,
-} from 'react-native-reanimated';
+import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 
 export type FilterOption<T extends string> = { value: T; label: string };
 
@@ -23,8 +15,6 @@ type Props<T extends string> = {
 type ChipLayout = { x: number; y: number; width: number; height: number };
 
 const DURATION = 260;
-const BORDER_IDLE = Colors.borderStrong;
-const BORDER_HIDDEN = 'rgba(211,221,215,0)';
 
 export function AnimatedFilterBar<T extends string>({ options, selected, onSelect, style }: Props<T>) {
   const reduceMotion = useReducedMotion();
@@ -75,9 +65,6 @@ export function AnimatedFilterBar<T extends string>({ options, selected, onSelec
           key={o.value}
           label={o.label}
           isSelected={o.value === selected}
-          layout={layouts[o.value]}
-          pillX={pillX}
-          pillWidth={pillWidth}
           onPress={() => onSelect(o.value)}
           onLayout={onChipLayout(o.value)}
         />
@@ -89,49 +76,17 @@ export function AnimatedFilterBar<T extends string>({ options, selected, onSelec
 type ChipProps = {
   label: string;
   isSelected: boolean;
-  layout?: ChipLayout;
-  pillX: SharedValue<number>;
-  pillWidth: SharedValue<number>;
   onPress: () => void;
   onLayout: (e: LayoutChangeEvent) => void;
 };
 
-function FilterChip({ label, isSelected, layout, pillX, pillWidth, onPress, onLayout }: ChipProps) {
-  // Shared values, not render-time constants: a worklet closure can keep stale layout under React Compiler memoisation.
-  const chipX = useSharedValue(layout?.x ?? -1);
-  const chipWidth = useSharedValue(layout?.width ?? 1);
-  const selected = useSharedValue(isSelected ? 1 : 0);
-
-  useEffect(() => {
-    chipX.set(layout?.x ?? -1);
-    chipWidth.set(layout?.width ?? 1);
-  }, [layout, chipX, chipWidth]);
-
-  useEffect(() => {
-    selected.set(isSelected ? 1 : 0);
-  }, [isSelected, selected]);
-
-  const coverage = () => {
-    'worklet';
-    const x = chipX.get();
-    const width = chipWidth.get();
-    if (x < 0) return selected.get();
-    const overlap = Math.min(pillX.get() + pillWidth.get(), x + width) - Math.max(pillX.get(), x);
-    return Math.min(1, Math.max(0, overlap / width));
-  };
-
-  const chipStyle = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(coverage(), [0, 1], [BORDER_IDLE, BORDER_HIDDEN]),
-  }));
-  const textStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(coverage(), [0, 1], [Colors.inkMuted, Colors.onDark]),
-  }));
-
+// Chip colours stay plain React styles: an animated colour can be overwritten by a slow re-render committing after the slide ends.
+function FilterChip({ label, isSelected, onPress, onLayout }: ChipProps) {
   return (
     <Pressable onPress={onPress} onLayout={onLayout} accessibilityRole="tab" accessibilityState={{ selected: isSelected }}>
-      <Animated.View style={[s.chip, chipStyle]}>
-        <Animated.Text style={[s.chipText, isSelected && s.chipTextSelected, textStyle]}>{label}</Animated.Text>
-      </Animated.View>
+      <View style={[s.chip, isSelected && s.chipSelected]}>
+        <Text style={[s.chipText, isSelected && s.chipTextSelected]}>{label}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -139,7 +94,8 @@ function FilterChip({ label, isSelected, layout, pillX, pillWidth, onPress, onLa
 const s = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8 },
   pill: { position: 'absolute', top: 0, left: 0, borderRadius: 999, experimental_backgroundImage: brandGradientCss(90) },
-  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
-  chipText: { fontSize: 13, fontWeight: '600' },
-  chipTextSelected: { fontWeight: '700' },
+  chip: { borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
+  chipSelected: { borderColor: 'transparent' },
+  chipText: { fontSize: 13, fontWeight: '600', color: Colors.inkMuted },
+  chipTextSelected: { fontWeight: '700', color: Colors.onDark },
 });
