@@ -105,8 +105,20 @@ export default function ResearcherDashboardScreen() {
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor={Colors.ink} colors={[Colors.accent]} />}
         >
           <View style={s.header}>
-            <Text style={s.eyebrow}>RESEARCHER</Text>
-            <Text style={s.title}>Overview</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={s.eyebrow}>RESEARCHER</Text>
+              <Text style={s.title}>Overview</Text>
+            </View>
+            <TouchableOpacity
+              style={s.exportBtn}
+              onPress={() => setExportOpen(true)}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Export reports"
+            >
+              <Ionicons name="download-outline" size={16} color={Colors.ink} />
+              <Text style={s.exportBtnText}>Export</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={isWide && s.statGridWide}>
@@ -204,13 +216,6 @@ export default function ResearcherDashboardScreen() {
             </>
           )}
 
-          <View style={s.exportRow}>
-            <TouchableOpacity style={s.exportBtn} onPress={() => setExportOpen(true)} activeOpacity={0.85}>
-              <Ionicons name="download-outline" size={18} color={Colors.onDark} />
-              <Text style={s.exportBtnText}>Export</Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={{ height: 20 }} />
         </ScrollView>
       </ResearcherAsyncState>
@@ -224,7 +229,7 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
 
-  header: { marginBottom: 18 },
+  header: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, marginBottom: 18 },
   eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: Colors.inkFaint, marginBottom: 5 },
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
 
@@ -265,7 +270,6 @@ const s = StyleSheet.create({
   muniBarBg: { height: 7, backgroundColor: Colors.divider, borderRadius: 4, overflow: 'hidden' },
   muniBarFill: { height: '100%', backgroundColor: Colors.accent, borderRadius: 4 },
 
-  exportRow: { marginTop: 18 },
-  exportBtn: { flexDirection: 'row', gap: 8, height: 52, borderRadius: 14, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
-  exportBtnText: { fontSize: 14.5, fontWeight: '800', color: Colors.onDark },
+  exportBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface, marginBottom: 2 },
+  exportBtnText: { fontSize: 13, fontWeight: '700', color: Colors.ink },
 });

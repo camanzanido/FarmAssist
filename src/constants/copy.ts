@@ -111,7 +111,7 @@ export const resultCopy = {
 
 export const treeCopy = {
   heading: 'Decision tree',
-  subtitle: "Each option's value is the chance of each kind of year times what it earns in that year, added up.",
+  subtitle: 'Chance of each kind of year × what the option earns in it, added up.',
   rootLabel: 'Your choice',
   best: 'BEST',
   expected: 'Expected',

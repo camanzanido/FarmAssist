@@ -193,7 +193,7 @@ const s = StyleSheet.create({
   scroll: { ...contentColumn, padding: 24, paddingBottom: 40 },
   closeBtn: {
     alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
-    backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
   },
   title: { fontSize: 26, fontWeight: '800', color: Colors.ink, marginBottom: 22, letterSpacing: -0.4 },
 

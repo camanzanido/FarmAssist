@@ -50,6 +50,7 @@ export interface ResearcherDecisionRow extends Decision {
 
 export interface ResearcherUserRow extends User {
   is_pending: boolean;
+  last_decision_at: string | null;
 }
 
 type PageError = { code?: string } | null;

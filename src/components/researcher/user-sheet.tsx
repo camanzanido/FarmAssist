@@ -1,9 +1,10 @@
 import { UserType } from '@/src/auth/types';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { ResearcherColors as C } from '@/src/constants/colors';
-import { updateUserRemote } from '@/src/database/repositories/researcher';
+import { updateUserRemote, type ResearcherUserRow } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
 import { getActionErrorMessage } from '@/src/utils/errors';
+import { isDormant } from '@/src/utils/userActivity';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -24,6 +25,10 @@ export function userInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
   return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
+}
+
+function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function describe(user: User, pending: Pending): Confirmation {
@@ -59,10 +64,10 @@ function describe(user: User, pending: Pending): Confirmation {
 
 export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
   visible: boolean;
-  user: User | null;
+  user: ResearcherUserRow | null;
   isSelf: boolean;
   onClose: () => void;
-  onChanged: (updated: User) => void;
+  onChanged: (updated: ResearcherUserRow) => void;
 }) {
   const [pending, setPending] = useState<Pending | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -115,6 +120,11 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
         <View style={{ flex: 1 }}>
           <Text style={s.name}>{user.name}</Text>
           <Text style={s.meta}>@{user.username} · {user.email}</Text>
+          {user.user_type === 'farmer' && (
+            <Text style={s.meta}>
+              {user.last_decision_at ? `Last decision: ${formatShortDate(user.last_decision_at)}` : 'No decisions yet'}
+            </Text>
+          )}
         </View>
       </View>
 
@@ -162,6 +172,12 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
           </View>
 
           <Text style={s.sectionLabel}>ACCOUNT</Text>
+          {isDormant(user) && (
+            <View style={s.dormantHint}>
+              <Ionicons name="time-outline" size={15} color={C.amber} />
+              <Text style={s.dormantHintText}>No activity in over a year. Consider deactivating.</Text>
+            </View>
+          )}
           <TouchableOpacity
             style={[s.statusBtn, user.status !== 'active' && s.statusBtnApprove, isSelf && s.statusBtnDisabled]}
             onPress={askStatus}
@@ -204,6 +220,8 @@ const s = StyleSheet.create({
   statusText: { fontSize: 14.5, fontWeight: '700', color: C.danger },
   approveText: { color: C.accent },
   statusTextDisabled: { color: C.textFaint },
+  dormantHint: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amberBorder, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 12, marginBottom: 10 },
+  dormantHintText: { flex: 1, fontSize: 13, color: C.amber, fontWeight: '600' },
   selfHint: { fontSize: 12.5, color: C.textFaint, textAlign: 'center', marginTop: 12 },
 
   confirmCard: { backgroundColor: C.fill, borderRadius: 16, padding: 18, alignItems: 'center' },

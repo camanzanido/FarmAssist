@@ -145,7 +145,7 @@ const s = StyleSheet.create({
   container: { ...contentColumn, flex: 1, paddingHorizontal: 24, paddingTop: 10 },
   closeBtn: {
     alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
-    backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     marginBottom: 24,
   },
   logo: { width: 64, height: 64, marginBottom: 20 },

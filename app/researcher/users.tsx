@@ -9,10 +9,10 @@ import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
 import { wideColumn } from '@/src/constants/layout';
 import { fetchUserCounts, fetchUsersPage, type ResearcherUserRow, type UserCounts } from '@/src/database/repositories/researcher';
-import { type User } from '@/src/database/repositories/users';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { useResearcherPage } from '@/src/hooks/use-researcher-page';
+import { isDormant } from '@/src/utils/userActivity';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -22,16 +22,18 @@ type RoleFilter = 'all' | UserType;
 
 const NO_COUNTS: UserCounts = { all: 0, farmer: 0, researcher: 0 };
 
-function UserRow({ user: u, onPress }: { user: User; onPress: (u: User) => void }) {
+function UserRow({ user: u, onPress }: { user: ResearcherUserRow; onPress: (u: ResearcherUserRow) => void }) {
   const isPending = u.status === 'pending';
   const isInactive = u.status !== 'active';
   const isResearcher = u.user_type === 'researcher';
+  const dormant = isDormant(u);
   return (
     <TouchableOpacity
       style={[s.userRow, isInactive && s.userRowInactive]}
       onPress={() => onPress(u)}
       activeOpacity={0.8}
       accessibilityRole="button"
+      accessibilityLabel={`${u.name}, @${u.username}${dormant ? ', no activity in over a year' : ''}`}
       accessibilityHint="Opens role and account options"
     >
       <View style={[s.avatar, isResearcher && s.avatarResearcher]}>
@@ -42,6 +44,12 @@ function UserRow({ user: u, onPress }: { user: User; onPress: (u: User) => void 
         <Text style={s.userMeta} numberOfLines={1}>
           @{u.username}{isPending ? ' · awaiting approval' : isInactive ? ' · deactivated' : ''}
         </Text>
+        {dormant && (
+          <View style={s.dormantRow}>
+            <Ionicons name="time-outline" size={12} color={C.amber} />
+            <Text style={s.dormantText}>No activity in 1+ yr</Text>
+          </View>
+        )}
       </View>
       <View style={[s.roleTag, isResearcher && s.roleTagResearcher, isPending && s.roleTagPending]}>
         <Text style={[s.roleTagText, isResearcher && s.roleTagTextResearcher, isPending && s.roleTagTextPending]}>
@@ -58,7 +66,7 @@ export default function ResearcherUsersScreen() {
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetUser, setSheetUser] = useState<User | null>(null);
+  const [sheetUser, setSheetUser] = useState<ResearcherUserRow | null>(null);
   const listRef = useRef<FlatList<ResearcherUserRow>>(null);
 
   const debouncedQuery = useDebouncedValue(query.trim());
@@ -85,12 +93,12 @@ export default function ResearcherUsersScreen() {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   };
 
-  const openUser = useCallback((u: User) => {
+  const openUser = useCallback((u: ResearcherUserRow) => {
     setSheetUser(u);
     setSheetOpen(true);
   }, []);
 
-  const onUserChanged = (updated: User) => {
+  const onUserChanged = (updated: ResearcherUserRow) => {
     setSheetUser(updated);
     reloadPage();
     reloadCounts();
@@ -202,6 +210,8 @@ const s = StyleSheet.create({
   avatarTextResearcher: { color: C.accentDeepText },
   userName: { fontSize: 15.5, fontWeight: '700', color: C.text },
   userMeta: { fontSize: 12.5, color: C.textSoft, marginTop: 2 },
+  dormantRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  dormantText: { fontSize: 11.5, fontWeight: '600', color: C.amber },
   roleTag: { borderWidth: 1, borderColor: C.cardBorderStrong, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
   roleTagResearcher: { backgroundColor: C.accentStrong, borderColor: C.accentStrong },
   roleTagText: { fontSize: 10.5, fontWeight: '700', color: C.textSoft },
