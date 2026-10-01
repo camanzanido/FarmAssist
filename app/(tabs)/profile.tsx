@@ -203,10 +203,8 @@ export default function ProfileScreen() {
               <Text style={s.sectionHeading}>MY LOCATION</Text>
               <View style={s.listCard}>
                 <View style={s.listRow}>
-                  <View style={s.listRowIconWrap}>
-                    <Ionicons name="location-outline" size={19} color={Colors.ink} />
-                  </View>
-                  <Text style={s.listRowLabel}>{locations[0].city}, {locations[0].province}</Text>
+                  <Ionicons name="location-outline" size={20} color={Colors.ink} />
+                  <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{locations[0].city}, {locations[0].province}</Text>
                 </View>
               </View>
             </>
@@ -310,7 +308,6 @@ const s = StyleSheet.create({
   listCard: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 16, marginBottom: 20, ...cardShadow },
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 15 },
   listRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  listRowIconWrap: { width: 38, height: 38, borderRadius: 11, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
   listRowLabel: { fontSize: 15, fontWeight: '600', color: Colors.ink },
   listRowValue: { fontSize: 14, color: Colors.inkFaint },
   listRowTop: { alignItems: 'flex-start' },
