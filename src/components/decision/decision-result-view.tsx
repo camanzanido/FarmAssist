@@ -231,6 +231,11 @@ export function DecisionResultView({ summary, decisionType, heroTop, banner, foo
           )}
         </Animated.View>
 
+        <View style={s.disclaimer} accessibilityRole="text">
+          <Ionicons name="information-circle-outline" size={18} color={Colors.inkFaint} />
+          <Text style={s.disclaimerText}>{copy.disclaimer}</Text>
+        </View>
+
         {footer}
 
         <View style={{ height: 40 }} />
@@ -265,6 +270,8 @@ const s = StyleSheet.create({
 
   section: { paddingVertical: 20 },
   sectionDivided: { borderTopWidth: 1, borderTopColor: Colors.divider },
+  disclaimer: { flexDirection: 'row', gap: 10, backgroundColor: Colors.surfaceAlt, borderRadius: 14, padding: 14, marginBottom: 16 },
+  disclaimerText: { flex: 1, fontSize: 13, lineHeight: 19, color: Colors.inkMuted },
   sectionTitle: { fontSize: 15, fontWeight: '800', color: Colors.ink, marginBottom: 16 },
 
   columns: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 36 },
