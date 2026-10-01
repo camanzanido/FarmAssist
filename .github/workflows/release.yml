@@ -1,0 +1,98 @@
+name: Release APK
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      KEYSTORE_PATH: ${{ github.workspace }}/release.keystore
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci
+
+      # Fail fast with a readable message instead of a cryptic Gradle signing error.
+      - name: Check secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_POWERSYNC_URL: ${{ secrets.EXPO_PUBLIC_POWERSYNC_URL }}
+        run: |
+          missing=0
+          for name in ANDROID_KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_POWERSYNC_URL; do
+            if [ -z "${!name}" ]; then echo "::error::Missing repository secret $name"; missing=1; fi
+          done
+          exit $missing
+
+      # EXPO_PUBLIC_* values are inlined into the JS bundle at build time, so they must exist before Gradle runs.
+      - name: Write .env
+        run: |
+          {
+            echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}"
+            echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}"
+            echo "EXPO_PUBLIC_POWERSYNC_URL=${{ secrets.EXPO_PUBLIC_POWERSYNC_URL }}"
+          } > .env
+
+      - name: Decode keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$KEYSTORE_PATH"
+
+      - name: Prebuild native project
+        run: npx expo prebuild --platform android --no-install
+
+      # A tag like v1.2.3 becomes versionName 1.2.3; the run number keeps versionCode increasing so installs upgrade in place.
+      - name: Set version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then name="${GITHUB_REF_NAME#v}"; else name="0.0.0-dev.${GITHUB_RUN_NUMBER}"; fi
+          sed -i -E "s/versionCode [0-9]+/versionCode ${GITHUB_RUN_NUMBER}/; s/versionName \"[^\"]*\"/versionName \"${name}\"/" android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
+
+      - name: Build signed release APK
+        working-directory: android
+        run: >
+          ./gradlew assembleRelease --no-daemon
+          -Pandroid.injected.signing.store.file="$KEYSTORE_PATH"
+          -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}"
+          -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}"
+          -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
+
+      - name: Rename APK
+        run: |
+          label="${GITHUB_REF_NAME//\//-}"
+          mv android/app/build/outputs/apk/release/app-release.apk "FarmAssist-${label}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FarmAssist-apk
+          path: FarmAssist-*.apk
+
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: FarmAssist-*.apk
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
