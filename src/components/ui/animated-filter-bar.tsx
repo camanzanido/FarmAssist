@@ -97,13 +97,26 @@ type ChipProps = {
 };
 
 function FilterChip({ label, isSelected, layout, pillX, pillWidth, onPress, onLayout }: ChipProps) {
-  const x = layout?.x ?? -1;
-  const width = layout?.width ?? 1;
+  // Shared values, not render-time constants: a worklet closure can keep stale layout under React Compiler memoisation.
+  const chipX = useSharedValue(layout?.x ?? -1);
+  const chipWidth = useSharedValue(layout?.width ?? 1);
+  const selected = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    chipX.set(layout?.x ?? -1);
+    chipWidth.set(layout?.width ?? 1);
+  }, [layout, chipX, chipWidth]);
+
+  useEffect(() => {
+    selected.set(isSelected ? 1 : 0);
+  }, [isSelected, selected]);
 
   const coverage = () => {
     'worklet';
-    if (x < 0) return isSelected ? 1 : 0;
-    const overlap = Math.min(pillX.value + pillWidth.value, x + width) - Math.max(pillX.value, x);
+    const x = chipX.get();
+    const width = chipWidth.get();
+    if (x < 0) return selected.get();
+    const overlap = Math.min(pillX.get() + pillWidth.get(), x + width) - Math.max(pillX.get(), x);
     return Math.min(1, Math.max(0, overlap / width));
   };
 
