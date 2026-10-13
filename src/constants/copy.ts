@@ -324,3 +324,85 @@ export const claimCopy = {
   errorTitle: "Couldn't add decisions",
   errorBody: "They are still safe on this phone. We'll ask again next time you open FarmAssist.",
 };
+
+export type GlossaryKey =
+  | 'scenarios' | 'price' | 'yield' | 'cost' | 'addCost'
+  | 'forecast' | 'normalYear'
+  | 'expectedEarnings' | 'recommended' | 'bothLose' | 'decisionTree'
+  | 'offline' | 'sync';
+
+export const GLOSSARY: Record<GlossaryKey, { term: string; definition: string }> = {
+  scenarios: {
+    term: 'Climate scenarios',
+    definition: 'The five kinds of season FarmAssist plans for: Driest, Below Average, Average, Above Average, and Wettest. They describe how much rain a season gets compared with what is usual for your area. Driest seasons often come with El Niño; Wettest with La Niña.',
+  },
+  price: {
+    term: 'Selling price',
+    definition: 'How much you expect to sell one kilogram of the harvest for, in pesos.',
+  },
+  yield: {
+    term: 'Yield (kg/ha)',
+    definition: 'How many kilograms you expect to harvest from one hectare in that kind of season.',
+  },
+  cost: {
+    term: 'Cost (₱/ha)',
+    definition: 'Your usual cost to produce one hectare in that kind of season: seeds, fertilizer, labor, land preparation, and so on.',
+  },
+  addCost: {
+    term: 'Additional cost (₱/ha)',
+    definition: 'Extra cost that only comes with that kind of season, such as covering the crop from rain, replanting after a flood, or extra irrigation in a drought. Enter 0 if there is none.',
+  },
+  forecast: {
+    term: 'Climate forecast (%)',
+    definition: 'The chance that the coming season will be dry, average, or wet, for example from the PAGASA seasonal outlook or your extension worker. You set dry and wet; average is whatever is left so the three add up to 100%.',
+  },
+  normalYear: {
+    term: 'Normal year (33 / 34 / 33)',
+    definition: 'With no forecast, a dry, average, or wet season are about equally likely: 33%, 34%, and 33%. FarmAssist compares your forecast with this, so you can see if this season looks better or worse than usual.',
+  },
+  expectedEarnings: {
+    term: 'Expected earnings',
+    definition: 'The average profit per hectare, after costs, that an option is expected to make. Each kind of season counts according to how likely the forecast says it is.',
+  },
+  recommended: {
+    term: 'Recommended option',
+    definition: 'The option with the higher expected earnings. The amount shown under it is how much more per hectare it is expected to earn than the other option.',
+  },
+  bothLose: {
+    term: 'Both options lose money',
+    definition: 'Both options are expected to earn less than they cost under this forecast, so FarmAssist does not recommend either. Try checking your prices, costs, or other options.',
+  },
+  decisionTree: {
+    term: 'Decision tree',
+    definition: 'A picture of how the result is worked out. For each option it shows the chance of a dry, average, or wet season and what the option earns in it, then adds them up into the expected earnings.',
+  },
+  offline: {
+    term: 'Offline',
+    definition: 'FarmAssist works without internet. Every decision is calculated and saved on your phone.',
+  },
+  sync: {
+    term: 'Sync',
+    definition: 'When you are signed in and online, your saved decisions are uploaded to the cloud so they are kept safe and can help researchers. This happens automatically.',
+  },
+};
+
+export const helpCopy = {
+  title: 'How to use',
+  back: 'Back',
+  intro: 'FarmAssist compares two farming options and tells you which one is likely to earn more this season, based on the climate forecast.',
+  stepsHeading: 'STEP BY STEP',
+  steps: [
+    { icon: 'apps-outline', title: 'Choose a decision', body: 'On Home, pick Crop Choice, Crop Variety, or Protect from Rain.' },
+    { icon: 'create-outline', title: 'Name your two options', body: 'For example, two crops or two varieties. When signed in and online, you can load saved values for your area.' },
+    { icon: 'calculator-outline', title: 'Enter the numbers', body: 'For each option, enter the selling price, then the yield, cost, and additional cost for each of the five climate scenarios.' },
+    { icon: 'partly-sunny-outline', title: 'Set the forecast', body: 'Enter the chance of a dry and a wet season. If you have no forecast, leave it at 33 / 34 / 33.' },
+    { icon: 'ribbon-outline', title: 'Read the result', body: 'See the better option, how much more it may earn per hectare, and how this season compares with a normal year. Tap "See full breakdown" for the decision tree. Every result is saved to History.' },
+  ] as const,
+  termsHeading: 'TERMS USED IN THE APP',
+  termsHint: 'Tap a term to see what it means.',
+  openHelp: 'How to use FarmAssist',
+  helpLabel: 'Help: how to use FarmAssist',
+  termHelpLabel: (term: string) => `What does ${term} mean?`,
+  sheetClose: 'Got it',
+  learnHow: 'Learn how it works',
+};

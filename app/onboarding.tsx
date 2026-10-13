@@ -1,6 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { brandGradientCss, Colors } from '@/src/constants/colors';
-import { onboardingCopy as copy } from '@/src/constants/copy';
+import { helpCopy, onboardingCopy as copy } from '@/src/constants/copy';
 import { CONTENT_MAX_WIDTH } from '@/src/constants/layout';
 import { useOnboarding } from '@/src/onboarding/OnboardingContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -63,6 +63,14 @@ export default function OnboardingScreen() {
     }
     complete();
     router.replace('/(tabs)');
+  }
+
+  function finishAndOpenHelp() {
+    if (!isReplay) {
+      complete();
+      router.replace('/(tabs)');
+    }
+    router.push('/help');
   }
 
   function finishAndSignIn() {
@@ -150,6 +158,11 @@ export default function OnboardingScreen() {
 
         {/* Keeps the button row a fixed height so the primary button doesn't jump on the last page. */}
         <View style={s.secondaryRow}>
+          {isLast && (
+            <TouchableOpacity onPress={finishAndOpenHelp} style={s.secondaryBtn} accessibilityRole="link">
+              <Text style={s.secondaryLink}>{helpCopy.learnHow}</Text>
+            </TouchableOpacity>
+          )}
           {isLast && !isReplay && !user && (
             <TouchableOpacity onPress={finishAndSignIn} style={s.secondaryBtn} accessibilityRole="button">
               <Text style={s.secondaryText}>

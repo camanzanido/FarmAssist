@@ -3,7 +3,7 @@ import { DECISIONS } from '@/src/constants';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import { BrandGradient, brandGradientCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { decisionResultLabel, homeCopy as copy } from '@/src/constants/copy';
+import { decisionResultLabel, helpCopy, homeCopy as copy } from '@/src/constants/copy';
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { useUpdateCheck } from '@/src/hooks/use-update-check';
@@ -62,11 +62,22 @@ export default function HomeScreen() {
 
         <View style={s.header}>
           <Text style={s.greeting}>{copy.greeting(user?.name?.trim().split(/\s+/)[0])}</Text>
-          {isOffline && (
-            <View style={s.offlineIcon} accessible accessibilityRole="image" accessibilityLabel={copy.offlineLabel}>
-              <Ionicons name="cloud-offline-outline" size={22} color={Colors.accent} />
-            </View>
-          )}
+          <View style={s.headerIcons}>
+            {isOffline && (
+              <View style={s.offlineIcon} accessible accessibilityRole="image" accessibilityLabel={copy.offlineLabel}>
+                <Ionicons name="cloud-offline-outline" size={22} color={Colors.accent} />
+              </View>
+            )}
+            <TouchableOpacity
+              style={s.helpIcon}
+              onPress={() => router.push('/help')}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel={helpCopy.helpLabel}
+            >
+              <Ionicons name="help-circle-outline" size={24} color={Colors.ink} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={s.topSpacer} />
@@ -156,6 +167,8 @@ const s = StyleSheet.create({
   topSpacer: { flexGrow: 1 },
   bottomSpacer: { flexGrow: 2 },
   greeting: { fontSize: 20, fontWeight: '700', color: Colors.ink },
+  headerIcons: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  helpIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
   offlineIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
 
   heading: { fontSize: 32, fontWeight: '800', color: Colors.ink, lineHeight: 38, letterSpacing: -0.6, marginBottom: 8 },

@@ -1,4 +1,5 @@
 import { useAuth } from '@/src/auth/AuthContext';
+import { TermHelpButton } from '@/src/components/help/term-help';
 import { PredefinedPicker } from '@/src/components/decision/predefined-picker';
 import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import { GradientText } from '@/src/components/ui/gradient-text';
@@ -389,7 +390,10 @@ export default function DecisionInputFlow() {
 
             <View style={s.titleBlock}>
               <Text style={s.title}>{climateCopy.title}</Text>
-              <Text style={s.subtitle}>{climateCopy.subtitle}</Text>
+              <View style={s.subtitleRow}>
+                <Text style={[s.subtitle, { flex: 1 }]}>{climateCopy.subtitle}</Text>
+                <TermHelpButton terms={['forecast', 'normalYear', 'scenarios']} />
+              </View>
             </View>
 
             <View style={s.climateCard}>
@@ -565,7 +569,10 @@ export default function DecisionInputFlow() {
             </View>
             {hasPriceError && <Text style={s.priceErrorText}>{dataEntryCopy.errorPriceMustBePositive}</Text>}
 
-            <Text style={s.scenariosHeading}>{dataEntryCopy.scenariosHeading}</Text>
+            <View style={s.scenariosHeadingRow}>
+              <Text style={[s.scenariosHeading, { marginBottom: 0 }]}>{dataEntryCopy.scenariosHeading}</Text>
+              <TermHelpButton terms={['scenarios', 'price', 'yield', 'cost', 'addCost']} />
+            </View>
 
             {CLIMATES.map((climateName, i) => (
               <View key={climateName} style={[s.scenarioCard, { borderLeftColor: CLIMATE_COLOR_LIST[i] }]}>
@@ -681,6 +688,8 @@ const s = StyleSheet.create({
   priceInput: { fontSize: 18, fontWeight: '800', color: Colors.ink, minWidth: 64 },
   priceErrorText: { fontSize: 12, color: Colors.danger, fontWeight: '600', marginTop: -8, marginBottom: 12, marginLeft: 4 },
 
+  scenariosHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
+  subtitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   scenariosHeading: { fontSize: 13, fontWeight: '700', letterSpacing: 0.6, color: Colors.inkFaint, marginBottom: 10, marginLeft: 2 },
 
   scenarioCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 15, marginBottom: 12, borderWidth: 1, borderColor: Colors.border, borderLeftWidth: 3, ...cardShadow },

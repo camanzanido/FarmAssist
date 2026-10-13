@@ -4,7 +4,7 @@ import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
 import { brandGradientCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { profileCopy as copy } from '@/src/constants/copy';
+import { helpCopy, profileCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { getDecisionsByUser, getStagedDecisionIds } from '@/src/database/repositories/decisions';
 import { getLocationsByUser, type Location } from '@/src/database/repositories/locations';
@@ -130,6 +130,10 @@ export default function ProfileScreen() {
             <Ionicons name="book-outline" size={17} color={Colors.inkSoft} />
             <Text style={s.aboutLinkText}>{copy.viewIntro}</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={[s.aboutLink, { marginTop: 0 }]} onPress={() => router.push('/help')} accessibilityRole="link">
+            <Ionicons name="help-circle-outline" size={17} color={Colors.inkSoft} />
+            <Text style={s.aboutLinkText}>{helpCopy.openHelp}</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
@@ -236,6 +240,11 @@ export default function ProfileScreen() {
             <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => router.push('/about')} activeOpacity={0.7} accessibilityRole="button">
               <Ionicons name="information-circle-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.about}</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => router.push('/help')} activeOpacity={0.7} accessibilityRole="button">
+              <Ionicons name="help-circle-outline" size={20} color={Colors.ink} />
+              <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{helpCopy.openHelp}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </TouchableOpacity>
             <TouchableOpacity style={s.listRow} onPress={() => router.push('/onboarding?replay=1')} activeOpacity={0.7} accessibilityRole="button">
