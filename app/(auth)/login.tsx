@@ -123,6 +123,7 @@ export default function LoginScreen() {
             {copy.noAccount} <Text style={s.noAccountLink}>{copy.createOne}</Text>
           </Text>
         </TouchableOpacity>
+        <Text style={s.researcherNote}>{copy.researcherNote}</Text>
 
         <View style={s.bottomBlock}>
           <View style={s.orRow}>
@@ -173,6 +174,7 @@ const s = StyleSheet.create({
   throttleText: { fontSize: 13, color: Colors.amberText, textAlign: 'center', marginTop: -4, marginBottom: 14 },
 
   noAccountRow: { alignItems: 'center' },
+  researcherNote: { fontSize: 12.5, color: Colors.inkFaint, textAlign: 'center', marginTop: 10, lineHeight: 18 },
   noAccountText: { fontSize: 15, color: Colors.inkSoft },
   noAccountLink: { color: Colors.accent, fontWeight: '700' },
 

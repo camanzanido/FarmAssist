@@ -4,7 +4,9 @@ import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
 import { Pager } from '@/src/components/researcher/pager';
 import { ListRowsSkeleton, ListScreenSkeleton } from '@/src/components/researcher/skeletons';
+import { CreateUserSheet } from '@/src/components/researcher/create-user-sheet';
 import { UserSheet, userInitials } from '@/src/components/researcher/user-sheet';
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
 import { wideColumn } from '@/src/constants/layout';
@@ -67,6 +69,8 @@ export default function ResearcherUsersScreen() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetUser, setSheetUser] = useState<ResearcherUserRow | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const { notify } = useFeedback();
   const listRef = useRef<FlatList<ResearcherUserRow>>(null);
 
   const debouncedQuery = useDebouncedValue(query.trim());
@@ -104,9 +108,22 @@ export default function ResearcherUsersScreen() {
     reloadCounts();
   };
 
+  const onUserCreated = ({ name, email, role }: { name: string; email: string; role: UserType }) => {
+    setCreateOpen(false);
+    notify.success(`${role === 'researcher' ? 'Researcher' : 'Farmer'} account created`, `${name} can now sign in with ${email}.`);
+    reloadPage();
+    reloadCounts();
+  };
+
   const header = (
     <View>
-      <Text style={s.title}>Users</Text>
+      <View style={s.titleRow}>
+        <Text style={s.title}>Users</Text>
+        <TouchableOpacity style={s.addBtn} onPress={() => setCreateOpen(true)} activeOpacity={0.8} accessibilityRole="button">
+          <Ionicons name="person-add-outline" size={17} color={C.accentDeepText} />
+          <Text style={s.addBtnText}>Add user</Text>
+        </TouchableOpacity>
+      </View>
       <Text style={s.subtitle}>
         {isFiltered ? `${pageInfo.total.toLocaleString()} match` : `${pageInfo.total.toLocaleString()} total`}
       </Text>
@@ -185,6 +202,7 @@ export default function ResearcherUsersScreen() {
         onClose={() => setSheetOpen(false)}
         onChanged={onUserChanged}
       />
+      <CreateUserSheet visible={createOpen} onClose={() => setCreateOpen(false)} onCreated={onUserCreated} />
     </SafeAreaView>
   );
 }
@@ -194,6 +212,9 @@ const s = StyleSheet.create({
   content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
   footer: { paddingBottom: 20 },
 
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.accentStrong, borderRadius: 999, paddingHorizontal: 14, height: 40 },
+  addBtnText: { fontSize: 14, fontWeight: '800', color: C.accentDeepText },
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
   subtitle: { fontSize: 14, color: C.textSoft, marginTop: 3, marginBottom: 16 },
 

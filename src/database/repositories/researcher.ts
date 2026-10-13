@@ -235,3 +235,44 @@ export async function deleteDecisionRemote(decisionId: string): Promise<void> {
   );
   if (error) throw error;
 }
+
+export interface NewUserInput {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+  user_type: 'farmer' | 'researcher';
+  city: string;
+  province: string;
+}
+
+// Carries the create-user function's own message, which is already worded for the researcher.
+export class CreateUserError extends Error {
+  name = 'CreateUserError';
+  constructor(message: string, public code?: string) {
+    super(message);
+  }
+}
+
+// Edge functions can cold-start, so this allows longer than the usual remote timeout.
+const CREATE_USER_TIMEOUT_MS = 25_000;
+
+export async function createUserRemote(input: NewUserInput): Promise<string> {
+  const { data, error } = await withTimeout(
+    (signal) => supabase.functions.invoke<{ id: string }>('create-user', { body: input, signal }),
+    CREATE_USER_TIMEOUT_MS
+  );
+  if (error) {
+    const context = (error as { context?: Response }).context;
+    let body: { error?: string; code?: string } | null = null;
+    try {
+      body = context && typeof context.json === 'function' ? await context.json() : null;
+    } catch {
+      body = null;
+    }
+    if (body?.error) throw new CreateUserError(body.error, body.code);
+    throw error;
+  }
+  if (!data?.id) throw new Error('create-user returned no id');
+  return data.id;
+}

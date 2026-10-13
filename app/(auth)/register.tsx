@@ -11,12 +11,6 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
-import { UserType } from '../../src/auth/types';
-
-const ROLES: { type: UserType; label: string; description: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { type: 'farmer', label: 'Farmer', description: 'Make decisions for your own farm', icon: 'leaf-outline' },
-  { type: 'researcher', label: 'Researcher', description: 'Review data & manage users', icon: 'analytics-outline' },
-];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 6;
@@ -59,7 +53,6 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [city, setCity] = useState('');
   const [province, setProvince] = useState('');
-  const [userType, setUserType] = useState<UserType>('farmer');
   const [touched, setTouched] = useState(false);
   const { signUp, isLoading } = useAuth();
   const { notify } = useFeedback();
@@ -107,7 +100,7 @@ export default function RegisterScreen() {
         password,
         name: name.trim(),
         username: username.trim(),
-        user_type: userType,
+        user_type: 'farmer',
         city: city.trim(),
         province: province.trim(),
       });
@@ -127,25 +120,7 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           <Text style={s.title}>{copy.registerTitle}</Text>
-
-          <Text style={s.sectionLabel}>{copy.iAm}</Text>
-          <View style={s.roleRow}>
-            {ROLES.map((role) => {
-              const isSelected = userType === role.type;
-              return (
-                <TouchableOpacity
-                  key={role.type}
-                  onPress={() => setUserType(role.type)}
-                  style={[s.roleCard, isSelected && s.roleCardSelected]}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name={role.icon} size={22} color={isSelected ? Colors.ink : Colors.inkFaint} style={{ marginBottom: 6 }} />
-                  <Text style={[s.roleLabel, isSelected && s.roleLabelSelected]}>{role.label}</Text>
-                  <Text style={s.roleDesc}>{role.description}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <Text style={s.subtitle}>{copy.registerSubtitle}</Text>
 
           <Field label={copy.fullName} value={name} onChangeText={setName} error={errors.name} touched={touched} />
           <Field label={copy.username} value={username} onChangeText={setUsername} error={errors.username} touched={touched} autoCapitalize="none" />
@@ -197,13 +172,7 @@ const s = StyleSheet.create({
   },
   title: { fontSize: 26, fontWeight: '800', color: Colors.ink, marginBottom: 22, letterSpacing: -0.4 },
 
-  sectionLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.6, color: Colors.inkFaint, marginBottom: 9 },
-  roleRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  roleCard: { flex: 1, borderWidth: 1.5, borderColor: Colors.borderStrong, backgroundColor: Colors.surface, borderRadius: 14, padding: 14, alignItems: 'center' },
-  roleCardSelected: { borderColor: Colors.ink, backgroundColor: Colors.accentTint },
-  roleLabel: { fontWeight: '700', color: Colors.inkSoft, marginBottom: 2 },
-  roleLabelSelected: { color: Colors.ink },
-  roleDesc: { fontSize: 11, color: Colors.inkFaint, textAlign: 'center' },
+  subtitle: { fontSize: 14, color: Colors.inkSoft, lineHeight: 20, marginTop: -12, marginBottom: 22 },
 
   field: { marginBottom: 14 },
   label: { fontSize: 13, fontWeight: '600', color: Colors.inkSoft, marginBottom: 6 },
