@@ -1,8 +1,9 @@
 import { OdometerText } from '@/src/components/ui/odometer-text';
 import { DECISION_IMAGES, DecisionType } from '@/src/constants';
-import { BrandGradient, brandGradientCss, Colors } from '@/src/constants/colors';
+import { BrandGradient, brandGradientCss, Colors, ForecastColors } from '@/src/constants/colors';
 import { resultCopy as copy, treeCopy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
+import type { NormalYearComparison } from '@/src/rcda/baseline';
 import { CLIMATE_LABELS, RcdaSummary } from '@/src/rcda/summary';
 import { Ionicons } from '@expo/vector-icons';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
@@ -15,6 +16,7 @@ import { DecisionTree, formatPeso } from './decision-tree';
 
 interface Props {
   summary: RcdaSummary;
+  baseline?: NormalYearComparison | null;
   decisionType?: string;
   /** Row at the top of the hero: back button, status pill, etc. */
   heroTop: ReactNode;
@@ -93,7 +95,78 @@ function EarningsColumn({ name, score, ratio, highlighted, recommended }: {
   );
 }
 
-export function DecisionResultView({ summary, decisionType, heroTop, banner, footer }: Props) {
+const FORECAST_SEGMENTS = [
+  { key: 'dry', color: ForecastColors.dry, text: Colors.onDark },
+  { key: 'average', color: ForecastColors.average, text: ForecastColors.averageText },
+  { key: 'wet', color: ForecastColors.wet, text: Colors.onDark },
+] as const;
+
+function ForecastBar({ label, split }: { label: string; split: number[] }) {
+  const a11y = FORECAST_SEGMENTS.map((seg, i) => `${split[i]}% ${copy.normalYearLegend[seg.key].toLowerCase()}`).join(', ');
+  return (
+    <View style={s.forecastRow} accessible accessibilityLabel={`${label}: ${a11y}`}>
+      <Text style={s.forecastLabel}>{label}</Text>
+      <View style={s.forecastBar}>
+        {FORECAST_SEGMENTS.map((seg, i) => split[i] > 0 && (
+          <View key={seg.key} style={[s.forecastSeg, { flex: split[i], backgroundColor: seg.color }]}>
+            {split[i] >= 12 && <Text style={[s.forecastPct, { color: seg.text }]}>{split[i]}%</Text>}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function NormalYearSection({ baseline, optionNames, bothNegative }: {
+  baseline: NormalYearComparison;
+  optionNames: string[];
+  bothNegative: boolean;
+}) {
+  const name = optionNames[baseline.focusOption];
+  const amount = formatPeso(Math.abs(baseline.delta));
+  let main: string;
+  if (baseline.forecastIsNormal) main = copy.normalYearSame;
+  else if (baseline.delta > 0) main = copy.normalYearBetter(name, amount);
+  else if (baseline.delta < 0) main = copy.normalYearWorse(name, amount);
+  else main = copy.normalYearEven(name);
+
+  let extra: string | null = null;
+  if (!baseline.forecastIsNormal) {
+    if (baseline.normalBothNegative) extra = bothNegative ? null : copy.normalYearNoProfit;
+    else if (bothNegative || baseline.normalRecommended !== baseline.focusOption) extra = copy.normalYearOtherPick(optionNames[baseline.normalRecommended]);
+  }
+
+  const tone = baseline.forecastIsNormal || baseline.delta === 0 ? null : baseline.delta > 0 ? 'up' : 'down';
+
+  return (
+    <View style={[s.section, s.sectionDivided]}>
+      <Text style={s.sectionTitle}>{copy.normalYearHeading}</Text>
+      <ForecastBar label={copy.normalYearYourForecast} split={baseline.forecast} />
+      <ForecastBar label={copy.normalYearNormal} split={baseline.normal} />
+      <View style={s.legendRow}>
+        {FORECAST_SEGMENTS.map(seg => (
+          <View key={seg.key} style={s.legendItem}>
+            <View style={[s.legendDot, { backgroundColor: seg.color }]} />
+            <Text style={s.legendText}>{copy.normalYearLegend[seg.key]}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={[s.normalNote, tone === 'up' && s.normalNoteUp, tone === 'down' && s.normalNoteDown]}>
+        <Ionicons
+          name={tone === 'up' ? 'trending-up' : tone === 'down' ? 'trending-down' : 'remove'}
+          size={20}
+          color={tone === 'down' ? Colors.danger : Colors.accent}
+        />
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={s.normalNoteText}>{main}</Text>
+          {extra && <Text style={s.normalNoteExtra}>{extra}</Text>}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+export function DecisionResultView({ summary, baseline, decisionType, heroTop, banner, footer }: Props) {
   const [showDetail, setShowDetail] = useState(false);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -166,6 +239,8 @@ export function DecisionResultView({ summary, decisionType, heroTop, banner, foo
             })}
           </View>
         </View>
+
+        {baseline && <NormalYearSection baseline={baseline} optionNames={optionNames} bothNegative={bothNegative} />}
 
         {!bothNegative && (
           <View style={[s.section, s.sectionDivided]}>
@@ -286,6 +361,21 @@ const s = StyleSheet.create({
   columnNameWinner: { fontWeight: '800', color: Colors.ink },
   tag: { marginTop: 6, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
   tagText: { fontSize: 11, fontWeight: '700', color: Colors.accent },
+
+  forecastRow: { marginBottom: 12 },
+  forecastLabel: { fontSize: 12, fontWeight: '700', color: Colors.inkSoft, marginBottom: 6 },
+  forecastBar: { flexDirection: 'row', height: 30, borderRadius: 8, overflow: 'hidden', backgroundColor: Colors.divider },
+  forecastSeg: { alignItems: 'center', justifyContent: 'center' },
+  forecastPct: { fontSize: 12, fontWeight: '800' },
+  legendRow: { flexDirection: 'row', gap: 16, marginBottom: 14 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendDot: { width: 10, height: 10, borderRadius: 3 },
+  legendText: { fontSize: 12, color: Colors.inkFaint },
+  normalNote: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', backgroundColor: Colors.surfaceAlt, borderRadius: 12, padding: 14 },
+  normalNoteUp: { backgroundColor: Colors.accentTint },
+  normalNoteDown: { backgroundColor: Colors.dangerBg },
+  normalNoteText: { fontSize: 14, fontWeight: '600', color: Colors.ink, lineHeight: 20 },
+  normalNoteExtra: { fontSize: 13, color: Colors.inkMuted, lineHeight: 19 },
 
   keepInMindBody: { fontSize: 14, color: Colors.inkMuted, lineHeight: 20, marginBottom: 14 },
   favorRow: { flexDirection: 'row', gap: 6 },
