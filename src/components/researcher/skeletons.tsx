@@ -99,7 +99,7 @@ export function ChartCardsSkeleton() {
   );
 }
 
-export const MAP_HEIGHT_RATIO = 0.55;
+export const MAP_HEIGHT_RATIO = 0.42;
 
 export function MapSkeleton() {
   const { height } = useWindowDimensions();

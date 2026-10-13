@@ -59,13 +59,6 @@ export default function ResearcherLayout() {
           }}
         />
         <Tabs.Screen
-          name="map"
-          options={{
-            title: 'Map',
-            tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'map' : 'map-outline'} size={23} color={color} />,
-          }}
-        />
-        <Tabs.Screen
           name="profile"
           options={{
             title: 'Profile',

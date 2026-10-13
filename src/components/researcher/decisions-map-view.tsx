@@ -12,16 +12,17 @@ import { formatCurrency } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator, FlatList, Platform, Pressable, RefreshControl, StatusBar, StyleSheet, Text, TextInput,
+  ActivityIndicator, FlatList, Platform, Pressable, RefreshControl, StyleSheet, Text, TextInput,
   TouchableOpacity, useWindowDimensions, View,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ROW_HEIGHT = 62;
 const ROW_GAP = 8;
 const EMPTY: CityStats[] = [];
 
 type CityRow = CityStats & { key: string; coord: CityCoordinate | undefined };
+
+export type Place = { city: string; province: string };
 
 function describeCity(row: CityStats): string {
   return `${row.decisions} decision${row.decisions === 1 ? '' : 's'} · ${row.farmers} farmer${row.farmers === 1 ? '' : 's'} · median ${formatCurrency(row.median_gain)}`;
@@ -33,7 +34,7 @@ function CityListRow({ row, selected, onPress }: { row: CityRow; selected: boole
       style={({ pressed }) => [s.row, selected && s.rowSelected, pressed && s.rowPressed]}
       onPress={() => onPress(row)}
       accessibilityRole="button"
-      accessibilityHint="Shows this municipality on the map"
+      accessibilityHint="Shows this municipality on the map and lets you view its decisions"
     >
       <View style={[s.rowDot, !row.coord && s.rowDotMissing]} />
       <View style={s.rowPlace}>
@@ -48,10 +49,10 @@ function CityListRow({ row, selected, onPress }: { row: CityRow; selected: boole
   );
 }
 
-export default function ResearcherMapScreen() {
+// Municipalities with decisions on a map; choosing one hands its place to the Decisions list.
+export function DecisionsMapView({ onShowDecisions }: { onShowDecisions: (place: Place) => void }) {
   const { data: byCity, isLoading, isRefreshing, error, reload, refresh } = useResearcherFetch(fetchCityStats, EMPTY);
   const { height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const mapRef = useRef<LeafletMapHandle>(null);
   const listRef = useRef<FlatList<CityRow>>(null);
 
@@ -104,10 +105,10 @@ export default function ResearcherMapScreen() {
   }, [filtered]);
 
   const mapHeight = Math.round(height * MAP_HEIGHT_RATIO);
+  const selected = useMemo(() => rows.find(r => r.key === selectedKey) ?? null, [rows, selectedKey]);
 
   return (
-    <SafeAreaView style={s.safe} edges={['left', 'right']}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+    <View style={s.fill}>
       <ResearcherAsyncState
         isLoading={isLoading}
         error={error}
@@ -121,13 +122,12 @@ export default function ResearcherMapScreen() {
               ref={mapRef}
               pins={pins}
               selectedKey={selectedKey}
-              topInset={insets.top}
               onPinPress={onPinPress}
               onLoadError={() => setMapFailed(true)}
             />
 
             {isGeocoding && (
-              <View style={[s.badge, { top: insets.top + 10 }]}>
+              <View style={[s.badge, { top: 10 }]}>
                 <ActivityIndicator size="small" color={Colors.accent} />
                 <Text style={s.badgeText}>Locating…</Text>
               </View>
@@ -148,6 +148,27 @@ export default function ResearcherMapScreen() {
               </View>
             )}
           </View>
+
+          {selected && (
+            <View style={s.selectedWrap}>
+              <View style={s.selectedBar}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.selectedCity} numberOfLines={1}>{selected.city}</Text>
+                  <Text style={s.selectedMeta} numberOfLines={1}>{selected.province} · {describeCity(selected)}</Text>
+                </View>
+                <TouchableOpacity
+                  style={s.viewBtn}
+                  onPress={() => onShowDecisions({ city: selected.city, province: selected.province })}
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View ${selected.decisions} decisions in ${selected.city}, ${selected.province}`}
+                >
+                  <Text style={s.viewBtnText}>View {selected.decisions}</Text>
+                  <Ionicons name="arrow-forward" size={16} color={Colors.onDark} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           <View style={s.searchWrap}>
             <View style={s.searchRow}>
@@ -194,13 +215,22 @@ export default function ResearcherMapScreen() {
           />
         </View>
       </ResearcherAsyncState>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.bg },
   fill: { flex: 1 },
+
+  selectedWrap: { ...wideColumn, paddingHorizontal: 16, paddingTop: 12 },
+  selectedBar: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, paddingLeft: 14,
+    backgroundColor: Colors.accentTint, borderRadius: 14, borderWidth: 1, borderColor: Colors.accentTintStrong,
+  },
+  selectedCity: { fontSize: 15, fontWeight: '800', color: Colors.ink },
+  selectedMeta: { fontSize: 12, color: Colors.inkSoft, marginTop: 1 },
+  viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.ink, borderRadius: 999, paddingHorizontal: 14, height: 38 },
+  viewBtnText: { fontSize: 13.5, fontWeight: '800', color: Colors.onDark },
 
   badge: {
     position: 'absolute', right: 12,

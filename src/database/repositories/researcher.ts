@@ -62,11 +62,13 @@ export async function fetchDecisionsPage(params: {
   pageSize: number;
   type: string | null;
   query: string;
+  place?: { city: string; province: string } | null;
 }): Promise<PagedRows<ResearcherDecisionRow>> {
   const term = sanitizeSearchTerm(params.query);
   const build = (head: boolean) => {
     let q = supabase.from('researcher_decisions').select('*', { count: 'exact', head });
     if (params.type) q = q.eq('decision_type', params.type);
+    if (params.place) q = q.eq('city', params.place.city).eq('province', params.place.province);
     if (term) q = q.or(ilikeAny(['result', 'farmer_name', 'farmer_username', 'city', 'province'], term));
     return q;
   };
