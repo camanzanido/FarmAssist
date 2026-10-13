@@ -6,12 +6,13 @@ import { contentColumn } from '@/src/constants/layout';
 import { decisionResultLabel, homeCopy as copy } from '@/src/constants/copy';
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
+import { useUpdateCheck } from '@/src/hooks/use-update-check';
 import { formatCurrency } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function formatDate(iso: string): string {
@@ -24,6 +25,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { connected } = useSyncStatus();
+  const { update, dismiss } = useUpdateCheck();
   const userId = user?.id ?? '';
 
   const [lastDecision, setLastDecision] = useState<Decision | null>(null);
@@ -75,6 +77,19 @@ export default function HomeScreen() {
           {copy.headingAfter}
         </Text>
         <Text style={s.subtitle}>{copy.subtitle}</Text>
+
+        {update && (
+          <View style={s.updateBanner}>
+            <Ionicons name="arrow-up-circle-outline" size={18} color={Colors.accent} />
+            <Text style={s.updateText}>{copy.updateTitle(update.version)}</Text>
+            <TouchableOpacity onPress={() => Linking.openURL(update.url).catch(() => {})} hitSlop={8} accessibilityRole="link">
+              <Text style={s.updateLink}>{copy.updateDownload}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={dismiss} hitSlop={8} accessibilityRole="button" accessibilityLabel={copy.updateDismiss}>
+              <Ionicons name="close" size={18} color={Colors.inkFaint} />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {loadError && (
           <View style={s.loadErrorBanner}>
@@ -146,6 +161,9 @@ const s = StyleSheet.create({
   heading: { fontSize: 32, fontWeight: '800', color: Colors.ink, lineHeight: 38, letterSpacing: -0.6, marginBottom: 8 },
   subtitle: { fontSize: 14, color: Colors.ink, marginBottom: 24 },
 
+  updateBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.accentTint, borderWidth: 1, borderColor: Colors.accentTintStrong, borderRadius: 12, padding: 12, marginBottom: 18 },
+  updateText: { flex: 1, fontSize: 14, fontWeight: '600', color: Colors.ink },
+  updateLink: { fontSize: 14, fontWeight: '700', color: Colors.accent },
   loadErrorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.dangerBg, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: 12, padding: 12, marginBottom: 18 },
   loadErrorText: { flex: 1, fontSize: 12.5, fontWeight: '600', color: Colors.dangerText },
   loadErrorRetry: { fontSize: 12.5, fontWeight: '700', color: Colors.ink },

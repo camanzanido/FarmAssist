@@ -2,14 +2,15 @@ import { cardShadow, Colors } from '@/src/constants/colors';
 import { aboutCopy as copy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
+import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, Linking, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Read from app.json so the screen never drifts from the build's real version.
-const APP_VERSION = Constants.expoConfig?.version ?? '—';
+// CI stamps the tag into the native versionName, so prefer it over app.json's static version.
+const APP_VERSION = Application.nativeApplicationVersion ?? Constants.expoConfig?.version ?? '—';
 
 function Section({ heading, body }: { heading: string; body: string }) {
   return (

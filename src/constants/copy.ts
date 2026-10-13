@@ -141,6 +141,9 @@ export const homeCopy = {
   weatherPlaceholder: 'Weather data unavailable',
   loadErrorTitle: "Couldn't load your recent decision.",
   retry: 'Retry',
+  updateTitle: (v: string) => `FarmAssist ${v} is available`,
+  updateDownload: 'Download',
+  updateDismiss: 'Dismiss update notice',
 };
 
 export const historyCopy = {
