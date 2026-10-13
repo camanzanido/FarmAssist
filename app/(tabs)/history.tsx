@@ -1,6 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
-import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
+import { ALL_DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { HistorySkeleton } from '@/src/components/skeletons/app-skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { brandGradientSoftCss, cardShadow, Colors } from '@/src/constants/colors';
@@ -25,9 +25,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const DECISION_ICONS: Record<DecisionType, keyof typeof Ionicons.glyphMap> =
-  Object.fromEntries(DECISIONS.map(d => [d.id, d.icon])) as Record<DecisionType, keyof typeof Ionicons.glyphMap>;
 
 function decisionTypeLabel(type: string): string {
   return DECISION_LABELS[type as DecisionType] ?? type;
@@ -102,8 +99,14 @@ export default function HistoryScreen() {
   );
 
   const filterOptions = useMemo(
-    () => [{ value: 'all' as const, label: copy.filterAll }, ...DECISIONS.map(d => ({ value: d.id, label: d.label }))],
-    []
+    () => [
+      { value: 'all' as const, label: copy.filterAll },
+      // A retired type only gets a chip when this user still has decisions of it.
+      ...ALL_DECISIONS
+        .filter(d => !d.legacy || decisions.some(x => x.decision_type === d.id))
+        .map(d => ({ value: d.id, label: d.label })),
+    ],
+    [decisions]
   );
 
   const sections = useMemo(() => {

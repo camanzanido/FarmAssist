@@ -4,7 +4,7 @@ import { EmptyState } from '@/src/components/researcher/empty-state';
 import { Pager } from '@/src/components/researcher/pager';
 import { ListRowsSkeleton, ListScreenSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
-import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
+import { ALL_DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { cardShadow, Colors } from '@/src/constants/colors';
 import { decisionResultLabel } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
@@ -21,8 +21,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TypeFilter = 'all' | DecisionType;
-
-const DECISION_ICONS = Object.fromEntries(DECISIONS.map(d => [d.id, d.icon])) as Record<DecisionType, keyof typeof Ionicons.glyphMap>;
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
@@ -84,7 +82,7 @@ export default function ResearcherDecisionsScreen() {
   } = useResearcherPage(fetchDecisionsPage, filters);
 
   const filterOptions = useMemo(
-    () => [{ value: 'all' as const, label: 'All' }, ...DECISIONS.map(d => ({ value: d.id, label: d.label }))],
+    () => [{ value: 'all' as const, label: 'All' }, ...ALL_DECISIONS.map(d => ({ value: d.id, label: d.label }))],
     []
   );
   const isFiltered = typeFilter !== 'all' || debouncedQuery.length > 0;

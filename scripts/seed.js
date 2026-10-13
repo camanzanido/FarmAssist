@@ -83,8 +83,8 @@ const DECISION_OPTIONS_BY_TYPE = {
     ['Cabbage', 'Mungbean'],
     ['Rice NSIC Rc222', 'Sorghum'],
   ],
-  harvest: [['Harvest Now', 'Delay 2 Weeks']],
-  protect: [['Apply Fungicide', 'Skip Treatment']],
+  crop_variety: [['NSIC Rc222', 'NSIC Rc160']],
+  protect: [['Cover from Rain', 'Leave Uncovered']],
 };
 const DECISION_TYPES = Object.keys(DECISION_OPTIONS_BY_TYPE);
 

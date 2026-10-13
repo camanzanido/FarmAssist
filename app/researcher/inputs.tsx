@@ -7,7 +7,7 @@ import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import {
   blankPredefinedForm, PredefinedFormInitial, PredefinedFormMode, PredefinedFormSheet,
 } from '@/src/components/researcher/predefined-form-sheet';
-import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
+import { ALL_DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
 import { wideColumn } from '@/src/constants/layout';
 import {
@@ -175,7 +175,7 @@ export default function ResearcherInputsScreen() {
   const typeLabel = (t: string) => DECISION_LABELS[t as DecisionType] ?? t;
 
   const filterOptions = useMemo(
-    () => [{ value: 'all' as const, label: 'All' }, ...DECISIONS.map(d => ({ value: d.id, label: d.label }))],
+    () => [{ value: 'all' as const, label: 'All' }, ...ALL_DECISIONS.map(d => ({ value: d.id, label: d.label }))],
     []
   );
 

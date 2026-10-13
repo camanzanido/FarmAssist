@@ -1,7 +1,7 @@
 import { column, Schema, Table } from '@powersync/react-native';
 
 const decisionColumns = () => ({
-  decision_type: column.text,   // 'crop_choice' | 'rainfall' | 'harvest'
+  decision_type: column.text,   // 'crop_choice' | 'crop_variety' | 'protect' | legacy 'harvest'
   datetime: column.text,
   location_id: column.text,
   user_id: column.text,

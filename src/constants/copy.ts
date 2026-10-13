@@ -221,12 +221,12 @@ export const onboardingCopy = {
     {
       key: 'welcome',
       title: 'Welcome to FarmAssist',
-      body: 'Mobile-based Decision Support System for crop selection, crop protection, and harvest decisions.',
+      body: 'Mobile-based Decision Support System for choosing crops, crop varieties, and rain protection.',
     },
     {
       key: 'compare',
       title: 'Compare two options',
-      body: 'Which crop to plant, whether to protect a crop, or whether to harvest now or wait. Enter the yield, cost, and price for each option, and FarmAssist recommends the one likely to earn more.',
+      body: 'Which crop to plant, which variety to grow, or whether to protect your crop from rain. Enter the yield, cost, and price for each option, and FarmAssist recommends the one likely to earn more.',
     },
     {
       key: 'offline',
@@ -248,7 +248,7 @@ export const aboutCopy = {
   tagline: 'Climate-smart decisions for Filipino farmers',
   version: (v: string) => `Version ${v}`,
   whatHeading: 'WHAT IT DOES',
-  whatBody: 'FarmAssist helps farmers and extension workers choose between two farming options, such as which crop to plant, whether to protect a crop, or whether to harvest now or wait. You enter the expected yields, prices, and costs, and the app recommends the option likely to earn more under the coming season\'s climate. It works fully offline, and your decisions sync to the cloud once you sign in.',
+  whatBody: 'FarmAssist helps farmers and extension workers choose between two farming options, such as which crop to plant, which variety to grow, or whether to protect a crop from rain. You enter the expected yields, prices, and costs, and the app recommends the option likely to earn more under the coming season\'s climate. It works fully offline, and your decisions sync to the cloud once you sign in.',
   rcdaHeading: 'THE RCDA MODEL',
   rcdaBody: 'Recommendations come from Rapid Climate Decision Analysis (RCDA). It combines the seasonal rainfall forecast (the chance of a below-normal, near-normal, or above-normal season) with the profit of each option under dry, average, and wet conditions. It then compares the expected returns and shows the recommended option, the estimated profit difference, and a decision tree of possible outcomes. It is created from the prototype Rapid Climate Decision Analysis version 3.2. FarmAssist supports decisions but does not make them: the final decision stays with the farmer, and every result is only as accurate as the data entered.',
   originHeading: 'ORIGIN',

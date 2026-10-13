@@ -3,7 +3,7 @@ import { ExportSheet } from '@/src/components/researcher/export-sheet';
 import { ChartCardsSkeleton, OverviewSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { OdometerText } from '@/src/components/ui/odometer-text';
-import { DECISIONS, DecisionType } from '@/src/constants';
+import { ALL_DECISIONS, DecisionType } from '@/src/constants';
 import { cardShadow, Colors } from '@/src/constants/colors';
 import { useIsWide, wideColumn } from '@/src/constants/layout';
 import { fetchOverview, type Overview } from '@/src/database/repositories/researcher';
@@ -17,8 +17,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TYPE_COLORS: Record<DecisionType, string> = {
   crop_choice: Colors.ink,
-  harvest: Colors.accentSoft,
+  crop_variety: Colors.accentSoft,
   protect: Colors.accentTintStrong,
+  harvest: Colors.barMuted,
 };
 
 type Range = 'season' | 'year' | 'all';
@@ -78,9 +79,10 @@ export default function ResearcherDashboardScreen() {
   const typeBreakdown = useMemo(() => {
     const total = overview.range_total || 1;
     const counts = new Map(overview.by_type.map(t => [t.decision_type, t.count]));
-    return DECISIONS.map(d => {
+    return ALL_DECISIONS.flatMap(d => {
       const count = counts.get(d.id) ?? 0;
-      return { id: d.id, label: d.label, count, pct: Math.round((count / total) * 100) };
+      if (d.legacy && count === 0) return [];
+      return [{ id: d.id, label: d.label, count, pct: Math.round((count / total) * 100) }];
     });
   }, [overview.by_type, overview.range_total]);
 
