@@ -5,7 +5,9 @@ import { claimLocalDecisions, countAnonymousStagedDecisions, type ClaimScope } f
 import { createLocation, getAllLocations, getLocationsByUser } from '../database/repositories/locations';
 import { createLocationRemote, fetchUserRemote, upsertUserRemote } from '../database/repositories/researcher';
 import { upsertUser } from '../database/repositories/users';
+import { invokeFunction } from '../database/supabase/invokeFunction';
 import { supabase } from '../database/supabase/supabase';
+import { isEmailLogin, normalizeUsername } from '../utils/accountEmail';
 import { UserType } from './types';
 
 
@@ -174,11 +176,20 @@ export async function signUp(params: {
   return data;
 }
 
-export async function signIn(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+// The sign-in function looks the email up server-side, so the app never learns another person's email.
+async function signInWithUsername(username: string, password: string) {
+  const tokens = await invokeFunction<{ access_token: string; refresh_token: string }>('sign-in', {
+    username: normalizeUsername(username),
     password,
   });
+  return supabase.auth.setSession(tokens);
+}
+
+export async function signIn(login: string, password: string) {
+  const trimmed = login.trim();
+  const { data, error } = isEmailLogin(trimmed)
+    ? await supabase.auth.signInWithPassword({ email: trimmed, password })
+    : await signInWithUsername(trimmed, password);
 
   if (error) throw error;
   if (!data.user || !data.session) throw new Error('Sign in failed');

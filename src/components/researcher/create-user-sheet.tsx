@@ -3,7 +3,8 @@ import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { DropdownField } from '@/src/components/ui/dropdown-field';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locations';
-import { createUserRemote, CreateUserError } from '@/src/database/repositories/researcher';
+import { createUserRemote } from '@/src/database/repositories/researcher';
+import { FunctionError } from '@/src/database/supabase/invokeFunction';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { cleanEmail, cleanName } from '@/src/utils/profileValidation';
 import { NewUserForm, validateNewUser } from '@/src/utils/newUserValidation';
@@ -59,7 +60,7 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
       onCreated({ name, email, role });
     } catch (err) {
       console.error('Failed to create user:', err);
-      setServerError(err instanceof CreateUserError ? err.message : getActionErrorMessage(err, 'Could not create the account. Please try again.'));
+      setServerError(err instanceof FunctionError ? err.message : getActionErrorMessage(err, 'Could not create the account. Please try again.'));
     } finally {
       setSaving(false);
     }

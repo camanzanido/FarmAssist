@@ -4,6 +4,7 @@ import { contentColumn } from '@/src/constants/layout';
 import { authCopy as copy } from '@/src/constants/copy';
 import { formatLockTime } from '@/src/auth/signInThrottle';
 import { useSignInThrottle } from '@/src/hooks/use-sign-in-throttle';
+import { isEmailLogin } from '@/src/utils/accountEmail';
 import { getAuthErrorMessage, isInvalidCredentialsError } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,10 +15,10 @@ import { useAuth } from '../../src/auth/AuthContext';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-type FieldErrors = Partial<Record<'email' | 'password', string>>;
+type FieldErrors = Partial<Record<'login' | 'password', string>>;
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState(false);
@@ -28,9 +29,9 @@ export default function LoginScreen() {
 
   function getFieldErrors(): FieldErrors {
     const errors: FieldErrors = {};
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) errors.email = 'Email is required';
-    else if (!EMAIL_REGEX.test(trimmedEmail)) errors.email = 'Enter a valid email address';
+    const trimmedLogin = login.trim();
+    if (!trimmedLogin) errors.login = copy.loginRequired;
+    else if (isEmailLogin(trimmedLogin) && !EMAIL_REGEX.test(trimmedLogin)) errors.login = 'Enter a valid email address';
 
     if (!password) errors.password = 'Password is required';
 
@@ -46,7 +47,7 @@ export default function LoginScreen() {
     if (throttle.isLocked) return;
 
     try {
-      await signIn(email.trim(), password);
+      await signIn(login.trim(), password);
       throttle.onSuccess();
     } catch (e: any) {
       if (isInvalidCredentialsError(e)) throttle.onFailure();
@@ -72,17 +73,18 @@ export default function LoginScreen() {
         <Text style={s.subtitle}>{copy.loginSubtitle}</Text>
 
         <View style={s.field}>
-          <Text style={s.label}>{copy.email}</Text>
+          <Text style={s.label}>{copy.loginLabel}</Text>
           <TextInput
-            style={[s.input, touched && errors.email && s.inputError]}
-            placeholder="you@email.com"
+            style={[s.input, touched && errors.login && s.inputError]}
+            placeholder={copy.loginPlaceholder}
             placeholderTextColor={Colors.placeholder}
-            value={email}
-            onChangeText={setEmail}
+            value={login}
+            onChangeText={setLogin}
             autoCapitalize="none"
+            autoCorrect={false}
             keyboardType="email-address"
           />
-          {touched && errors.email && <Text style={s.errorText}>{errors.email}</Text>}
+          {touched && errors.login && <Text style={s.errorText}>{errors.login}</Text>}
         </View>
 
         <View style={s.field}>

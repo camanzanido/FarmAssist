@@ -14,7 +14,7 @@ import { resetClaimPrompt } from './claimPromptState';
 import { AuthState, AuthUser, UserType } from './types';
 
 interface AuthContextValue extends AuthState {
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (login: string, password: string) => Promise<void>;
   signUp: (params: {
     email: string;
     password: string;
@@ -145,10 +145,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [loadUserProfile]);
 
-  const handleSignIn = useCallback(async (email: string, password: string) => {
+  const handleSignIn = useCallback(async (login: string, password: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const { user } = await signIn(email, password);
+      const { user } = await signIn(login, password);
       if (user) await loadUserProfile(user.id);
       dispatch({ type: 'SET_ONLINE', payload: true });
     } finally {
