@@ -216,6 +216,7 @@ export const profileCopy = {
   emailConfirmTitle: 'Confirm your new email',
   emailConfirmBody: (email: string) => `Open the link we sent to ${email}. If a link also went to your current email, open that one too.`,
   pendingEmail: (email: string) => `Waiting for you to confirm ${email}`,
+  noEmailHint: 'Add an email in Edit profile so you can reset a forgotten password yourself.',
 };
 
 export const onboardingCopy = {
@@ -295,6 +296,9 @@ export const authCopy = {
   researcherNote: 'Researcher? Ask an existing FarmAssist researcher to create your account.',
   fullName: 'Full name',
   username: 'Username',
+  usernamePlaceholder: 'e.g. juan.dc (you sign in with this)',
+  emailOptional: 'Email (optional)',
+  noEmailNote: "Without an email you can't reset a forgotten password yourself. Ask your researcher or extension worker to reset it.",
   cityLabel: 'City / Municipality',
   provinceLabel: 'Province',
   confirmPassword: 'Confirm password',

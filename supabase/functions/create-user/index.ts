@@ -11,6 +11,8 @@ const CORS = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
+const INTERNAL_EMAIL_DOMAIN = 'farmassist.invalid';
 const MIN_PASSWORD_LENGTH = 6;
 const USER_TYPES = ['farmer', 'researcher'];
 
@@ -61,15 +63,21 @@ Deno.serve(async (req) => {
   }
 
   const name = text(body.name);
-  const username = text(body.username);
-  const email = text(body.email).toLowerCase();
+  const username = text(body.username).toLowerCase();
+  const givenEmail = text(body.email).toLowerCase();
   const password = typeof body.password === 'string' ? body.password : '';
   const userType = text(body.user_type);
   const city = text(body.city);
   const province = text(body.province);
 
   if (!name || !username || !city || !province) return fail(400, 'invalid_input', 'Fill in every field.');
-  if (!EMAIL_REGEX.test(email)) return fail(400, 'invalid_input', 'Enter a valid email address.');
+  if (!USERNAME_PATTERN.test(username)) {
+    return fail(400, 'invalid_input', 'Use 3 to 30 letters, numbers, dots (.) or underscores (_) for the username.');
+  }
+  if (givenEmail && !EMAIL_REGEX.test(givenEmail)) return fail(400, 'invalid_input', 'Enter a valid email address.');
+  if (givenEmail.endsWith(`@${INTERNAL_EMAIL_DOMAIN}`)) return fail(400, 'invalid_input', 'Enter a valid email address.');
+  // Without an email the account gets a hidden one; only a researcher can then reset its password.
+  const email = givenEmail || `${username}@${INTERNAL_EMAIL_DOMAIN}`;
   if (password.length < MIN_PASSWORD_LENGTH) {
     return fail(400, 'invalid_input', `The password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
   }
@@ -79,16 +87,12 @@ Deno.serve(async (req) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data: taken, error: takenError } = await admin
-    .from('users')
-    .select('id')
-    .eq('username', username)
-    .limit(1);
-  if (takenError) {
-    console.error('username lookup failed:', takenError);
+  const { data: available, error: availableError } = await admin.rpc('username_available', { p_username: username });
+  if (availableError) {
+    console.error('username check failed:', availableError);
     return fail(500, 'server_error', 'Something went wrong. Please try again.');
   }
-  if ((taken ?? []).length > 0) return fail(409, 'username_taken', 'That username is already taken.');
+  if (available !== true) return fail(409, 'username_taken', 'That username is already taken.');
 
   // user_type in metadata mirrors the app's own sign-up, which PowerSync and RLS read.
   const { data: created, error: createError } = await admin.auth.admin.createUser({
@@ -99,6 +103,7 @@ Deno.serve(async (req) => {
   });
   if (createError || !created.user) {
     const exists = createError?.code === 'email_exists' || /already been registered/i.test(createError?.message ?? '');
+    if (exists && !givenEmail) return fail(409, 'username_taken', 'That username is already taken.');
     if (exists) return fail(409, 'email_exists', 'An account with this email already exists.');
     console.error('createUser failed:', createError);
     return fail(500, 'server_error', 'Something went wrong. Please try again.');

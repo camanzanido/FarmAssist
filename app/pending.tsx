@@ -1,6 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
+import { displayEmail } from '@/src/utils/accountEmail';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -71,7 +72,7 @@ export default function PendingScreen() {
           <View style={s.card}>
             <Text style={s.cardLabel}>Signed in as</Text>
             <Text style={s.cardValue}>{user.name || user.username}</Text>
-            <Text style={s.cardEmail}>{user.email}</Text>
+            <Text style={s.cardEmail}>{displayEmail(user.email)}</Text>
           </View>
         )}
 

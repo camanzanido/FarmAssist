@@ -12,6 +12,7 @@ import { clearSyncErrors } from '@/src/database/repositories/syncErrors';
 import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
+import { displayEmail, realEmail } from '@/src/utils/accountEmail';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -225,8 +226,11 @@ export default function ProfileScreen() {
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={s.emailRow}>
                   <Text style={s.listRowLabel}>Email</Text>
-                  <Text style={[s.listRowValue, s.emailValue]} numberOfLines={1}>{user.email}</Text>
+                  <Text style={[s.listRowValue, s.emailValue]} numberOfLines={1}>{displayEmail(user.email)}</Text>
                 </View>
+                {!realEmail(user.email) && !edit.pendingEmail && (
+                  <Text style={s.pendingEmail}>{copy.noEmailHint}</Text>
+                )}
                 {edit.pendingEmail && (
                   <Text style={s.pendingEmail}>{copy.pendingEmail(edit.pendingEmail)}</Text>
                 )}

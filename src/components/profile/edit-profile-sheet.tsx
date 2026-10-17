@@ -3,6 +3,7 @@ import { requestEmailChange, saveName } from '@/src/auth/profileService';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { brandGradientCss, Colors } from '@/src/constants/colors';
 import { profileCopy as copy } from '@/src/constants/copy';
+import { isInternalEmail, realEmail } from '@/src/utils/accountEmail';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { cleanName, emailChanged, validateEmail, validateName } from '@/src/utils/profileValidation';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,7 +30,7 @@ export function EditProfileSheet({ visible, canChangeEmail, onClose, onSaved }: 
   useEffect(() => {
     if (!visible || !user) return;
     setName(user.name);
-    setEmail(user.email);
+    setEmail(realEmail(user.email) ?? '');
     setSubmitted(false);
     setSaveError(null);
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -37,8 +38,12 @@ export function EditProfileSheet({ visible, canChangeEmail, onClose, onSaved }: 
   if (!user) return <BottomSheet visible={false} onClose={onClose}>{null}</BottomSheet>;
 
   const nameError = validateName(name);
-  const wantsEmailChange = canChangeEmail && emailChanged(user.email, email);
-  const emailError = wantsEmailChange ? validateEmail(email) : null;
+  const currentEmail = realEmail(user.email);
+  // An account without an email can leave the field blank; one with an email must keep a valid one.
+  const wantsEmailChange = canChangeEmail && (currentEmail ? emailChanged(currentEmail, email) : email.trim() !== '');
+  const emailError = wantsEmailChange
+    ? validateEmail(email) ?? (isInternalEmail(email) ? 'Enter a valid email, like juan@example.com.' : null)
+    : null;
   const nameChanged = cleanName(name) !== user.name;
   const nothingToSave = !nameChanged && !wantsEmailChange;
 

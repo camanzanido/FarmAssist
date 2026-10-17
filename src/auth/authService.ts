@@ -5,9 +5,10 @@ import { claimLocalDecisions, countAnonymousStagedDecisions, type ClaimScope } f
 import { createLocation, getAllLocations, getLocationsByUser } from '../database/repositories/locations';
 import { createLocationRemote, fetchUserRemote, upsertUserRemote } from '../database/repositories/researcher';
 import { upsertUser } from '../database/repositories/users';
-import { invokeFunction } from '../database/supabase/invokeFunction';
+import { FunctionError, invokeFunction } from '../database/supabase/invokeFunction';
 import { supabase } from '../database/supabase/supabase';
 import { isEmailLogin, normalizeUsername } from '../utils/accountEmail';
+import { withTimeout } from '../utils/withTimeout';
 import { UserType } from './types';
 
 
@@ -116,7 +117,7 @@ export async function disconnectSync() {
   await db.disconnect();
 }
 
-export async function signUp(params: {
+export type SignUpParams = {
   email: string;
   password: string;
   name: string;
@@ -124,7 +125,35 @@ export async function signUp(params: {
   user_type: UserType;
   city: string;
   province: string;
-}) {
+};
+
+// Without an email the server creates the account under a hidden address, then the farmer signs in by username.
+async function signUpWithoutEmail(params: SignUpParams) {
+  await invokeFunction<{ id: string }>('register', {
+    name: params.name,
+    username: params.username,
+    password: params.password,
+    city: params.city,
+    province: params.province,
+  });
+  return signIn(params.username, params.password);
+}
+
+async function assertUsernameAvailable(username: string): Promise<void> {
+  const { data, error } = await withTimeout((signal) =>
+    supabase.rpc('username_available', { p_username: username }).abortSignal(signal)
+  );
+  if (error) throw error;
+  if (data !== true) throw new FunctionError('That username is already taken.', 'username_taken');
+}
+
+export async function signUp(input: SignUpParams) {
+  const params = { ...input, username: normalizeUsername(input.username), email: input.email.trim() };
+  if (!params.email) return signUpWithoutEmail(params);
+
+  // A taken username would otherwise only fail later, when PowerSync uploads the profile.
+  await assertUsernameAvailable(params.username);
+
   // Create auth account in Supabase
   const { data, error } = await supabase.auth.signUp({
     email: params.email,

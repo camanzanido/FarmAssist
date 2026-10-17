@@ -4,16 +4,16 @@ import { Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { authCopy as copy } from '@/src/constants/copy';
 import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locations';
+import { normalizeUsername, validateUsername } from '@/src/utils/accountEmail';
 import { getAuthErrorMessage } from '@/src/utils/errors';
+import { validateOptionalEmail } from '@/src/utils/newUserValidation';
+import { validatePassword, validatePasswordConfirm } from '@/src/utils/passwordValidation';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 6;
 
 type FieldErrors = Partial<Record<
   'name' | 'username' | 'email' | 'password' | 'confirmPassword' | 'city' | 'province',
@@ -62,19 +62,17 @@ export default function RegisterScreen() {
     const errors: FieldErrors = {};
 
     if (!name.trim()) errors.name = 'Name is required';
-    if (!username.trim()) errors.username = 'Username is required';
+    const usernameError = validateUsername(username);
+    if (usernameError) errors.username = usernameError;
 
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) errors.email = 'Email is required';
-    else if (!EMAIL_REGEX.test(trimmedEmail)) errors.email = 'Enter a valid email address';
+    const emailError = validateOptionalEmail(email);
+    if (emailError) errors.email = emailError;
 
-    if (!password) errors.password = 'Password is required';
-    else if (password.length < MIN_PASSWORD_LENGTH) {
-      errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
-    }
+    const passwordError = validatePassword(password);
+    if (passwordError) errors.password = passwordError;
 
-    if (!confirmPassword) errors.confirmPassword = 'Please confirm your password';
-    else if (password !== confirmPassword) errors.confirmPassword = 'Passwords do not match';
+    const confirmError = validatePasswordConfirm(password, confirmPassword);
+    if (confirmError) errors.confirmPassword = confirmError;
 
     if (!city.trim()) errors.city = 'City/municipality is required';
     if (!province.trim()) errors.province = 'Province is required';
@@ -99,7 +97,7 @@ export default function RegisterScreen() {
         email: email.trim(),
         password,
         name: name.trim(),
-        username: username.trim(),
+        username: normalizeUsername(username),
         user_type: 'farmer',
         city: city.trim(),
         province: province.trim(),
@@ -123,7 +121,7 @@ export default function RegisterScreen() {
           <Text style={s.subtitle}>{copy.registerSubtitle}</Text>
 
           <Field label={copy.fullName} value={name} onChangeText={setName} error={errors.name} touched={touched} />
-          <Field label={copy.username} value={username} onChangeText={setUsername} error={errors.username} touched={touched} autoCapitalize="none" />
+          <Field label={copy.username} value={username} onChangeText={setUsername} error={errors.username} touched={touched} autoCapitalize="none" autoCorrect={false} placeholder={copy.usernamePlaceholder} />
           <DropdownField
             label={copy.provinceLabel}
             value={province}
@@ -144,7 +142,13 @@ export default function RegisterScreen() {
             disabled={!province}
             disabledHint="Select a province first"
           />
-          <Field label={copy.email} value={email} onChangeText={setEmail} error={errors.email} touched={touched} autoCapitalize="none" keyboardType="email-address" />
+          <Field label={copy.emailOptional} value={email} onChangeText={setEmail} error={errors.email} touched={touched} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" />
+          {!email.trim() && (
+            <View style={s.noteRow}>
+              <Ionicons name="information-circle-outline" size={16} color={Colors.amberText} />
+              <Text style={s.noteText}>{copy.noEmailNote}</Text>
+            </View>
+          )}
           <Field label={copy.password} value={password} onChangeText={setPassword} error={errors.password} touched={touched} secureTextEntry />
           <Field label={copy.confirmPassword} value={confirmPassword} onChangeText={setConfirmPassword} error={errors.confirmPassword} touched={touched} secureTextEntry />
 
@@ -179,6 +183,8 @@ const s = StyleSheet.create({
   input: { borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface, borderRadius: 12, padding: 14, fontSize: 15, color: Colors.ink },
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 5 },
+  noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: -6, marginBottom: 14 },
+  noteText: { flex: 1, fontSize: 12.5, color: Colors.amberText, lineHeight: 17 },
 
   submitBtn: { backgroundColor: Colors.ink, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, marginBottom: 16 },
   submitBtnDisabled: { opacity: 0.6 },

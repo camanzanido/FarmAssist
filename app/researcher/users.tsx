@@ -108,9 +108,9 @@ export default function ResearcherUsersScreen() {
     reloadCounts();
   };
 
-  const onUserCreated = ({ name, email, role }: { name: string; email: string; role: UserType }) => {
+  const onUserCreated = ({ name, username, role }: { name: string; username: string; role: UserType }) => {
     setCreateOpen(false);
-    notify.success(`${role === 'researcher' ? 'Researcher' : 'Farmer'} account created`, `${name} can now sign in with ${email}.`);
+    notify.success(`${role === 'researcher' ? 'Researcher' : 'Farmer'} account created`, `${name} can now sign in with the username ${username}.`);
     reloadPage();
     reloadCounts();
   };

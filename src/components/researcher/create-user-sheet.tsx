@@ -6,18 +6,21 @@ import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locatio
 import { createUserRemote } from '@/src/database/repositories/researcher';
 import { FunctionError } from '@/src/database/supabase/invokeFunction';
 import { getActionErrorMessage } from '@/src/utils/errors';
+import { normalizeUsername } from '@/src/utils/accountEmail';
 import { cleanEmail, cleanName } from '@/src/utils/profileValidation';
 import { NewUserForm, validateNewUser } from '@/src/utils/newUserValidation';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+const NO_EMAIL_HINT = "Without an email, they can't reset a forgotten password themselves. You can reset it for them from Users.";
+
 const EMPTY: NewUserForm = { name: '', username: '', email: '', password: '', province: '', city: '' };
 
 export function CreateUserSheet({ visible, onClose, onCreated }: {
   visible: boolean;
   onClose: () => void;
-  onCreated: (summary: { name: string; email: string; role: UserType }) => void;
+  onCreated: (summary: { name: string; username: string; role: UserType }) => void;
 }) {
   const [form, setForm] = useState<NewUserForm>(EMPTY);
   const [role, setRole] = useState<UserType>('farmer');
@@ -46,18 +49,18 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
     if (Object.keys(errors).length > 0) return;
     setSaving(true);
     const name = cleanName(form.name);
-    const email = cleanEmail(form.email);
+    const username = normalizeUsername(form.username);
     try {
       await createUserRemote({
         name,
-        username: form.username.trim(),
-        email,
+        username,
+        email: cleanEmail(form.email),
         password: form.password,
         user_type: role === 'researcher' ? 'researcher' : 'farmer',
         city: form.city.trim(),
         province: form.province.trim(),
       });
-      onCreated({ name, email, role });
+      onCreated({ name, username, role });
     } catch (err) {
       console.error('Failed to create user:', err);
       setServerError(err instanceof FunctionError ? err.message : getActionErrorMessage(err, 'Could not create the account. Please try again.'));
@@ -84,7 +87,7 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
   return (
     <BottomSheet visible={visible} onClose={onClose} avoidKeyboard style={s.sheet} scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
       <Text style={s.title}>Add user</Text>
-      <Text style={s.subtitle}>The account is active right away. Share the email and temporary password with them.</Text>
+      <Text style={s.subtitle}>The account is active right away. Share the username and temporary password with them.</Text>
 
       <Text style={s.label}>ROLE</Text>
       <View style={s.roleRow}>
@@ -107,7 +110,8 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
 
       {field('name', 'NAME', { placeholder: 'Full name', autoCapitalize: 'words', textContentType: 'name' })}
       {field('username', 'USERNAME', { placeholder: 'e.g. juan.dc', autoCapitalize: 'none', autoCorrect: false })}
-      {field('email', 'EMAIL', { placeholder: 'name@example.com', autoCapitalize: 'none', autoCorrect: false, keyboardType: 'email-address', textContentType: 'emailAddress' })}
+      {field('email', 'EMAIL (OPTIONAL)', { placeholder: 'name@example.com', autoCapitalize: 'none', autoCorrect: false, keyboardType: 'email-address', textContentType: 'emailAddress' })}
+      {!form.email.trim() && <Text style={s.roleHint}>{NO_EMAIL_HINT}</Text>}
 
       <Text style={s.label}>TEMPORARY PASSWORD</Text>
       <View style={[s.input, s.passwordRow, show('password') && s.inputError]}>

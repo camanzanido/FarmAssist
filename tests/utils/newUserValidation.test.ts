@@ -1,4 +1,4 @@
-import { validateNewUser, NewUserForm } from '../../src/utils/newUserValidation';
+import { validateNewUser, validateOptionalEmail, NewUserForm } from '../../src/utils/newUserValidation';
 
 const VALID: NewUserForm = {
   name: 'Juan Dela Cruz',
@@ -14,9 +14,13 @@ describe('validateNewUser', () => {
     expect(validateNewUser(VALID)).toEqual({});
   });
 
-  it('flags every missing field', () => {
+  it('accepts a form without an email', () => {
+    expect(validateNewUser({ ...VALID, email: '  ' })).toEqual({});
+  });
+
+  it('flags every missing required field', () => {
     const errors = validateNewUser({ name: ' ', username: '', email: '', password: '', province: '', city: '' });
-    expect(Object.keys(errors).sort()).toEqual(['city', 'email', 'name', 'password', 'province', 'username']);
+    expect(Object.keys(errors).sort()).toEqual(['city', 'name', 'password', 'province', 'username']);
   });
 
   it('rejects a username with spaces, a malformed email, and a short password', () => {
@@ -24,5 +28,11 @@ describe('validateNewUser', () => {
     expect(errors.username).toBeDefined();
     expect(errors.email).toBeDefined();
     expect(errors.password).toBeDefined();
+  });
+});
+
+describe('validateOptionalEmail', () => {
+  it('rejects a hidden address typed in by hand', () => {
+    expect(validateOptionalEmail('juan@farmassist.invalid')).not.toBeNull();
   });
 });

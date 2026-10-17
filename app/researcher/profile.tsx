@@ -5,6 +5,7 @@ import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
 import { profileCopy } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
+import { displayEmail } from '@/src/utils/accountEmail';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -66,7 +67,7 @@ export default function ResearcherProfileScreen() {
             <View style={{ flex: 1, marginLeft: 12 }}>
               <View style={s.emailRow}>
                 <Text style={s.rowLabel}>Email</Text>
-                <Text style={[s.rowValue, s.emailValue]} numberOfLines={1}>{user.email}</Text>
+                <Text style={[s.rowValue, s.emailValue]} numberOfLines={1}>{displayEmail(user.email)}</Text>
               </View>
               {edit.pendingEmail && <Text style={s.pendingEmail}>{profileCopy.pendingEmail(edit.pendingEmail)}</Text>}
             </View>

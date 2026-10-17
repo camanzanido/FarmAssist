@@ -5,6 +5,7 @@ import { updateUserRemote, type ResearcherUserRow } from '@/src/database/reposit
 import { type User } from '@/src/database/repositories/users';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { isDormant } from '@/src/utils/userActivity';
+import { displayEmail } from '@/src/utils/accountEmail';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -119,7 +120,7 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.name}>{user.name}</Text>
-          <Text style={s.meta}>@{user.username} · {user.email}</Text>
+          <Text style={s.meta}>@{user.username} · {displayEmail(user.email)}</Text>
           {user.user_type === 'farmer' && (
             <Text style={s.meta}>
               {user.last_decision_at ? `Last decision: ${formatShortDate(user.last_decision_at)}` : 'No decisions yet'}
