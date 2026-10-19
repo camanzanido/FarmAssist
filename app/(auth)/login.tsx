@@ -1,7 +1,7 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { brandGradientCss, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { authCopy as copy } from '@/src/constants/copy';
+import { authCopy as copy, forgotPasswordCopy } from '@/src/constants/copy';
 import { formatLockTime } from '@/src/auth/signInThrottle';
 import { useSignInThrottle } from '@/src/hooks/use-sign-in-throttle';
 import { isEmailLogin } from '@/src/utils/accountEmail';
@@ -102,6 +102,9 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
           {touched && errors.password && <Text style={s.errorText}>{errors.password}</Text>}
+          <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={s.forgotRow} hitSlop={8} accessibilityRole="link">
+            <Text style={s.forgotText}>{forgotPasswordCopy.link}</Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity
@@ -169,6 +172,8 @@ const s = StyleSheet.create({
   passwordInput: { flex: 1, fontSize: 16, color: Colors.ink },
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 6 },
+  forgotRow: { alignSelf: 'flex-end', marginTop: 10 },
+  forgotText: { fontSize: 13.5, fontWeight: '700', color: Colors.accent },
 
   signInBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 16, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
   signInBtnDisabled: { opacity: 0.6 },

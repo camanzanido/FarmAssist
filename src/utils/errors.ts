@@ -20,9 +20,11 @@ const PERMISSION_MESSAGE = "You don't have permission to do this.";
 
 const AUTH_MESSAGE_OVERRIDES: Record<string, string> = {
   'Invalid login credentials': 'Incorrect email or password.',
+  'Token has expired or is invalid': 'That code is wrong or has expired. Ask for a new code.',
+  'New password should be different': 'Choose a password that is different from your old one.',
 };
 
-const RATE_LIMIT_MESSAGE = 'Too many sign-in attempts. Please wait a few minutes and try again.';
+const RATE_LIMIT_MESSAGE = 'Too many attempts. Please wait a few minutes and try again.';
 
 // A wrong email or password, as opposed to a network or server problem; only these count toward the sign-in limit.
 export function isInvalidCredentialsError(err: unknown): boolean {

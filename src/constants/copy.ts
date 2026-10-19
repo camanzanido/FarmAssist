@@ -308,6 +308,30 @@ export const authCopy = {
   signInInstead: 'Sign in',
 };
 
+export const forgotPasswordCopy = {
+  link: 'Forgot password?',
+  title: 'Reset your password',
+  emailSubtitle: "Enter the email on your account. We'll send you a code to set a new password.",
+  emailLabel: 'Email',
+  noEmailNote: "No email on your account? Ask your researcher or extension worker to reset your password.",
+  noEmailAccount: 'Enter the email you added to your account.',
+  sendCode: 'Send code',
+  sendFailed: "Couldn't send the code. Please try again.",
+  sentBody: (email: string) => `If ${email} has an account, we sent it a code. Check your inbox and spam folder.`,
+  resentTitle: 'Code sent again',
+  codeLabel: 'Code from the email',
+  codeInvalid: 'Enter the code from the email.',
+  newPasswordLabel: 'New password',
+  confirmLabel: 'Confirm new password',
+  resend: 'Send a new code',
+  resendIn: (s: number) => `Send a new code in ${s}s`,
+  savePassword: 'Save new password',
+  resetFailed: "Couldn't reset your password. Please try again.",
+  changeEmail: 'Use a different email',
+  doneTitle: 'Password updated',
+  doneBody: 'Sign in with your new password.',
+};
+
 export const startupCopy = {
   starting: 'Starting FarmAssist…',
   slowTitle: 'This is taking longer than usual.',
