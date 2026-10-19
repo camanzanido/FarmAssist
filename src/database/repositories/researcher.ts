@@ -254,3 +254,7 @@ export async function createUserRemote(input: NewUserInput): Promise<string> {
   if (!data.id) throw new Error('create-user returned no id');
   return data.id;
 }
+
+export async function resetPasswordRemote(userId: string, password: string): Promise<void> {
+  await invokeFunction<{ ok: boolean }>('reset-password', { user_id: userId, password });
+}

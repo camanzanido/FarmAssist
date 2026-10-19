@@ -1,18 +1,24 @@
+import 'react-native-get-random-values';
 import { UserType } from '@/src/auth/types';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { ResearcherColors as C } from '@/src/constants/colors';
-import { updateUserRemote, type ResearcherUserRow } from '@/src/database/repositories/researcher';
+import { resetPasswordRemote, updateUserRemote, type ResearcherUserRow } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
+import { FunctionError } from '@/src/database/supabase/invokeFunction';
+import { displayEmail, realEmail } from '@/src/utils/accountEmail';
 import { getActionErrorMessage } from '@/src/utils/errors';
+import { validatePassword } from '@/src/utils/passwordValidation';
+import { generateTempPassword } from '@/src/utils/tempPassword';
 import { isDormant } from '@/src/utils/userActivity';
-import { displayEmail } from '@/src/utils/accountEmail';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 type Pending =
   | { kind: 'role'; role: UserType }
   | { kind: 'status'; next: 'active' | 'inactive' };
+
+type PasswordReset = { step: 'form' } | { step: 'done'; password: string };
 
 type Confirmation = {
   title: string;
@@ -73,11 +79,14 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
   const [pending, setPending] = useState<Pending | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reset, setReset] = useState<PasswordReset | null>(null);
+  const [tempPassword, setTempPassword] = useState('');
 
   useEffect(() => {
     if (!visible) return;
     setPending(null);
     setError(null);
+    setReset(null);
   }, [visible, user?.id]);
 
   if (!user) return <BottomSheet visible={false} onClose={onClose}>{null}</BottomSheet>;
@@ -110,10 +119,36 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
     }
   };
 
+  const startReset = () => {
+    if (isSelf) return;
+    setError(null);
+    setTempPassword(generateTempPassword());
+    setReset({ step: 'form' });
+  };
+
+  const applyReset = async () => {
+    const invalid = validatePassword(tempPassword);
+    if (invalid) {
+      setError(invalid);
+      return;
+    }
+    setIsSaving(true);
+    setError(null);
+    try {
+      await resetPasswordRemote(user.id, tempPassword);
+      setReset({ step: 'done', password: tempPassword });
+    } catch (err) {
+      console.error('Failed to reset password:', err);
+      setError(err instanceof FunctionError ? err.message : getActionErrorMessage(err, 'Please try again.'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const confirmation = pending ? describe(user, pending) : null;
 
   return (
-    <BottomSheet visible={visible} onClose={onClose}>
+    <BottomSheet visible={visible} onClose={onClose} avoidKeyboard>
       <View style={s.header}>
         <View style={s.avatar}>
           <Text style={s.avatarText}>{userInitials(user.name)}</Text>
@@ -129,7 +164,65 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
         </View>
       </View>
 
-      {confirmation ? (
+      {reset?.step === 'form' ? (
+        <View style={s.confirmCard}>
+          <View style={s.confirmIcon}>
+            <Ionicons name="key-outline" size={20} color={C.accent} />
+          </View>
+          <Text style={s.confirmTitle}>Set a temporary password</Text>
+          <Text style={s.confirmMessage}>
+            {user.name}&apos;s old password will stop working. Give them this one; they can change it in Profile after signing in.
+          </Text>
+          <View style={s.tempRow}>
+            <TextInput
+              style={s.tempInput}
+              value={tempPassword}
+              onChangeText={setTempPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!isSaving}
+              accessibilityLabel="Temporary password"
+            />
+            <TouchableOpacity
+              style={s.generateBtn}
+              onPress={() => setTempPassword(generateTempPassword())}
+              disabled={isSaving}
+              accessibilityRole="button"
+              accessibilityLabel="Make a new password"
+            >
+              <Ionicons name="refresh" size={18} color={C.accent} />
+            </TouchableOpacity>
+          </View>
+          {error && <Text style={s.error}>{error}</Text>}
+          <View style={s.confirmActions}>
+            <TouchableOpacity style={s.cancelBtn} onPress={() => setReset(null)} disabled={isSaving}>
+              <Text style={s.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.confirmBtn, isSaving && s.disabled]} onPress={applyReset} disabled={isSaving}>
+              {isSaving
+                ? <ActivityIndicator color={C.accentDeepText} />
+                : <Text style={s.confirmBtnText}>Reset password</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : reset?.step === 'done' ? (
+        <View style={s.confirmCard}>
+          <View style={s.confirmIcon}>
+            <Ionicons name="checkmark" size={22} color={C.accent} />
+          </View>
+          <Text style={s.confirmTitle}>Password reset</Text>
+          <Text style={s.confirmMessage}>Give {user.name} these details. This is the only time the password is shown.</Text>
+          <View style={s.doneBox}>
+            <Text style={s.doneLabel}>USERNAME</Text>
+            <Text style={s.doneValue} selectable>{user.username}</Text>
+            <Text style={[s.doneLabel, s.doneLabelGap]}>TEMPORARY PASSWORD</Text>
+            <Text style={s.doneValue} selectable>{reset.password}</Text>
+          </View>
+          <TouchableOpacity style={[s.confirmBtn, s.doneBtn]} onPress={() => setReset(null)}>
+            <Text style={s.confirmBtnText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      ) : confirmation ? (
         <View style={s.confirmCard}>
           <View style={[s.confirmIcon, confirmation.destructive && s.confirmIconDanger]}>
             <Ionicons name={confirmation.icon} size={20} color={confirmation.destructive ? C.danger : C.accent} />
@@ -194,7 +287,15 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
             </Text>
           </TouchableOpacity>
 
-          {isSelf && <Text style={s.selfHint}>You can&apos;t change your own role or account status.</Text>}
+          <TouchableOpacity style={[s.resetBtn, isSelf && s.statusBtnDisabled]} onPress={startReset} disabled={isSelf}>
+            <Ionicons name="key-outline" size={17} color={isSelf ? C.textFaint : C.text} />
+            <Text style={[s.resetText, isSelf && s.statusTextDisabled]}>Reset password</Text>
+          </TouchableOpacity>
+          {!isSelf && !realEmail(user.email) && (
+            <Text style={s.selfHint}>This account has no email, so only a researcher can reset its password.</Text>
+          )}
+
+          {isSelf && <Text style={s.selfHint}>You can&apos;t change your own role or account status. Change your password from Profile.</Text>}
         </>
       )}
     </BottomSheet>
@@ -224,6 +325,16 @@ const s = StyleSheet.create({
   dormantHint: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amberBorder, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 12, marginBottom: 10 },
   dormantHintText: { flex: 1, fontSize: 13, color: C.amber, fontWeight: '600' },
   selfHint: { fontSize: 12.5, color: C.textFaint, textAlign: 'center', marginTop: 12 },
+  resetBtn: { flexDirection: 'row', gap: 8, height: 50, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  resetText: { fontSize: 14.5, fontWeight: '700', color: C.text },
+  tempRow: { flexDirection: 'row', gap: 8, alignSelf: 'stretch', marginTop: 14 },
+  tempInput: { flex: 1, height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, paddingHorizontal: 14, fontSize: 17, fontWeight: '700', letterSpacing: 1, color: C.text },
+  generateBtn: { width: 48, height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
+  doneBox: { alignSelf: 'stretch', backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorder, padding: 14, marginTop: 14 },
+  doneLabel: { fontSize: 11.5, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint },
+  doneLabelGap: { marginTop: 10 },
+  doneValue: { fontSize: 18, fontWeight: '800', color: C.text, marginTop: 3, letterSpacing: 0.5 },
+  doneBtn: { alignSelf: 'stretch', flex: 0, marginTop: 16 },
 
   confirmCard: { backgroundColor: C.fill, borderRadius: 16, padding: 18, alignItems: 'center' },
   confirmIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.accentTint, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
