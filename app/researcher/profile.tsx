@@ -1,14 +1,15 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
+import { ChangePasswordSheet } from '@/src/components/profile/change-password-sheet';
 import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
 import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
-import { profileCopy } from '@/src/constants/copy';
+import { changePasswordCopy, profileCopy } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { displayEmail } from '@/src/utils/accountEmail';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,9 +21,10 @@ function initials(name: string): string {
 
 export default function ResearcherProfileScreen() {
   const { user, signOut } = useAuth();
-  const { confirm } = useFeedback();
+  const { confirm, notify } = useFeedback();
   const router = useRouter();
   const edit = useEditProfile();
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   async function handleLogout() {
     const confirmed = await confirm({
@@ -72,6 +74,11 @@ export default function ResearcherProfileScreen() {
               {edit.pendingEmail && <Text style={s.pendingEmail}>{profileCopy.pendingEmail(edit.pendingEmail)}</Text>}
             </View>
           </View>
+          <TouchableOpacity style={[s.row, s.rowBorder]} onPress={() => setPasswordOpen(true)} activeOpacity={0.7} accessibilityRole="button">
+            <Ionicons name="key-outline" size={19} color={C.textSoft} />
+            <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{changePasswordCopy.row}</Text>
+            <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
+          </TouchableOpacity>
           <View style={[s.row, s.rowBorder]}>
             <Ionicons name="shield-checkmark-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Account type</Text>
@@ -94,6 +101,14 @@ export default function ResearcherProfileScreen() {
         </TouchableOpacity>
       </ScrollView>
       <EditProfileSheet visible={edit.isOpen} canChangeEmail onClose={edit.close} onSaved={edit.onSaved} />
+      <ChangePasswordSheet
+        visible={passwordOpen}
+        onClose={() => setPasswordOpen(false)}
+        onChanged={() => {
+          setPasswordOpen(false);
+          notify.success(changePasswordCopy.doneTitle, changePasswordCopy.doneBody);
+        }}
+      />
     </SafeAreaView>
   );
 }

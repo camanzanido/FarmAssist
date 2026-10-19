@@ -332,6 +332,24 @@ export const forgotPasswordCopy = {
   doneBody: 'Sign in with your new password.',
 };
 
+export const changePasswordCopy = {
+  row: 'Change password',
+  title: 'Change password',
+  subtitle: 'You need an internet connection to change your password.',
+  currentLabel: 'CURRENT PASSWORD',
+  newLabel: 'NEW PASSWORD',
+  confirmLabel: 'CONFIRM NEW PASSWORD',
+  currentRequired: 'Enter your current password.',
+  currentWrong: 'Your current password is incorrect.',
+  sameAsCurrent: 'Choose a password that is different from your current one.',
+  signedOut: 'Please sign in again, then change your password.',
+  failed: "Couldn't change your password. Please try again.",
+  cancel: 'Cancel',
+  save: 'Change password',
+  doneTitle: 'Password changed',
+  doneBody: 'Use your new password the next time you sign in.',
+};
+
 export const startupCopy = {
   starting: 'Starting FarmAssist…',
   slowTitle: 'This is taking longer than usual.',

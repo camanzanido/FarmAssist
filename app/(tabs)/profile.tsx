@@ -4,11 +4,12 @@ import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
 import { brandGradientCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { helpCopy, profileCopy as copy } from '@/src/constants/copy';
+import { changePasswordCopy, helpCopy, profileCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { getDecisionsByUser, getStagedDecisionIds } from '@/src/database/repositories/decisions';
 import { getLocationsByUser, type Location } from '@/src/database/repositories/locations';
 import { clearSyncErrors } from '@/src/database/repositories/syncErrors';
+import { ChangePasswordSheet } from '@/src/components/profile/change-password-sheet';
 import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
@@ -34,8 +35,9 @@ function formatSyncTime(date: Date | null): string {
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
-  const { confirm } = useFeedback();
+  const { confirm, notify } = useFeedback();
   const router = useRouter();
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const isAuthenticated = !!user;
   const sync = useSyncStatus();
   const edit = useEditProfile();
@@ -236,6 +238,11 @@ export default function ProfileScreen() {
                 )}
               </View>
             </View>
+            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => setPasswordOpen(true)} activeOpacity={0.7} accessibilityRole="button">
+              <Ionicons name="key-outline" size={20} color={Colors.ink} />
+              <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{changePasswordCopy.row}</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
+            </TouchableOpacity>
             <View style={[s.listRow, s.listRowBorder]}>
               <Ionicons name="shield-checkmark-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.accountType}</Text>
@@ -268,6 +275,14 @@ export default function ProfileScreen() {
         canChangeEmail={sync.connected}
         onClose={edit.close}
         onSaved={edit.onSaved}
+      />
+      <ChangePasswordSheet
+        visible={passwordOpen}
+        onClose={() => setPasswordOpen(false)}
+        onChanged={() => {
+          setPasswordOpen(false);
+          notify.success(changePasswordCopy.doneTitle, changePasswordCopy.doneBody);
+        }}
       />
     </SafeAreaView>
   );
