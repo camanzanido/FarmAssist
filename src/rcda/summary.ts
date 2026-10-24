@@ -5,10 +5,16 @@ export const CLIMATE_LABELS = ['V. Dry', 'Dry', 'Average', 'Wet', 'V. Wet'] as c
 // Walk indices (0-based) sampled to represent the 5 scenarios across the 100 percentiles.
 const SAMPLE_INDICES = [9, 29, 49, 69, 89];
 
-// Per forecast third: does the recommended option earn at least as much there?
+// Per forecast third: which option earns more there, counting equal pesos as a tie.
 export interface OutcomeFavor {
   key: OutcomeKey;
-  favorsWinner: boolean;
+  result: 'winner' | 'loser' | 'tie';
+}
+
+function compareOutcome(winner: number, loser: number): OutcomeFavor['result'] {
+  const a = Math.round(winner);
+  const b = Math.round(loser);
+  return a === b ? 'tie' : a > b ? 'winner' : 'loser';
 }
 
 /** Everything the result view displays, derived from one RCDA computation. */
@@ -43,7 +49,7 @@ export function summarizeRcda(
   const winner = tree.branches[recommendedOption].outcomes;
   const loser = tree.branches[1 - recommendedOption].outcomes;
   const outcomeFavors = winner.flatMap((o, t): OutcomeFavor[] =>
-    o.value === null ? [] : [{ key: o.key, favorsWinner: o.value >= loser[t].value! }]
+    o.value === null ? [] : [{ key: o.key, result: compareOutcome(o.value, loser[t].value!) }]
   );
 
   return {

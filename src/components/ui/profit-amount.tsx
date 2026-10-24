@@ -1,6 +1,6 @@
 import { Colors } from '@/src/constants/colors';
 import { formatCurrency } from '@/src/utils/formatters';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
 
@@ -16,13 +16,13 @@ export function ProfitAmount({ value, size = 14, color = Colors.accent, style }:
   const amount = formatCurrency(value);
   return (
     <View style={s.row} accessible accessibilityLabel={`Up ${amount}`}>
-      <Ionicons name="arrow-up" size={size} color={color} />
+      <MaterialCommunityIcons name="arrow-up-thick" size={size + 2} color={color} />
       <Text style={[s.text, { fontSize: size, color }, style]}>{amount}</Text>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 1 },
   text: { fontWeight: '800' },
 });

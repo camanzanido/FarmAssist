@@ -85,6 +85,11 @@ export const climateCopy = {
 // A saved decision with no recommended option (both options lose money) stores result = ''.
 export const decisionResultLabel = (result: string) => result || 'Both options lose money';
 
+// Joins words as "a", "a and b" or "a, b and c".
+function joinList(items: string[]): string {
+  return items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
 export const resultCopy = {
   savingPill: 'Saving…',
   savedPill: 'Saved',
@@ -100,11 +105,15 @@ export const resultCopy = {
   earningsForecast: 'With your forecast',
   earningsNormal: 'Normal year (no forecast)',
   earningsSameAsNormal: 'Your forecast is a normal year',
-  keepInMindHeading: 'But keep in mind',
-  keepInMindBody: (favorCount: number, total: number, winner: string, loser: string) =>
-    favorCount === total
-      ? `${winner} earns more in every kind of year this forecast allows.`
-      : `${winner} earns more in ${favorCount} of ${total} kinds of year. In the rest, ${loser} does better.`,
+  keepInMindHeading: (allWins: boolean) => (allWins ? 'Year by year' : 'Keep in mind'),
+  // Each argument lists year names such as ['dry', 'average']; empty lists are left out.
+  keepInMindBody: (wins: string[], losses: string[], ties: string[], winner: string, loser: string) =>
+    [
+      wins.length > 0 && `${winner} earns more in ${joinList(wins)} years.`,
+      losses.length > 0 && `In ${joinList(losses)} years, ${loser} does better.`,
+      ties.length > 0 && `In ${joinList(ties)} years, both earn about the same.`,
+    ].filter(Boolean).join(' '),
+  yearNames: { dry: 'dry', average: 'average', wet: 'wet' },
   bothNegativeVerdict: 'Both options are\nexpected to lose money.',
   bothNegativeDetail: (a: string, b: string) =>
     `Neither ${a} nor ${b} is expected to make a profit across this year's likely climate.`,

@@ -32,10 +32,19 @@ describe('summarizeRcda', () => {
   it('compares the options on the decision-tree thirds, skipping ones the forecast gives 0%', () => {
     const [cabbage, atsal] = summary.tree.branches.map((b) => b.outcomes);
     expect(summary.outcomeFavors).toEqual(
-      atsal.map((o, t) => ({ key: o.key, favorsWinner: o.value! >= cabbage[t].value! }))
+      atsal.map((o, t) => ({
+        key: o.key,
+        result: Math.round(o.value!) > Math.round(cabbage[t].value!) ? 'winner' : 'loser',
+      }))
     );
     const noWet = summarizeRcda(computeRcda({ ...EXAMPLE, climate: [90, 10, 0] }), EXAMPLE.optionNames, [90, 10, 0]);
     expect(noWet.outcomeFavors.map((o) => o.key)).toEqual(['dry', 'average']);
+  });
+
+  it('calls a third a tie when both options earn the same pesos there', () => {
+    const same: RcdaInputs = { ...EXAMPLE, yield: [EXAMPLE.yield[0], EXAMPLE.yield[0]], cost: [EXAMPLE.cost[0], EXAMPLE.cost[0]], price: [70, 70] };
+    const tied = summarizeRcda(computeRcda(same), same.optionNames, same.climate);
+    expect(tied.outcomeFavors.every((o) => o.result === 'tie')).toBe(true);
   });
 
   it('is not bothNegative when at least one option has a positive score', () => {

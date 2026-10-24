@@ -4,8 +4,8 @@ import { BrandGradient, brandGradientCss, cardShadow, Colors, ForecastColors } f
 import { resultCopy as copy, treeCopy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
 import type { NormalYearComparison } from '@/src/rcda/baseline';
-import type { RcdaSummary } from '@/src/rcda/summary';
-import { Ionicons } from '@expo/vector-icons';
+import type { OutcomeFavor, RcdaSummary } from '@/src/rcda/summary';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import Animated, {
@@ -206,7 +206,8 @@ export function DecisionResultView({ summary, baseline, decisionType, heroTop, b
   const { optionNames, recommendedOption, bothNegative, scores, outcomeFavors, tree } = summary;
   const winner = optionNames[recommendedOption];
   const loser = optionNames[1 - recommendedOption];
-  const favorCount = outcomeFavors.filter((o) => o.favorsWinner).length;
+  const yearsWhere = (result: string) => outcomeFavors.filter((o) => o.result === result).map((o) => copy.yearNames[o.key]);
+  const allWins = outcomeFavors.every((o) => o.result === 'winner');
   const showNormal = !!baseline && !baseline.forecastIsNormal;
   const maxScore = Math.max(...scores, ...(showNormal ? baseline!.normalScores : []), 1);
   const bestNormal = showNormal ? baseline!.normalScores[baseline!.normalRecommended] : 0;
@@ -243,7 +244,7 @@ export function DecisionResultView({ summary, baseline, decisionType, heroTop, b
                 <Text style={s.verdict}>{copy.verdict(winner)}</Text>
                 <View style={s.deltaRow}>
                   <View style={s.deltaAmount}>
-                    <Ionicons name="arrow-up" size={34} color={Colors.accent} />
+                    <MaterialCommunityIcons name="arrow-up-thick" size={38} color={Colors.accent} />
                     <OdometerText text={`₱${summary.profitIncrease.toLocaleString()}`} colors={BrandGradient} style={s.deltaValue} />
                   </View>
                   <Text style={s.deltaUnit}>{copy.perHectare}</Text>
@@ -289,15 +290,15 @@ export function DecisionResultView({ summary, baseline, decisionType, heroTop, b
 
         {!bothNegative && (
           <View style={[s.section, s.sectionDivided]}>
-            <Text style={s.sectionTitle}>{copy.keepInMindHeading}</Text>
+            <Text style={s.sectionTitle}>{copy.keepInMindHeading(allWins)}</Text>
             <Text style={s.keepInMindBody}>
-              {copy.keepInMindBody(favorCount, outcomeFavors.length, winner, loser)}
+              {copy.keepInMindBody(yearsWhere('winner'), yearsWhere('loser'), yearsWhere('tie'), winner, loser)}
             </Text>
             <View style={s.favorRow}>
               {outcomeFavors.map((o) => (
                 <View key={o.key} style={s.favorItem}>
-                  <View style={[s.favorIconWrap, o.favorsWinner ? s.favorIconWrapYes : s.favorIconWrapNo]}>
-                    <Ionicons name={o.favorsWinner ? 'checkmark' : 'close'} size={17} color={o.favorsWinner ? Colors.accent : Colors.danger} />
+                  <View style={[s.favorIconWrap, FAVOR_STYLE[o.result].wrap]}>
+                    <Ionicons name={FAVOR_STYLE[o.result].icon} size={17} color={FAVOR_STYLE[o.result].color} />
                   </View>
                   <Text style={s.favorLabel}>{treeCopy.outcomes[o.key]}</Text>
                 </View>
@@ -409,6 +410,7 @@ const s = StyleSheet.create({
   favorIconWrap: { width: '100%', height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   favorIconWrapYes: { backgroundColor: Colors.accentTint },
   favorIconWrapNo: { backgroundColor: Colors.dangerBg },
+  favorIconWrapTie: { backgroundColor: Colors.surfaceAlt },
   favorLabel: { fontSize: 11, color: Colors.inkFaint, marginTop: 5 },
 
   disclosureRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 18 },
@@ -423,3 +425,9 @@ export const heroTopStyles = StyleSheet.create({
   pillError: { backgroundColor: Colors.dangerBg },
   pillText: { fontSize: 12, fontWeight: '600', color: Colors.ink },
 });
+
+const FAVOR_STYLE: Record<OutcomeFavor['result'], { icon: keyof typeof Ionicons.glyphMap; color: string; wrap: object }> = {
+  winner: { icon: 'checkmark', color: Colors.accent, wrap: s.favorIconWrapYes },
+  loser: { icon: 'close', color: Colors.danger, wrap: s.favorIconWrapNo },
+  tie: { icon: 'remove', color: Colors.inkSoft, wrap: s.favorIconWrapTie },
+};
