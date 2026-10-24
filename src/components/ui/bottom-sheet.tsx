@@ -159,7 +159,7 @@ export function BottomSheet({ visible, onClose, avoidKeyboard, style, scrollProp
 
 const s = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { backgroundColor: 'rgba(10,59,40,0.35)' },
+  backdrop: { backgroundColor: Colors.scrim },
   sheet: {
     backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingBottom: 34, maxHeight: '92%',

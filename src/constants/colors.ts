@@ -46,6 +46,8 @@ export const Colors = {
   tabInactive: '#5A625D',
   barMuted: '#C9D3CD',
   surfaceAlt: '#F3F8F5',
+  chipBorder: '#B9C7BF',
+  scrim: 'rgba(17,20,18,0.40)',
 } as const;
 
 export const ResearcherColors = {
@@ -92,10 +94,10 @@ export const ClimateColors = {
 
 // The three forecast bands (dry / average / wet years), as on the forecast input screen.
 export const ForecastColors = {
-  dry: ClimateColors.driest,
-  average: '#C9BE9E',
-  averageText: '#43391F',
-  wet: ClimateColors.above_ave,
+  dry: '#E07B39',
+  average: '#3FA36B',
+  averageText: '#FFFFFF',
+  wet: '#2F7FD1',
 } as const;
 
 // Brand gradient stops, left to right.

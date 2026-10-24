@@ -22,7 +22,7 @@ export interface FeedbackTheme {
 export type FeedbackAppearance = 'farmer' | 'researcher';
 
 const farmer: FeedbackTheme = {
-  backdrop: 'rgba(10,59,40,0.45)',
+  backdrop: Colors.scrim,
   surface: Colors.surface,
   border: Colors.border,
   title: Colors.ink,

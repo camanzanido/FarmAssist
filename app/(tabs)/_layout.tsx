@@ -1,9 +1,9 @@
 import { useAuth } from '@/src/auth/AuthContext';
+import { AnimatedTabIcon } from '@/src/components/ui/animated-tab-icon';
 import { HapticTab } from '@/src/components/ui/haptic-tab';
 import { Colors } from '@/src/constants/colors';
 import { useTabBarFrame } from '@/src/constants/layout';
 import { useOnboarding } from '@/src/onboarding/OnboardingContext';
-import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 
@@ -37,10 +37,11 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
+            <AnimatedTabIcon
               name={focused ? 'home' : 'home-outline'}
               size={28}
               color={color}
+              focused={focused}
             />
           ),
         }}
@@ -50,10 +51,11 @@ export default function TabLayout() {
         options={{
           title: 'History',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
+            <AnimatedTabIcon
               name={focused ? 'time' : 'time-outline'}
               size={28}
               color={color}
+              focused={focused}
             />
           ),
         }}
@@ -63,10 +65,11 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
+            <AnimatedTabIcon
               name={focused ? 'person' : 'person-outline'}
               size={28}
               color={color}
+              focused={focused}
             />
           ),
         }}
