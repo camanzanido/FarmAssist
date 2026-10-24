@@ -3,6 +3,8 @@ import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ALL_DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { HistorySkeleton } from '@/src/components/skeletons/app-skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
+import { PopoverMenu } from '@/src/components/ui/popover-menu';
+import { TrashIcon } from '@/src/components/ui/trash-icon';
 import { brandGradientSoftCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { decisionResultLabel, historyCopy as copy } from '@/src/constants/copy';
@@ -40,6 +42,11 @@ function formatDate(iso: string): string {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+function timeOf(iso: string): number {
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
 function monthKey(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
@@ -58,6 +65,8 @@ export default function HistoryScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [filter, setFilter] = useState<DecisionType | 'all'>('all');
 
   const load = useCallback(async (opts: { silent?: boolean } = {}) => {
@@ -93,10 +102,11 @@ export default function HistoryScreen() {
     load({ silent: true });
   };
 
-  const filtered = useMemo(
-    () => (filter === 'all' ? decisions : decisions.filter(d => d.decision_type === filter)),
-    [decisions, filter]
-  );
+  const filtered = useMemo(() => {
+    const rows = filter === 'all' ? decisions : decisions.filter(d => d.decision_type === filter);
+    const sign = sortOrder === 'newest' ? -1 : 1;
+    return [...rows].sort((a, b) => sign * (timeOf(a.datetime) - timeOf(b.datetime)));
+  }, [decisions, filter, sortOrder]);
 
   const filterOptions = useMemo(
     () => [
@@ -120,6 +130,7 @@ export default function HistoryScreen() {
   }, [filtered]);
 
   const confirmDelete = async (decision: Decision) => {
+    setConfirmingId(decision.id);
     const confirmed = await confirm({
       title: copy.deleteTitle,
       message: copy.deleteBody(decisionResultLabel(decision.result)),
@@ -128,6 +139,7 @@ export default function HistoryScreen() {
       tone: 'destructive',
       icon: 'trash-outline',
     });
+    setConfirmingId(null);
     if (!confirmed) return;
 
     setDeletingId(decision.id);
@@ -147,8 +159,20 @@ export default function HistoryScreen() {
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <View style={s.header}>
-        <Text style={s.title}>{copy.title}</Text>
-        <Text style={s.subtitle}>{copy.subtitle(decisions.length)}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.title}>{copy.title}</Text>
+          <Text style={s.subtitle}>{copy.subtitle(decisions.length)}</Text>
+        </View>
+        {decisions.length > 1 && (
+          <PopoverMenu
+            icon="filter-outline"
+            accessibilityLabel={copy.sortLabel}
+            items={[
+              { key: 'newest', label: copy.sortNewest, icon: 'arrow-down-outline', selected: sortOrder === 'newest', onPress: () => setSortOrder('newest') },
+              { key: 'oldest', label: copy.sortOldest, icon: 'arrow-up-outline', selected: sortOrder === 'oldest', onPress: () => setSortOrder('oldest') },
+            ]}
+          />
+        )}
       </View>
 
       {decisions.length > 0 && (
@@ -195,7 +219,7 @@ export default function HistoryScreen() {
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={Colors.ink} />
           }
           renderSectionHeader={({ section }) => (
-            <Text style={s.sectionHeader}>{section.title.toUpperCase()}</Text>
+            <Text style={s.sectionHeader}>{section.title}</Text>
           )}
           renderItem={({ item }) => {
             const isPending = pendingIds.has(item.id);
@@ -234,11 +258,13 @@ export default function HistoryScreen() {
                   onPress={() => confirmDelete(item)}
                   disabled={deletingId === item.id}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={copy.deleteLabel}
                 >
                   {deletingId === item.id ? (
                     <ActivityIndicator size="small" color={Colors.danger} />
                   ) : (
-                    <Ionicons name="trash-outline" size={18} color={Colors.danger} />
+                    <TrashIcon size={21} color={Colors.danger} open={confirmingId === item.id} />
                   )}
                 </TouchableOpacity>
               </Pressable>
@@ -253,7 +279,7 @@ export default function HistoryScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
 
-  header: { ...contentColumn, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 },
+  header: { ...contentColumn, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 },
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
   subtitle: { fontSize: 14, color: Colors.inkSoft, marginTop: 3 },
 
@@ -271,7 +297,7 @@ const s = StyleSheet.create({
   ctaBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 14 },
 
   list: { ...contentColumn, padding: 22, paddingTop: 8 },
-  sectionHeader: { fontSize: 12, fontWeight: '700', letterSpacing: 0.9, color: Colors.inkFaint, marginTop: 18, marginBottom: 10 },
+  sectionHeader: { fontSize: 14, fontWeight: '700', color: Colors.inkFaint, marginTop: 18, marginBottom: 10 },
 
   card: {
     flexDirection: 'row', alignItems: 'center',
@@ -301,8 +327,7 @@ const s = StyleSheet.create({
   syncChipTextSent: { color: Colors.inkSoft },
 
   deleteBtn: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 36, height: 36,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Colors.dangerBg,
   },
 });
