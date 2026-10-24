@@ -11,7 +11,7 @@ import { validatePassword, validatePasswordConfirm } from '@/src/utils/passwordV
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 
@@ -113,9 +113,17 @@ export default function RegisterScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity onPress={() => router.back()} style={s.closeBtn}>
-            <Ionicons name="close" size={22} color={Colors.ink} />
-          </TouchableOpacity>
+          <View style={s.topRow}>
+            <TouchableOpacity onPress={() => router.back()} style={s.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
+              <Ionicons name="close" size={22} color={Colors.ink} />
+            </TouchableOpacity>
+            <Image
+              source={require('@/assets/images/FarmAssist-logo.png')}
+              style={s.logo}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
+          </View>
 
           <Text style={s.title}>{copy.registerTitle}</Text>
           <Text style={s.subtitle}>{copy.registerSubtitle}</Text>
@@ -145,7 +153,7 @@ export default function RegisterScreen() {
           <Field label={copy.emailOptional} value={email} onChangeText={setEmail} error={errors.email} touched={touched} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" />
           {!email.trim() && (
             <View style={s.noteRow}>
-              <Ionicons name="information-circle-outline" size={16} color={Colors.amberText} />
+              <Ionicons name="information-circle-outline" size={16} color={Colors.inkFaint} />
               <Text style={s.noteText}>{copy.noEmailNote}</Text>
             </View>
           )}
@@ -170,10 +178,9 @@ export default function RegisterScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   scroll: { ...contentColumn, padding: 24, paddingBottom: 40 },
-  closeBtn: {
-    alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
-  },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  closeBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginLeft: -8 },
+  logo: { width: 40, height: 40 },
   title: { fontSize: 26, fontWeight: '800', color: Colors.ink, marginBottom: 22, letterSpacing: -0.4 },
 
   subtitle: { fontSize: 14, color: Colors.inkSoft, lineHeight: 20, marginTop: -12, marginBottom: 22 },
@@ -184,7 +191,7 @@ const s = StyleSheet.create({
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 5 },
   noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: -6, marginBottom: 14 },
-  noteText: { flex: 1, fontSize: 12.5, color: Colors.amberText, lineHeight: 17 },
+  noteText: { flex: 1, fontSize: 12.5, color: Colors.inkSoft, lineHeight: 17 },
 
   submitBtn: { backgroundColor: Colors.ink, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8, marginBottom: 16 },
   submitBtnDisabled: { opacity: 0.6 },

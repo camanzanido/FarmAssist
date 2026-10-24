@@ -110,34 +110,32 @@ export default function ProfileScreen() {
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       {!isAuthenticated ? (
-        <View style={s.signedOutWrap}>
-          <Image
-            source={require('@/assets/images/FarmAssist-logo.png')}
-            style={s.signedOutLogo}
-            resizeMode="contain"
-            accessibilityIgnoresInvertColors
-          />
-          <Text style={s.signedOutTitle}>{copy.signedOutTitle}</Text>
-          <Text style={s.signedOutSubtitle}>{copy.signedOutSubtitle}</Text>
+        <View style={s.signedOutScreen}>
+          <View style={s.signedOutTop}>
+            <TouchableOpacity onPress={() => router.push('/about')} hitSlop={8} style={s.topIcon} accessibilityRole="button" accessibilityLabel={copy.about}>
+              <Ionicons name="information-circle-outline" size={24} color={Colors.ink} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/onboarding?replay=1')} hitSlop={8} style={s.topIcon} accessibilityRole="button" accessibilityLabel={copy.viewIntro}>
+              <Ionicons name="book-outline" size={23} color={Colors.ink} />
+            </TouchableOpacity>
+          </View>
+          <View style={s.signedOutWrap}>
+            <Image
+              source={require('@/assets/images/FarmAssist-logo.png')}
+              style={s.signedOutLogo}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
+            <Text style={s.signedOutTitle}>{copy.signedOutTitle}</Text>
+            <Text style={s.signedOutSubtitle}>{copy.signedOutSubtitle}</Text>
 
-          <TouchableOpacity style={s.primaryBtn} onPress={() => router.push('/(auth)/login')} activeOpacity={0.85}>
-            <Text style={s.primaryBtnText}>{copy.signIn}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={s.secondaryBtn} onPress={() => router.push('/(auth)/register')} activeOpacity={0.85}>
-            <Text style={s.secondaryBtnText}>{copy.createAccount}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={s.aboutLink} onPress={() => router.push('/about')} accessibilityRole="link">
-            <Ionicons name="information-circle-outline" size={17} color={Colors.inkSoft} />
-            <Text style={s.aboutLinkText}>{copy.about}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.aboutLink, { marginTop: 0 }]} onPress={() => router.push('/onboarding?replay=1')} accessibilityRole="link">
-            <Ionicons name="book-outline" size={17} color={Colors.inkSoft} />
-            <Text style={s.aboutLinkText}>{copy.viewIntro}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.aboutLink, { marginTop: 0 }]} onPress={() => router.push('/help')} accessibilityRole="link">
-            <Ionicons name="help-circle-outline" size={17} color={Colors.inkSoft} />
-            <Text style={s.aboutLinkText}>{helpCopy.openHelp}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={s.primaryBtn} onPress={() => router.push('/(auth)/login')} activeOpacity={0.85}>
+              <Text style={s.primaryBtnText}>{copy.signIn}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.secondaryBtn} onPress={() => router.push('/(auth)/register')} activeOpacity={0.85}>
+              <Text style={s.secondaryBtnText}>{copy.createAccount}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
@@ -284,16 +282,18 @@ export default function ProfileScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
 
-  signedOutWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
+  signedOutScreen: { flex: 1 },
+  signedOutTop: { flexDirection: 'row', justifyContent: 'flex-end', gap: 6, paddingHorizontal: 16, paddingTop: 8 },
+  topIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  // Buttons are capped and centred so they stay off the screen edges on a tablet.
+  signedOutWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28, paddingBottom: 48 },
   signedOutTitle: { fontSize: 24, fontWeight: '800', color: Colors.ink, marginBottom: 10, textAlign: 'center' },
   signedOutSubtitle: { fontSize: 14, color: Colors.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
   signedOutLogo: { width: 84, height: 84, alignSelf: 'center', marginBottom: 16 },
-  primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 14, paddingVertical: 16, width: '100%', alignItems: 'center', marginBottom: 12 },
+  primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 14, paddingVertical: 16, width: '100%', maxWidth: 420, alignItems: 'center', marginBottom: 12 },
   primaryBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
-  secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 14, paddingVertical: 16, width: '100%', alignItems: 'center' },
+  secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 14, paddingVertical: 16, width: '100%', maxWidth: 420, alignItems: 'center' },
   secondaryBtnText: { color: Colors.ink, fontWeight: '700', fontSize: 15 },
-  aboutLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 22, paddingVertical: 10, paddingHorizontal: 12 },
-  aboutLinkText: { color: Colors.inkSoft, fontWeight: '600', fontSize: 14 },
 
   content: { ...contentColumn, padding: 22, paddingTop: 12, paddingBottom: 40 },
   profileHeader: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },

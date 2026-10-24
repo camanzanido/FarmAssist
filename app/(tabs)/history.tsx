@@ -135,7 +135,6 @@ export default function HistoryScreen() {
   const [loadError, setLoadError] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-  const [sortFlips, setSortFlips] = useState(0);
   const [filter, setFilter] = useState<DecisionType | 'all'>('all');
 
   const hasLoaded = useRef(false);
@@ -202,12 +201,6 @@ export default function HistoryScreen() {
     return Array.from(groups.entries()).map(([title, data]) => ({ title, data }));
   }, [filtered]);
 
-  const changeSort = (order: 'newest' | 'oldest') => {
-    if (order === sortOrder) return;
-    setSortOrder(order);
-    setSortFlips(n => n + 1);
-  };
-
   const openDecision = useCallback(
     (id: string) => router.push({ pathname: '/decision/[id]', params: { id } }),
     [router]
@@ -249,28 +242,25 @@ export default function HistoryScreen() {
 
       {decisions.length > 0 && (
         <View style={s.filterRow}>
-          {decisions.length > 1 && (
-            <PopoverMenu
-              icon="swap-vertical"
-              iconSize={18}
-              motion="flip"
-              motionTrigger={sortFlips}
-              style={s.sortBtn}
-              accessibilityLabel={copy.sortLabel}
-              items={[
-                { key: 'newest', label: copy.sortNewest, icon: 'arrow-down-outline', selected: sortOrder === 'newest', onPress: () => changeSort('newest') },
-                { key: 'oldest', label: copy.sortOldest, icon: 'arrow-up-outline', selected: sortOrder === 'oldest', onPress: () => changeSort('oldest') },
-              ]}
-            />
-          )}
           <View style={{ flex: 1 }}>
             <AnimatedFilterBar
               options={filterOptions}
               selected={filter}
               onSelect={setFilter}
-              style={[s.filterContent, decisions.length > 1 && s.filterContentAfterSort]}
+              style={s.filterContent}
             />
           </View>
+          {decisions.length > 1 && (
+            <PopoverMenu
+              icon="filter-outline"
+              style={s.sortBtn}
+              accessibilityLabel={copy.sortLabel}
+              items={[
+                { key: 'newest', label: copy.sortNewest, icon: 'arrow-down-outline', selected: sortOrder === 'newest', onPress: () => setSortOrder('newest') },
+                { key: 'oldest', label: copy.sortOldest, icon: 'arrow-up-outline', selected: sortOrder === 'oldest', onPress: () => setSortOrder('oldest') },
+              ]}
+            />
+          )}
         </View>
       )}
 
@@ -332,10 +322,8 @@ const s = StyleSheet.create({
   subtitle: { fontSize: 14, color: Colors.inkSoft, marginTop: 3 },
 
   filterRow: { ...contentColumn, flexDirection: 'row', alignItems: 'center', paddingTop: 16, paddingBottom: 4 },
-  filterContent: { paddingHorizontal: 24 },
-  filterContentAfterSort: { paddingLeft: 8 },
-  // Sized and outlined like an unselected filter chip so it reads as part of the row.
-  sortBtn: { width: 36, height: 36, marginLeft: 24, borderRadius: 18, borderWidth: 1.5, borderColor: Colors.chipBorder },
+  filterContent: { paddingLeft: 24, paddingRight: 12 },
+  sortBtn: { marginRight: 18 },
 
   centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
   emptyText: { fontSize: 15, fontWeight: '700', color: Colors.ink, marginTop: 4 },
