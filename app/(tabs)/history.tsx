@@ -14,7 +14,7 @@ import { formatCurrency } from '@/src/utils/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -53,6 +53,75 @@ function monthKey(iso: string): string {
   return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
+type RowProps = {
+  item: Decision;
+  isPending: boolean;
+  deleting: boolean;
+  onOpen: (id: string) => void;
+  onDelete: (decision: Decision) => Promise<void>;
+};
+
+// Memoised so opening one row's delete dialog doesn't re-render the rest of the list.
+const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen, onDelete }: RowProps) {
+  const [lidOpen, setLidOpen] = useState(false);
+
+  const handleDelete = async () => {
+    setLidOpen(true);
+    try {
+      await onDelete(item);
+    } finally {
+      setLidOpen(false);
+    }
+  };
+
+  return (
+    <Pressable
+      style={({ pressed }) => [s.card, pressed && s.cardPressed]}
+      onPress={() => onOpen(item.id)}
+      accessibilityRole="button"
+      accessibilityHint={copy.openHint}
+    >
+      <View style={s.cardMain}>
+        <View style={s.cardIconWrap}>
+          <Ionicons name={decisionTypeIcon(item.decision_type)} size={21} color={Colors.ink} />
+        </View>
+        <View style={s.cardBody}>
+          <Text style={s.cardResult} numberOfLines={1}>{decisionResultLabel(item.result)}</Text>
+          <Text style={s.cardType}>{decisionTypeLabel(item.decision_type)}</Text>
+          <View style={s.cardMetaRow}>
+            {item.result !== '' && <Text style={s.cardProfit}>+{formatCurrency(item.profit_increase)}</Text>}
+            <Text style={s.cardDate}>{formatDate(item.datetime)}</Text>
+            <View style={[s.syncChip, isPending ? s.syncChipPending : s.syncChipSent]}>
+              <Ionicons
+                name={isPending ? 'cloud-offline-outline' : 'checkmark'}
+                size={11}
+                color={isPending ? Colors.amber : Colors.inkSoft}
+              />
+              <Text style={[s.syncChipText, isPending ? s.syncChipTextPending : s.syncChipTextSent]}>
+                {isPending ? copy.notSent : copy.sent}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+      <TouchableOpacity
+        style={s.deleteBtn}
+        onPress={handleDelete}
+        disabled={deleting}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        accessibilityRole="button"
+        accessibilityLabel={copy.deleteLabel}
+      >
+        {deleting ? (
+          <ActivityIndicator size="small" color={Colors.danger} />
+        ) : (
+          <TrashIcon size={21} color={Colors.danger} open={lidOpen} />
+        )}
+      </TouchableOpacity>
+    </Pressable>
+  );
+});
+
 export default function HistoryScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -65,12 +134,14 @@ export default function HistoryScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [filter, setFilter] = useState<DecisionType | 'all'>('all');
 
+  const hasLoaded = useRef(false);
+
+  // Only the first load shows the skeleton; revisiting the tab refreshes in place.
   const load = useCallback(async (opts: { silent?: boolean } = {}) => {
-    if (!opts.silent) setIsLoading(true);
+    if (!opts.silent && !hasLoaded.current) setIsLoading(true);
     setLoadError(false);
     try {
       const rows = await getDecisionsByUser(userId);
@@ -86,6 +157,7 @@ export default function HistoryScreen() {
       console.error('Failed to load decision history:', err);
       setLoadError(true);
     } finally {
+      hasLoaded.current = true;
       setIsLoading(false);
       setIsRefreshing(false);
     }
@@ -129,8 +201,12 @@ export default function HistoryScreen() {
     return Array.from(groups.entries()).map(([title, data]) => ({ title, data }));
   }, [filtered]);
 
-  const confirmDelete = async (decision: Decision) => {
-    setConfirmingId(decision.id);
+  const openDecision = useCallback(
+    (id: string) => router.push({ pathname: '/decision/[id]', params: { id } }),
+    [router]
+  );
+
+  const confirmDelete = useCallback(async (decision: Decision) => {
     const confirmed = await confirm({
       title: copy.deleteTitle,
       message: copy.deleteBody(decisionResultLabel(decision.result)),
@@ -139,7 +215,6 @@ export default function HistoryScreen() {
       tone: 'destructive',
       icon: 'trash-outline',
     });
-    setConfirmingId(null);
     if (!confirmed) return;
 
     setDeletingId(decision.id);
@@ -153,7 +228,7 @@ export default function HistoryScreen() {
     } finally {
       setDeletingId(null);
     }
-  };
+  }, [confirm, notify]);
 
   return (
     <SafeAreaView style={s.safe}>
@@ -221,55 +296,15 @@ export default function HistoryScreen() {
           renderSectionHeader={({ section }) => (
             <Text style={s.sectionHeader}>{section.title}</Text>
           )}
-          renderItem={({ item }) => {
-            const isPending = pendingIds.has(item.id);
-            return (
-              <Pressable
-                style={({ pressed }) => [s.card, pressed && s.cardPressed]}
-                onPress={() => router.push({ pathname: '/decision/[id]', params: { id: item.id } })}
-                accessibilityRole="button"
-                accessibilityHint={copy.openHint}
-              >
-                <View style={s.cardMain}>
-                  <View style={s.cardIconWrap}>
-                    <Ionicons name={decisionTypeIcon(item.decision_type)} size={21} color={Colors.ink} />
-                  </View>
-                  <View style={s.cardBody}>
-                    <Text style={s.cardResult} numberOfLines={1}>{decisionResultLabel(item.result)}</Text>
-                    <Text style={s.cardType}>{decisionTypeLabel(item.decision_type)}</Text>
-                    <View style={s.cardMetaRow}>
-                      {item.result !== '' && <Text style={s.cardProfit}>+{formatCurrency(item.profit_increase)}</Text>}
-                      <Text style={s.cardDate}>{formatDate(item.datetime)}</Text>
-                      <View style={[s.syncChip, isPending ? s.syncChipPending : s.syncChipSent]}>
-                        <Ionicons
-                          name={isPending ? 'cloud-offline-outline' : 'checkmark'}
-                          size={11}
-                          color={isPending ? Colors.amber : Colors.inkSoft}
-                        />
-                        <Text style={[s.syncChipText, isPending ? s.syncChipTextPending : s.syncChipTextSent]}>
-                          {isPending ? copy.notSent : copy.sent}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={s.deleteBtn}
-                  onPress={() => confirmDelete(item)}
-                  disabled={deletingId === item.id}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  accessibilityRole="button"
-                  accessibilityLabel={copy.deleteLabel}
-                >
-                  {deletingId === item.id ? (
-                    <ActivityIndicator size="small" color={Colors.danger} />
-                  ) : (
-                    <TrashIcon size={21} color={Colors.danger} open={confirmingId === item.id} />
-                  )}
-                </TouchableOpacity>
-              </Pressable>
-            );
-          }}
+          renderItem={({ item }) => (
+            <HistoryRow
+              item={item}
+              isPending={pendingIds.has(item.id)}
+              deleting={deletingId === item.id}
+              onOpen={openDecision}
+              onDelete={confirmDelete}
+            />
+          )}
         />
       )}
     </SafeAreaView>
