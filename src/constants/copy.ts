@@ -183,9 +183,10 @@ export const profileCopy = {
   loadErrorBody: 'Some information on this screen may be out of date.',
   retry: 'Retry',
   offlineTitle: 'No internet right now',
-  offlineBody: (pending: number, lastSync: string) =>
-    `${pending} decision${pending === 1 ? '' : 's'} will send once you're back online. Last sync: ${lastSync}.`,
-  syncNow: 'Try to sync now',
+  lastSync: (lastSync: string) => `Last sync: ${lastSync}`,
+  syncNow: 'Sync now',
+  settingsLabel: 'Account settings',
+  location: 'Location',
   syncErrorsTitle: "Couldn't finish syncing",
   syncErrorsBody: (count: number) =>
     `${count} change${count === 1 ? '' : 's'} failed to save to the cloud and won't be retried automatically. This usually means the same account or record already exists there.`,
