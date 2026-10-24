@@ -89,7 +89,7 @@ function EarningsColumn({ name, score, ratio, highlighted, recommended }: {
       <Text style={[s.columnName, highlighted && s.columnNameWinner]} numberOfLines={2}>{name}</Text>
       {recommended && (
         <View style={s.tag}>
-          <Text style={s.tagText}>{copy.recommendedTag}</Text>
+          <Text style={s.tagText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{copy.recommendedTag}</Text>
         </View>
       )}
     </View>
@@ -378,7 +378,7 @@ const s = StyleSheet.create({
   groupCaption: { alignSelf: 'center', backgroundColor: Colors.surfaceAlt, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 14 },
   groupCaptionText: { fontSize: 12, fontWeight: '700', color: Colors.inkSoft, textAlign: 'center' },
   columns: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 10 },
-  column: { flex: 1, maxWidth: 90, alignItems: 'center' },
+  column: { flex: 1, maxWidth: 104, alignItems: 'center' },
   columnValue: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8, fontVariant: ['tabular-nums'] },
   columnValueWinner: { fontSize: 15, fontWeight: '800', color: Colors.ink },
   columnTrack: { height: COLUMN_MAX, justifyContent: 'flex-end' },
@@ -387,7 +387,7 @@ const s = StyleSheet.create({
   columnBarMuted: { experimental_backgroundImage: MUTED_COLUMN },
   columnName: { fontSize: 13, fontWeight: '600', color: Colors.inkSoft, marginTop: 10, textAlign: 'center' },
   columnNameWinner: { fontWeight: '800', color: Colors.ink },
-  tag: { marginTop: 6, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  tag: { marginTop: 6, maxWidth: '100%', backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 3 },
   tagText: { fontSize: 11, fontWeight: '700', color: Colors.accent },
 
   donutRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 16 },
