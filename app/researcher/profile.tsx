@@ -2,6 +2,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ChangePasswordSheet } from '@/src/components/profile/change-password-sheet';
 import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
+import { PopoverMenu } from '@/src/components/ui/popover-menu';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { changePasswordCopy, profileCopy } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
@@ -44,7 +45,6 @@ export default function ResearcherProfileScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Text style={s.eyebrow}>RESEARCHER</Text>
           <Text style={s.title}>Profile</Text>
         </View>
 
@@ -56,14 +56,18 @@ export default function ResearcherProfileScreen() {
             <Text style={s.name}>{user.name}</Text>
             <Text style={s.username}>@{user.username}</Text>
           </View>
+          <PopoverMenu
+            icon="settings-outline"
+            motion="spin"
+            accessibilityLabel={profileCopy.settingsLabel}
+            items={[
+              { key: 'edit', label: profileCopy.editProfile, icon: 'create-outline', onPress: edit.open },
+              { key: 'password', label: changePasswordCopy.row, icon: 'key-outline', onPress: () => setPasswordOpen(true) },
+            ]}
+          />
         </View>
 
         <View style={s.list}>
-          <TouchableOpacity style={[s.row, s.rowBorder]} onPress={edit.open} activeOpacity={0.7} accessibilityRole="button">
-            <Ionicons name="create-outline" size={19} color={C.textSoft} />
-            <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.editProfile}</Text>
-            <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
-          </TouchableOpacity>
           <View style={[s.row, s.rowBorder, s.rowTop]}>
             <Ionicons name="mail-outline" size={19} color={C.textSoft} />
             <View style={{ flex: 1, marginLeft: 12 }}>
@@ -74,11 +78,6 @@ export default function ResearcherProfileScreen() {
               {edit.pendingEmail && <Text style={s.pendingEmail}>{profileCopy.pendingEmail(edit.pendingEmail)}</Text>}
             </View>
           </View>
-          <TouchableOpacity style={[s.row, s.rowBorder]} onPress={() => setPasswordOpen(true)} activeOpacity={0.7} accessibilityRole="button">
-            <Ionicons name="key-outline" size={19} color={C.textSoft} />
-            <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{changePasswordCopy.row}</Text>
-            <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
-          </TouchableOpacity>
           <View style={[s.row, s.rowBorder]}>
             <Ionicons name="shield-checkmark-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Account type</Text>
@@ -118,7 +117,6 @@ const s = StyleSheet.create({
   content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 40 },
 
   header: { marginBottom: 22 },
-  eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: C.textFaint, marginBottom: 5 },
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
 
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },

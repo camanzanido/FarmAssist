@@ -81,10 +81,16 @@ function ChartSections() {
           {[40, 65, 30, 80, 55, 95].map((h, i) => <Skeleton key={i} height={`${h}%`} radius={5} style={s.bar} />)}
         </View>
       </View>
-      <View style={s.section}>
-        <Skeleton width="40%" height={14} />
-        <Skeleton height={12} radius={6} style={s.gapMd} />
-        {[0, 1, 2].map(i => <Skeleton key={i} width="80%" height={12} style={s.gapSm} />)}
+      <View style={[s.section, s.splitRow]}>
+        <View style={s.typesCol}>
+          <Skeleton width="70%" height={14} />
+          <Skeleton width={120} height={120} radius={60} style={[s.gapMd, s.donut]} />
+          {[0, 1, 2].map(i => <Skeleton key={i} width="90%" height={12} style={s.gapSm} />)}
+        </View>
+        <View style={s.muniCol}>
+          <Skeleton width="55%" height={14} />
+          {[0, 1, 2, 3].map(i => <Skeleton key={i} height={10} radius={5} style={s.gapMd} />)}
+        </View>
       </View>
     </>
   );
@@ -141,6 +147,10 @@ const s = StyleSheet.create({
   stat: { flex: 1, padding: 16 },
   section: { marginTop: 26 },
   bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 9, height: 110, marginTop: 16 },
+  splitRow: { flexDirection: 'row', gap: 20 },
+  typesCol: { flex: 2 },
+  muniCol: { flex: 3 },
+  donut: { alignSelf: 'center' },
   bar: { flex: 1 },
 
   mapPanel: {

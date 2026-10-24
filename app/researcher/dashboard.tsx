@@ -2,6 +2,7 @@ import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { ExportSheet } from '@/src/components/researcher/export-sheet';
 import { ChartCardsSkeleton, OverviewSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
+import { DonutChart } from '@/src/components/ui/donut-chart';
 import { OdometerText } from '@/src/components/ui/odometer-text';
 import { ALL_DECISIONS, DecisionType } from '@/src/constants';
 import { cardShadow, Colors } from '@/src/constants/colors';
@@ -12,7 +13,7 @@ import { formatCurrency } from '@/src/utils/formatters';
 import { monthsBack } from '@/src/utils/researcherStats';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TYPE_COLORS: Record<DecisionType, string> = {
@@ -21,6 +22,9 @@ const TYPE_COLORS: Record<DecisionType, string> = {
   protect: Colors.accentTintStrong,
   harvest: Colors.barMuted,
 };
+
+// Below this width the types and municipalities columns stack instead of sharing a row.
+const SPLIT_MIN_WIDTH = 400;
 
 type Range = 'season' | 'year' | 'all';
 
@@ -53,6 +57,7 @@ export default function ResearcherDashboardScreen() {
   const [isRangeLoading, setIsRangeLoading] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const isWide = useIsWide();
+  const splitRow = useWindowDimensions().width >= SPLIT_MIN_WIDTH;
 
   const fetchForRange = useCallback(() => fetchOverview(rangeStart(range)), [range]);
   const { data: overview, isLoading, isRefreshing, error, reload, refresh } = useResearcherFetch(fetchForRange, EMPTY);
@@ -174,44 +179,49 @@ export default function ResearcherDashboardScreen() {
                 </View>
               </View>
 
-              <View style={s.section}>
-                <Text style={s.sectionTitle}>Decision types</Text>
-                <Text style={s.sectionHint}>{overview.range_total} total</Text>
-                <View style={s.stackedBar}>
-                  {typeBreakdown.map(t => (
-                    <View key={t.id} style={{ width: `${t.pct}%`, backgroundColor: TYPE_COLORS[t.id], height: '100%' }} />
-                  ))}
-                </View>
-                <View style={{ gap: 9, marginTop: 4 }}>
-                  {typeBreakdown.map(t => (
-                    <View key={t.id} style={s.legendRow}>
-                      <View style={[s.legendDot, { backgroundColor: TYPE_COLORS[t.id] }]} />
-                      <Text style={s.legendLabel}>{t.label}</Text>
-                      <Text style={s.legendCount}>{t.count}</Text>
-                      <Text style={s.legendPct}>{t.pct}%</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {topMunicipalities.length > 0 && (
-                <View style={s.section}>
-                  <Text style={s.sectionTitle}>Top municipalities</Text>
-                  <View style={{ gap: 12, marginTop: 14 }}>
-                    {topMunicipalities.map(m => (
-                      <View key={m.city}>
-                        <View style={s.muniTopRow}>
-                          <Text style={s.muniLabel}>{m.city}</Text>
-                          <Text style={s.muniCount}>{m.count}</Text>
-                        </View>
-                        <View style={s.muniBarBg}>
-                          <View style={[s.muniBarFill, { width: `${m.pct}%` }]} />
-                        </View>
+              <View style={[s.section, splitRow && s.splitRow]}>
+                <View style={splitRow ? s.typesCol : undefined}>
+                  <Text style={s.sectionTitle}>Decision types</Text>
+                  <Text style={s.sectionHint}>{overview.range_total} total</Text>
+                  <View style={s.donutWrap}>
+                    <DonutChart
+                      segments={typeBreakdown.map(t => ({ key: t.id, value: t.count, color: TYPE_COLORS[t.id] }))}
+                      centerValue={overview.range_total.toLocaleString()}
+                      centerLabel="decisions"
+                      accessibilityLabel={typeBreakdown.map(t => `${t.label} ${t.count}`).join(', ')}
+                    />
+                  </View>
+                  <View style={{ gap: 9 }}>
+                    {typeBreakdown.map(t => (
+                      <View key={t.id} style={s.legendRow}>
+                        <View style={[s.legendDot, { backgroundColor: TYPE_COLORS[t.id] }]} />
+                        <Text style={s.legendLabel} numberOfLines={2}>{t.label}</Text>
+                        <Text style={s.legendCount}>{t.count}</Text>
+                        <Text style={s.legendPct}>{t.pct}%</Text>
                       </View>
                     ))}
                   </View>
                 </View>
-              )}
+
+                {topMunicipalities.length > 0 && (
+                  <View style={splitRow ? s.muniCol : s.section}>
+                    <Text style={s.sectionTitle}>Top municipalities</Text>
+                    <View style={{ gap: 12, marginTop: 14 }}>
+                      {topMunicipalities.map(m => (
+                        <View key={m.city}>
+                          <View style={s.muniTopRow}>
+                            <Text style={s.muniLabel} numberOfLines={1}>{m.city}</Text>
+                            <Text style={s.muniCount}>{m.count}</Text>
+                          </View>
+                          <View style={s.muniBarBg}>
+                            <View style={[s.muniBarFill, { width: `${m.pct}%` }]} />
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
             </>
           )}
 
@@ -255,15 +265,19 @@ const s = StyleSheet.create({
   chartLabel: { flex: 1, textAlign: 'center', fontSize: 10.5, color: Colors.inkFaint },
   chartLabelActive: { fontWeight: '700', color: Colors.accent },
 
-  stackedBar: { flexDirection: 'row', height: 12, borderRadius: 6, overflow: 'hidden', marginBottom: 14, backgroundColor: Colors.divider },
+  // Municipalities get the wider share of the row.
+  splitRow: { flexDirection: 'row', gap: 20 },
+  typesCol: { flex: 2 },
+  muniCol: { flex: 3 },
+  donutWrap: { alignItems: 'center', marginBottom: 16 },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   legendDot: { width: 10, height: 10, borderRadius: 3 },
   legendLabel: { flex: 1, fontSize: 13.5, color: Colors.inkMuted },
   legendCount: { fontSize: 13.5, fontWeight: '700', color: Colors.ink },
-  legendPct: { fontSize: 12, color: Colors.inkFaint, width: 38, textAlign: 'right' },
+  legendPct: { fontSize: 12, color: Colors.inkFaint, width: 34, textAlign: 'right' },
 
   muniTopRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  muniLabel: { fontSize: 13.5, color: Colors.inkMuted },
+  muniLabel: { flex: 1, fontSize: 13.5, color: Colors.inkMuted, marginRight: 8 },
   muniCount: { fontSize: 13, fontWeight: '700', color: Colors.ink },
   muniBarBg: { height: 7, backgroundColor: Colors.divider, borderRadius: 4, overflow: 'hidden' },
   muniBarFill: { height: '100%', backgroundColor: Colors.accent, borderRadius: 4 },
