@@ -138,6 +138,9 @@ export const treeCopy = {
   expected: 'Expected',
   outcomes: { dry: 'Dry years', average: 'Average years', wet: 'Wet years' },
   notForecast: 'not forecast',
+  conclusionBest: (name: string) => `Best choice: ${name}`,
+  conclusionNone: 'Both options lose money',
+  formulaHeading: 'How "Expected" is worked out',
 };
 
 export const decisionDetailCopy = {
