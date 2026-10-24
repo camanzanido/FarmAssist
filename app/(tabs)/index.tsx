@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Linking, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Linking, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function formatDate(iso: string): string {
@@ -61,11 +61,17 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
 
         <View style={s.header}>
-          <Text style={s.greeting}>{copy.greeting(user?.name?.trim().split(/\s+/)[0])}</Text>
+          <Image
+            source={require('@/assets/images/FarmAssist-logo.png')}
+            style={s.logo}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+            accessibilityLabel="FarmAssist"
+          />
           <View style={s.headerIcons}>
             {isOffline && (
               <View style={s.offlineIcon} accessible accessibilityRole="image" accessibilityLabel={copy.offlineLabel}>
-                <Ionicons name="cloud-offline-outline" size={22} color={Colors.accent} />
+                <Ionicons name="cloud-offline-outline" size={23} color={Colors.ink} />
               </View>
             )}
             <TouchableOpacity
@@ -79,6 +85,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
+        <Text style={s.greeting}>{copy.greeting(user?.name?.trim().split(/\s+/)[0])}</Text>
 
         <View style={s.topSpacer} />
 
@@ -162,14 +169,15 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
   content: { ...contentColumn, flexGrow: 1, padding: 22, paddingTop: 32, paddingBottom: 40 },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  logo: { width: 34, height: 34 },
   // On tall screens the free space splits 1:2 above/below, so the content sits a little above centre instead of hugging the top.
   topSpacer: { flexGrow: 1 },
   bottomSpacer: { flexGrow: 2 },
-  greeting: { fontSize: 20, fontWeight: '700', color: Colors.ink },
+  greeting: { fontSize: 20, fontWeight: '700', color: Colors.ink, marginBottom: 12 },
   headerIcons: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  helpIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
-  offlineIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+  helpIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  offlineIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
 
   heading: { fontSize: 32, fontWeight: '800', color: Colors.ink, lineHeight: 38, letterSpacing: -0.6, marginBottom: 8 },
   subtitle: { fontSize: 14, color: Colors.ink, marginBottom: 24 },
@@ -191,7 +199,7 @@ const s = StyleSheet.create({
   descOnGradient: { color: 'rgba(255,255,255,0.85)' },
 
   lastDecisionBlock: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 18 },
-  lastDecisionHeading: { fontSize: 11, fontWeight: '700', letterSpacing: 1.1, color: Colors.accent, marginBottom: 11 },
+  lastDecisionHeading: { fontSize: 14, fontWeight: '700', color: Colors.accent, marginBottom: 11 },
   lastDecisionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.accentTint, borderRadius: 14, padding: 14, ...cardShadow },
   lastDecisionResult: { fontSize: 15, fontWeight: '700', color: Colors.ink },
   lastDecisionMeta: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },

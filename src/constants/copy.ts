@@ -147,7 +147,7 @@ export const homeCopy = {
   headingAccent: 'decision',
   headingAfter: ' do\nyou need today?',
   subtitle: "Pick a decision problem. We'll answer it using your climate data.",
-  lastDecisionHeading: 'LAST DECISION',
+  lastDecisionHeading: 'Last Decision',
   weatherPlaceholder: 'Weather data unavailable',
   loadErrorTitle: "Couldn't load your recent decision.",
   retry: 'Retry',
