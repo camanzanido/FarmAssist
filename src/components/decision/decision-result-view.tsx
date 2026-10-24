@@ -1,10 +1,10 @@
 import { OdometerText } from '@/src/components/ui/odometer-text';
 import { DECISION_IMAGES, DecisionType } from '@/src/constants';
-import { BrandGradient, brandGradientCss, Colors, ForecastColors } from '@/src/constants/colors';
+import { BrandGradient, brandGradientCss, cardShadow, Colors, ForecastColors } from '@/src/constants/colors';
 import { resultCopy as copy, treeCopy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
 import type { NormalYearComparison } from '@/src/rcda/baseline';
-import { CLIMATE_LABELS, RcdaSummary } from '@/src/rcda/summary';
+import type { RcdaSummary } from '@/src/rcda/summary';
 import { Ionicons } from '@expo/vector-icons';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DecisionTree, formatPeso } from './decision-tree';
+import { ForecastDonut } from './forecast-donut';
 
 interface Props {
   summary: RcdaSummary;
@@ -95,27 +96,40 @@ function EarningsColumn({ name, score, ratio, highlighted, recommended }: {
   );
 }
 
-const FORECAST_SEGMENTS = [
-  { key: 'dry', color: ForecastColors.dry, text: Colors.onDark },
-  { key: 'average', color: ForecastColors.average, text: ForecastColors.averageText },
-  { key: 'wet', color: ForecastColors.wet, text: Colors.onDark },
-] as const;
-
-function ForecastBar({ label, split }: { label: string; split: number[] }) {
-  const a11y = FORECAST_SEGMENTS.map((seg, i) => `${split[i]}% ${copy.normalYearLegend[seg.key].toLowerCase()}`).join(', ');
+function EarningsGroup({ caption, names, scores, maxScore, winner, showTag }: {
+  caption: string;
+  names: string[];
+  scores: number[];
+  maxScore: number;
+  winner: number | null;
+  showTag: boolean;
+}) {
   return (
-    <View style={s.forecastRow} accessible accessibilityLabel={`${label}: ${a11y}`}>
-      <Text style={s.forecastLabel}>{label}</Text>
-      <View style={s.forecastBar}>
-        {FORECAST_SEGMENTS.map((seg, i) => split[i] > 0 && (
-          <View key={seg.key} style={[s.forecastSeg, { flex: split[i], backgroundColor: seg.color }]}>
-            {split[i] >= 12 && <Text style={[s.forecastPct, { color: seg.text }]}>{split[i]}%</Text>}
-          </View>
+    <View style={s.earningsGroup}>
+      <View style={s.groupCaption}>
+        <Text style={s.groupCaptionText}>{caption}</Text>
+      </View>
+      <View style={s.columns}>
+        {names.map((name, i) => (
+          <EarningsColumn
+            key={i}
+            name={name}
+            score={scores[i]}
+            ratio={Math.max(scores[i] / maxScore, 0)}
+            highlighted={i === winner}
+            recommended={showTag && i === winner}
+          />
         ))}
       </View>
     </View>
   );
 }
+
+const FORECAST_SEGMENTS = [
+  { key: 'dry', color: ForecastColors.dry },
+  { key: 'average', color: ForecastColors.average },
+  { key: 'wet', color: ForecastColors.wet },
+] as const;
 
 function NormalYearSection({ baseline, optionNames, bothNegative }: {
   baseline: NormalYearComparison;
@@ -141,8 +155,17 @@ function NormalYearSection({ baseline, optionNames, bothNegative }: {
   return (
     <View style={[s.section, s.sectionDivided]}>
       <Text style={s.sectionTitle}>{copy.normalYearHeading}</Text>
-      <ForecastBar label={copy.normalYearYourForecast} split={baseline.forecast} />
-      <ForecastBar label={copy.normalYearNormal} split={baseline.normal} />
+      <View style={s.donutRow}>
+        {[
+          { label: copy.normalYearYourForecast, split: baseline.forecast },
+          { label: copy.normalYearNormal, split: baseline.normal },
+        ].map(d => (
+          <View key={d.label} style={s.donutItem}>
+            <ForecastDonut driest={d.split[0]} wettest={d.split[2]} size={132} stroke={20} />
+            <Text style={s.donutLabel}>{d.label}</Text>
+          </View>
+        ))}
+      </View>
       <View style={s.legendRow}>
         {FORECAST_SEGMENTS.map(seg => (
           <View key={seg.key} style={s.legendItem}>
@@ -171,11 +194,12 @@ export function DecisionResultView({ summary, baseline, decisionType, heroTop, b
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
-  const { optionNames, recommendedOption, bothNegative, scores, breakdown, outcomeFavors, tree } = summary;
+  const { optionNames, recommendedOption, bothNegative, scores, outcomeFavors, tree } = summary;
   const winner = optionNames[recommendedOption];
   const loser = optionNames[1 - recommendedOption];
   const favorCount = outcomeFavors.filter((o) => o.favorsWinner).length;
-  const maxScore = Math.max(...scores, 1);
+  const showNormal = !!baseline && !baseline.forecastIsNormal;
+  const maxScore = Math.max(...scores, ...(showNormal ? baseline!.normalScores : []), 1);
 
   const heroHeight = Math.round((height - insets.top) * HERO_RATIO);
   const photo = decisionType ? DECISION_IMAGES[decisionType as DecisionType] : undefined;
@@ -223,21 +247,24 @@ export function DecisionResultView({ summary, baseline, decisionType, heroTop, b
 
         <View style={s.section}>
           <Text style={s.sectionTitle}>{copy.earningsHeading}</Text>
-          <View style={s.columns}>
-            {optionNames.map((name, i) => {
-              const isWinner = !bothNegative && i === recommendedOption;
-              return (
-                <EarningsColumn
-                  key={i}
-                  name={name}
-                  score={scores[i]}
-                  ratio={Math.max(scores[i] / maxScore, 0)}
-                  highlighted={isWinner}
-                  recommended={isWinner}
-                />
-              );
-            })}
-          </View>
+          <EarningsGroup
+            caption={baseline?.forecastIsNormal ? copy.earningsSameAsNormal : copy.earningsForecast}
+            names={optionNames}
+            scores={scores}
+            maxScore={maxScore}
+            winner={bothNegative ? null : recommendedOption}
+            showTag
+          />
+          {showNormal && (
+            <EarningsGroup
+              caption={copy.earningsNormal}
+              names={optionNames}
+              scores={baseline!.normalScores}
+              maxScore={maxScore}
+              winner={baseline!.normalBothNegative ? null : baseline!.normalRecommended}
+              showTag={false}
+            />
+          )}
         </View>
 
         {baseline && <NormalYearSection baseline={baseline} optionNames={optionNames} bothNegative={bothNegative} />}
@@ -277,31 +304,6 @@ export function DecisionResultView({ summary, baseline, decisionType, heroTop, b
           {showDetail && (
             <Animated.View entering={FadeIn.duration(220)}>
               <DecisionTree tree={tree} bare />
-
-              <Text style={s.tableTitle}>{copy.detailTable}</Text>
-              <View style={s.table}>
-                <View style={s.tableRow}>
-                  <Text style={[s.tableCell, s.tableHeader, { flex: 1.4 }]}>Climate</Text>
-                  {optionNames.map((n, i) => (
-                    <Text key={i} style={[s.tableCell, s.tableHeader]} numberOfLines={1}>{n}</Text>
-                  ))}
-                </View>
-                {CLIMATE_LABELS.map((cl, ci) => (
-                  <View key={cl} style={[s.tableRow, ci % 2 === 0 && s.tableRowAlt]}>
-                    <View style={[s.tableCell, s.climateLabelCell, { flex: 1.4 }]}>
-                      <Text style={s.climateCellText}>{cl}</Text>
-                    </View>
-                    {optionNames.map((_, oi) => {
-                      const val = breakdown[oi][ci];
-                      return (
-                        <Text key={oi} style={[s.tableCell, s.tableCellValue, val >= 0 ? s.positiveVal : s.negativeVal]}>
-                          {val > 0 ? '+' : ''}{formatPeso(val)}
-                        </Text>
-                      );
-                    })}
-                  </View>
-                ))}
-              </View>
             </Animated.View>
           )}
         </Animated.View>
@@ -330,7 +332,7 @@ const s = StyleSheet.create({
   heroInner: { ...contentColumn, flex: 1, paddingTop: 16, paddingHorizontal: 22, paddingBottom: 14 },
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   verdictBlock: { flex: 1, justifyContent: 'flex-end', maxWidth: '64%', paddingBottom: 28 },
-  answerEyebrow: { fontSize: 12, fontWeight: '700', letterSpacing: 1.2, color: Colors.accent, marginBottom: 10 },
+  answerEyebrow: { fontSize: 14, fontWeight: '700', color: Colors.accent, marginBottom: 10 },
   verdict: { fontSize: 32, fontWeight: '800', color: Colors.ink, lineHeight: 38, letterSpacing: -0.6 },
   deltaRow: { flexDirection: 'row', alignItems: 'flex-end', flexWrap: 'wrap', gap: 8, marginTop: 18, marginBottom: 6 },
   deltaValue: { fontSize: 40, fontWeight: '800', lineHeight: 44 },
@@ -349,6 +351,9 @@ const s = StyleSheet.create({
   disclaimerText: { flex: 1, fontSize: 13, lineHeight: 19, color: Colors.inkMuted },
   sectionTitle: { fontSize: 15, fontWeight: '800', color: Colors.ink, marginBottom: 16 },
 
+  earningsGroup: { marginBottom: 18 },
+  groupCaption: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surfaceAlt, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, marginBottom: 14 },
+  groupCaptionText: { fontSize: 12, fontWeight: '700', color: Colors.inkSoft },
   columns: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 36 },
   column: { width: 110, alignItems: 'center' },
   columnValue: { fontSize: 15, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8 },
@@ -362,12 +367,10 @@ const s = StyleSheet.create({
   tag: { marginTop: 6, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
   tagText: { fontSize: 11, fontWeight: '700', color: Colors.accent },
 
-  forecastRow: { marginBottom: 12 },
-  forecastLabel: { fontSize: 12, fontWeight: '700', color: Colors.inkSoft, marginBottom: 6 },
-  forecastBar: { flexDirection: 'row', height: 30, borderRadius: 8, overflow: 'hidden', backgroundColor: Colors.divider },
-  forecastSeg: { alignItems: 'center', justifyContent: 'center' },
-  forecastPct: { fontSize: 12, fontWeight: '800' },
-  legendRow: { flexDirection: 'row', gap: 16, marginBottom: 14 },
+  donutRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 16 },
+  donutItem: { alignItems: 'center', gap: 8 },
+  donutLabel: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft },
+  legendRow: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 14 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendDot: { width: 10, height: 10, borderRadius: 3 },
   legendText: { fontSize: 12, color: Colors.inkFaint },
@@ -388,23 +391,12 @@ const s = StyleSheet.create({
   disclosureRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 18 },
   disclosureText: { flex: 1, fontSize: 15, fontWeight: '700', color: Colors.ink },
 
-  tableTitle: { fontSize: 14, fontWeight: '800', color: Colors.ink, marginBottom: 10 },
-  table: { borderWidth: 1, borderColor: Colors.border, borderRadius: 14, overflow: 'hidden', marginBottom: 20 },
-  tableRow: { flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 12 },
-  tableRowAlt: { backgroundColor: Colors.surfaceAlt },
-  tableCell: { flex: 1, fontSize: 12, color: Colors.ink, textAlign: 'center' },
-  tableHeader: { fontWeight: '700', color: Colors.inkFaint, fontSize: 11, letterSpacing: 0.3 },
-  climateLabelCell: { justifyContent: 'center' },
-  climateCellText: { fontSize: 12, fontWeight: '600', color: Colors.ink, textAlign: 'left' },
-  tableCellValue: { fontWeight: '700' },
-  positiveVal: { color: Colors.accent },
-  negativeVal: { color: Colors.danger },
 });
 
 /** Hero-top styles shared by screens that render into `heroTop`. */
 export const heroTopStyles = StyleSheet.create({
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: Colors.surface, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, ...cardShadow },
   pillError: { backgroundColor: Colors.dangerBg },
-  pillText: { fontSize: 12, fontWeight: '600', color: Colors.accent },
+  pillText: { fontSize: 12, fontWeight: '600', color: Colors.ink },
 });

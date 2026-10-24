@@ -89,12 +89,15 @@ export const resultCopy = {
   savingPill: 'Saving…',
   savedPill: 'Saved',
   notSavedPill: 'Not saved',
-  answerEyebrow: 'THE RESULT',
+  answerEyebrow: 'Forecast result',
   verdict: (winner: string) => `${winner} is the\nbetter choice.`,
   perHectare: 'per hectare',
   verdictDetail: (winner: string, loser: string) =>
     `Expected to earn more than ${loser} across this year's likely climate.`,
   earningsHeading: 'Expected earnings per hectare',
+  earningsForecast: 'With your forecast',
+  earningsNormal: 'Normal year (no forecast)',
+  earningsSameAsNormal: 'Your forecast is a normal year',
   keepInMindHeading: 'But keep in mind',
   keepInMindBody: (favorCount: number, total: number, winner: string, loser: string) =>
     favorCount === total
@@ -103,7 +106,6 @@ export const resultCopy = {
   bothNegativeVerdict: 'Both options are\nexpected to lose money.',
   bothNegativeDetail: (a: string, b: string) =>
     `Neither ${a} nor ${b} is expected to make a profit across this year's likely climate.`,
-  detailTable: 'Detailed table',
   seeDetails: 'See details',
   fullBreakdown: 'See full breakdown',
   hideBreakdown: 'Hide full breakdown',
@@ -118,7 +120,7 @@ export const resultCopy = {
   normalYearEven: (name: string) => `This season looks about the same as a normal year for ${name}.`,
   normalYearOtherPick: (name: string) => `In a normal year, ${name} would be the better choice.`,
   normalYearNoProfit: 'In a normal year, neither option would be expected to make a profit.',
-  disclaimer: 'FarmAssist is a decision-support tool. The final decision is always yours, and how accurate this result is depends on the data you entered.',
+  disclaimer: 'FarmAssist is a decision-support tool. The final decision is always yours.',
   newComparison: 'Go home',
   loading: 'Computing decision…',
   paramsError: "We couldn't load this decision. Please start a new analysis.",

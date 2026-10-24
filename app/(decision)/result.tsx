@@ -220,7 +220,7 @@ export default function ResultScreen() {
                 <Ionicons name="arrow-back" size={22} color={Colors.ink} />
               </TouchableOpacity>
               <View style={[heroTopStyles.pill, saveError && heroTopStyles.pillError]}>
-                <Ionicons name={saveError ? 'warning-outline' : 'save-outline'} size={15} color={Colors.accent} />
+                <Ionicons name={saveError ? 'warning-outline' : 'save-outline'} size={15} color={saveError ? Colors.danger : Colors.ink} />
                 <Text style={heroTopStyles.pillText}>{savedPill}</Text>
               </View>
             </>

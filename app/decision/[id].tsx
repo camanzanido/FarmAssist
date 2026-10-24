@@ -113,7 +113,7 @@ export default function DecisionDetailScreen() {
               <Ionicons name="arrow-back" size={22} color={Colors.ink} />
             </TouchableOpacity>
             <View style={heroTopStyles.pill}>
-              <Ionicons name="time-outline" size={15} color={Colors.accent} />
+              <Ionicons name="time-outline" size={15} color={Colors.ink} />
               <Text style={heroTopStyles.pillText} numberOfLines={1}>
                 {date ? `${typeLabel} · ${date}` : typeLabel}
               </Text>
