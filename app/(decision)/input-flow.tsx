@@ -1,12 +1,13 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { TermHelpButton } from '@/src/components/help/term-help';
+import { ForecastDonut } from '@/src/components/decision/forecast-donut';
 import { PredefinedPicker } from '@/src/components/decision/predefined-picker';
 import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
-import { BrandGradient, brandGradientCss, cardShadow, ClimateColors, Colors, ForecastColors } from '@/src/constants/colors';
+import { BrandGradient, brandGradientCss, cardShadow, Colors, ForecastColors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy, predefinedCopy } from '@/src/constants/copy';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
@@ -27,14 +28,6 @@ type LoadedSaved = { id: string; before: { name: string; data: OptionEntry } };
 function emptyFive(): string[] {
   return ['', '', '', '', ''];
 }
-
-const CLIMATE_COLOR_LIST = [
-  ClimateColors.driest,
-  ClimateColors.below_ave,
-  ClimateColors.average,
-  ClimateColors.above_ave,
-  ClimateColors.wettest,
-].map(c => `${c}73`);
 
 export default function DecisionInputFlow() {
   const router = useRouter();
@@ -91,6 +84,10 @@ export default function DecisionInputFlow() {
     const cleaned = v.replace(/[^0-9]/g, '');
     if (cleaned === '') { setWettest(''); return; }
     setWettest(String(Math.min(100, parseInt(cleaned, 10))));
+  };
+  const handleDonutChange = (nextDriest: number, nextWettest: number) => {
+    setDriest(String(nextDriest));
+    setWettest(String(nextWettest));
   };
   const handleDriestBlur = () => { if (driest === '') setDriest('0'); };
   const handleWettestBlur = () => { if (wettest === '') setWettest('0'); };
@@ -397,37 +394,20 @@ export default function DecisionInputFlow() {
             </View>
 
             <View style={s.climateCard}>
-              <View style={s.climateBar}>
-                <View style={[s.climateBarSeg, { width: `${dVal}%`, backgroundColor: ForecastColors.dry }]}>
-                  {dVal >= 12 && (
-                    <>
-                      <Text style={s.climateBarPct}>{dVal}%</Text>
-                      <Text style={s.climateBarLabel}>Dry</Text>
-                    </>
-                  )}
-                </View>
-                <View style={[s.climateBarSeg, { width: `${mid}%`, backgroundColor: ForecastColors.average }]}>
-                  {mid >= 12 && (
-                    <>
-                      <Text style={[s.climateBarPct, { color: ForecastColors.averageText }]}>{mid}%</Text>
-                      <Text style={[s.climateBarLabel, { color: ForecastColors.averageText, opacity: 0.85 }]}>Average</Text>
-                    </>
-                  )}
-                </View>
-                <View style={[s.climateBarSeg, { width: `${wVal}%`, backgroundColor: ForecastColors.wet }]}>
-                  {wVal >= 12 && (
-                    <>
-                      <Text style={s.climateBarPct}>{wVal}%</Text>
-                      <Text style={s.climateBarLabel}>Wet</Text>
-                    </>
-                  )}
-                </View>
+              <View style={s.donutWrap}>
+                <ForecastDonut
+                  driest={dVal}
+                  wettest={wVal}
+                  labels={{ dry: climateCopy.dryYears, average: climateCopy.averageYears, wet: climateCopy.wetYears }}
+                  onChange={handleDonutChange}
+                />
+                <Text style={s.donutHint}>{climateCopy.donutHint}</Text>
               </View>
 
               {/* Dry Years */}
               <View style={s.climateRow}>
                 <View style={s.climateRowInfo}>
-                  <View style={[s.climateDot, { backgroundColor: ClimateColors.driest }]} />
+                  <View style={[s.climateDot, { backgroundColor: ForecastColors.dry }]} />
                   <View>
                     <Text style={s.climateRowLabel}>{climateCopy.dryYears}</Text>
                     <Text style={s.climateRowSub}>{climateCopy.dryYearsSub}</Text>
@@ -550,7 +530,7 @@ export default function DecisionInputFlow() {
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
             {/* Price Block - Full Width Input */}
             <View style={s.priceBlock}>
-              <Ionicons name="pricetag-outline" size={20} color={Colors.accentSoft} />
+              <Ionicons name="pricetag-outline" size={20} color={Colors.ink} />
               <View style={{ flex: 1 }}>
                 <Text style={s.priceLabel}>{dataEntryCopy.price}</Text>
                 <Text style={s.priceUnit}>{dataEntryCopy.priceUnit}</Text>
@@ -575,9 +555,10 @@ export default function DecisionInputFlow() {
             </View>
 
             {CLIMATES.map((climateName, i) => (
-              <View key={climateName} style={[s.scenarioCard, { borderLeftColor: CLIMATE_COLOR_LIST[i] }]}>
+              <View key={climateName} style={s.scenarioCard}>
                 <View style={s.scenarioHeader}>
                   <Text style={s.scenarioName}>{climateName}</Text>
+                  <Text style={s.scenarioMeaning}>{dataEntryCopy.scenarioMeaning[i]}</Text>
                 </View>
                 <View style={s.scenarioFields}>
                   <View style={s.scenarioField}>
@@ -658,8 +639,8 @@ const s = StyleSheet.create({
   namingGroup: { gap: 12 },
   namingCard: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, ...cardShadow, borderWidth: 1.5, borderColor: Colors.border },
   namingCardInvalid: { borderColor: Colors.danger },
-  badge: { alignSelf: 'flex-start', backgroundColor: Colors.accentTint, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 12 },
-  badgeText: { fontSize: 13, fontWeight: '700', color: Colors.ink, letterSpacing: 0.4 },
+  badge: { alignSelf: 'flex-start', marginBottom: 10 },
+  badgeText: { fontSize: 14, fontWeight: '700', color: Colors.inkSoft },
   namingInput: { fontSize: 19, fontWeight: '700', color: Colors.ink, paddingVertical: 8, borderBottomWidth: 2, borderBottomColor: Colors.ink },
   useSavedRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   useSavedBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.accentTintStrong, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
@@ -692,10 +673,11 @@ const s = StyleSheet.create({
   subtitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   scenariosHeading: { fontSize: 13, fontWeight: '700', letterSpacing: 0.6, color: Colors.inkFaint, marginBottom: 10, marginLeft: 2 },
 
-  scenarioCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 15, marginBottom: 12, borderWidth: 1, borderColor: Colors.border, borderLeftWidth: 3, ...cardShadow },
+  scenarioCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 15, marginBottom: 12, borderWidth: 1, borderColor: Colors.border, ...cardShadow },
   scenarioHeader: { marginBottom: 12 },
   optionTitle: { ...wizardHeader.title, fontSize: 30, lineHeight: 36, marginBottom: 6 },
   scenarioName: { fontSize: 16, fontWeight: '800', color: Colors.ink },
+  scenarioMeaning: { fontSize: 12, color: Colors.inkFaint, marginTop: 2 },
   scenarioFields: { flexDirection: 'row', gap: 8 },
   scenarioField: { flex: 1 },
   scenarioFieldLabel: { fontSize: 11, fontWeight: '600', color: Colors.inkSoft, marginBottom: 5 },
@@ -723,10 +705,8 @@ const s = StyleSheet.create({
 
   // Climate step
   climateCard: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 20, padding: 20, marginBottom: 16, ...cardShadow },
-  climateBar: { flexDirection: 'row', height: 46, borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
-  climateBarSeg: { alignItems: 'center', justifyContent: 'center' },
-  climateBarPct: { fontSize: 16, fontWeight: '800', color: Colors.onDark },
-  climateBarLabel: { fontSize: 10, fontWeight: '600', color: Colors.onDark, opacity: 0.9 },
+  donutWrap: { alignItems: 'center', marginBottom: 8 },
+  donutHint: { fontSize: 12, color: Colors.inkFaint, marginTop: 8, textAlign: 'center' },
 
   climateRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12 },
   climateRowInfo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -744,7 +724,7 @@ const s = StyleSheet.create({
     paddingVertical: 6, paddingHorizontal: 4, backgroundColor: Colors.surfaceAlt,
     borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 8,
   },
-  autoValue: { fontSize: 20, fontWeight: '800', color: Colors.accentSoft, backgroundColor: Colors.divider, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 16 },
+  autoValue: { fontSize: 20, fontWeight: '800', color: Colors.ink, backgroundColor: Colors.divider, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 16 },
 
   offlineNoteRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingHorizontal: 4 },
   offlineNoteText: { flex: 1, fontSize: 13, color: Colors.inkFaint, lineHeight: 18 },

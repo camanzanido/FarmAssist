@@ -8,8 +8,8 @@ export const decisionTypeCopy = {
 export const namingCopy = {
   titleFor: (decisionLabel: string) => `Which two options\nare you comparing?`,
   subtitle: (decisionLabel: string) => `For ${decisionLabel}, give each option a short name.`,
-  firstOption: 'FIRST OPTION',
-  secondOption: 'SECOND OPTION',
+  firstOption: 'First Option',
+  secondOption: 'Second Option',
   helper: 'Followed by questions about yield, cost, and price for each option.',
   continue: 'Continue to Data Entry',
   continueDisabledHint: 'Fill in both names first',
@@ -46,6 +46,13 @@ export const dataEntryCopy = {
   price: 'Selling price',
   priceUnit: 'per kilogram',
   scenariosHeading: 'FOR EACH CLIMATE SCENARIO',
+  scenarioMeaning: [
+    'The driest 1 in 5 seasons',
+    'Somewhat drier than usual',
+    'A typical season',
+    'Somewhat wetter than usual',
+    'The wettest 1 in 5 seasons',
+  ],
   yield: 'Yield',
   yieldUnit: 'kg/ha',
   cost: 'Cost',
@@ -66,6 +73,7 @@ export const climateCopy = {
   dryYearsSub: 'Below-normal rainfall (El Niño)',
   averageYears: 'Average',
   averageYearsSub: 'Calculated automatically',
+  donutHint: 'Drag the white handles, or use the buttons below.',
   wetYears: 'Wettest',
   wetYearsSub: 'Above-normal rainfall (La Niña)',
   offlineNote: 'Calculated right here on your phone. No internet needed.',
@@ -389,7 +397,12 @@ export type GlossaryKey =
 export const GLOSSARY: Record<GlossaryKey, { term: string; definition: string }> = {
   scenarios: {
     term: 'Climate scenarios',
-    definition: 'The five kinds of season FarmAssist plans for: Driest, Below Average, Average, Above Average, and Wettest. They describe how much rain a season gets compared with what is usual for your area. Driest seasons often come with El Niño; Wettest with La Niña.',
+    definition: 'The five kinds of season FarmAssist plans for: Driest, Below Average, Average, Above Average, and Wettest. They describe how much rain a season gets compared with what is usual for your area. Driest seasons often come with El Niño; Wettest with La Niña.\n\n'
+      + 'Driest: the driest 1 in 5 seasons.\n'
+      + 'Below Average: drier than usual, but not the driest.\n'
+      + 'Average: a typical season for your area.\n'
+      + 'Above Average: wetter than usual, but not the wettest.\n'
+      + 'Wettest: the wettest 1 in 5 seasons.',
   },
   price: {
     term: 'Selling price',
