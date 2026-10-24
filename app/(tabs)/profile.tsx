@@ -151,6 +151,7 @@ export default function ProfileScreen() {
             </View>
             <PopoverMenu
               icon="settings-outline"
+              motion="spin"
               accessibilityLabel={copy.settingsLabel}
               items={[
                 { key: 'edit', label: copy.editProfile, icon: 'create-outline', onPress: edit.open },
@@ -185,11 +186,9 @@ export default function ProfileScreen() {
 
           {!sync.connected && (
             <View style={s.offlineCard}>
+              <Ionicons name="cloud-offline-outline" size={22} color={Colors.amber} />
               <View style={s.offlineInfo}>
-                <View style={[s.offlineTitleRow, { marginBottom: 3 }]}>
-                  <Ionicons name="cloud-offline-outline" size={18} color={Colors.amber} />
-                  <Text style={s.offlineTitle}>{copy.offlineTitle}</Text>
-                </View>
+                <Text style={[s.offlineTitle, { marginBottom: 3 }]}>{copy.offlineTitle}</Text>
                 <Text style={s.offlineBody}>{copy.lastSync(formatSyncTime(sync.lastSyncedAt))}</Text>
               </View>
               <TouchableOpacity style={[s.syncBtn, isSyncing && s.syncBtnBusy]} onPress={handleSyncNow} disabled={isSyncing} activeOpacity={0.8}>
@@ -312,7 +311,7 @@ const s = StyleSheet.create({
   offlineInfo: { flex: 1 },
   offlineTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 8 },
   offlineTitle: { fontSize: 15, fontWeight: '800', color: Colors.amberText, flexShrink: 1 },
-  offlineBody: { fontSize: 13, color: Colors.amberDeepText, marginLeft: 27 },
+  offlineBody: { fontSize: 13, color: Colors.amberDeepText },
   syncBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.surface, borderRadius: 10, height: 34, paddingHorizontal: 12 },
   syncBtnBusy: { opacity: 0.6 },
   syncBtnText: { fontSize: 13, fontWeight: '700', color: Colors.amberText },

@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
+import { AnimatedIcon, type IconMotion } from './animated-icon';
 
 export type PopoverItem = {
   key: string;
@@ -17,6 +18,10 @@ type Props = {
   accessibilityLabel: string;
   items: PopoverItem[];
   style?: StyleProp<ViewStyle>;
+  iconSize?: number;
+  motion?: IconMotion;
+  // Plays the motion from outside instead of on every press.
+  motionTrigger?: number;
 };
 
 type Anchor = { top: number; right: number };
@@ -24,13 +29,15 @@ type Anchor = { top: number; right: number };
 const MENU_WIDTH = 210;
 
 // An icon button that opens a small menu anchored under it; tapping outside closes it.
-export function PopoverMenu({ icon, accessibilityLabel, items, style }: Props) {
+export function PopoverMenu({ icon, accessibilityLabel, items, style, iconSize = 23, motion = 'pop', motionTrigger }: Props) {
   const { width } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const triggerRef = useRef<View>(null);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
+  const [presses, setPresses] = useState(0);
 
   const open = () => {
+    if (motionTrigger === undefined) setPresses(n => n + 1);
     triggerRef.current?.measureInWindow((x, y, w, h) => {
       setAnchor({ top: y + h + 6, right: Math.max(12, width - (x + w)) });
     });
@@ -48,7 +55,7 @@ export function PopoverMenu({ icon, accessibilityLabel, items, style }: Props) {
         accessibilityLabel={accessibilityLabel}
         accessibilityState={{ expanded: !!anchor }}
       >
-        <Ionicons name={icon} size={23} color={Colors.ink} />
+        <AnimatedIcon name={icon} size={iconSize} color={Colors.ink} motion={motion} trigger={motionTrigger ?? presses} />
       </TouchableOpacity>
       <Modal visible={!!anchor} transparent animationType="none" onRequestClose={close} statusBarTranslucent>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close menu" />

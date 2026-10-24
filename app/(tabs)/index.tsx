@@ -1,5 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { DECISIONS } from '@/src/constants';
+import { AnimatedIcon } from '@/src/components/ui/animated-icon';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import { BrandGradient, brandGradientCss, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
@@ -30,6 +31,8 @@ export default function HomeScreen() {
 
   const [lastDecision, setLastDecision] = useState<Decision | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [visits, setVisits] = useState(0);
+  const [helpPresses, setHelpPresses] = useState(0);
 
   const load = useCallback(async () => {
     if (!userId) {
@@ -47,7 +50,7 @@ export default function HomeScreen() {
     }
   }, [userId]);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => { load(); setVisits(n => n + 1); }, [load]));
 
   const goToDecision = (decisionType: string) => {
     router.push({ pathname: '/input-flow', params: { decisionType } });
@@ -71,17 +74,18 @@ export default function HomeScreen() {
           <View style={s.headerIcons}>
             {isOffline && (
               <View style={s.offlineIcon} accessible accessibilityRole="image" accessibilityLabel={copy.offlineLabel}>
-                <Ionicons name="cloud-offline-outline" size={23} color={Colors.ink} />
+                <AnimatedIcon name="cloud-offline-outline" size={23} color={Colors.ink} motion="pop" trigger={visits} />
               </View>
             )}
             <TouchableOpacity
               style={s.helpIcon}
+              onPressIn={() => setHelpPresses(n => n + 1)}
               onPress={() => router.push('/help')}
               hitSlop={6}
               accessibilityRole="button"
               accessibilityLabel={helpCopy.helpLabel}
             >
-              <Ionicons name="help-circle-outline" size={24} color={Colors.ink} />
+              <AnimatedIcon name="help-circle-outline" size={24} color={Colors.ink} motion="wiggle" trigger={helpPresses} />
             </TouchableOpacity>
           </View>
         </View>
