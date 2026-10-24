@@ -96,6 +96,15 @@ function EarningsColumn({ name, score, ratio, highlighted, recommended }: {
   );
 }
 
+function NormalBetterNote({ name, gain }: { name: string; gain: number }) {
+  return (
+    <View style={s.normalBetter}>
+      <Ionicons name="trending-up" size={16} color={Colors.inkSoft} />
+      <Text style={s.normalBetterText}>{copy.heroNormalBetter(name, formatPeso(gain))}</Text>
+    </View>
+  );
+}
+
 function EarningsGroup({ caption, names, scores, maxScore, winner, showTag }: {
   caption: string;
   names: string[];
@@ -200,6 +209,8 @@ export function DecisionResultView({ summary, baseline, decisionType, heroTop, b
   const favorCount = outcomeFavors.filter((o) => o.favorsWinner).length;
   const showNormal = !!baseline && !baseline.forecastIsNormal;
   const maxScore = Math.max(...scores, ...(showNormal ? baseline!.normalScores : []), 1);
+  const bestNormal = showNormal ? baseline!.normalScores[baseline!.normalRecommended] : 0;
+  const normalGain = showNormal && !baseline!.normalBothNegative ? bestNormal - Math.max(...scores) : 0;
 
   const heroHeight = Math.round((height - insets.top) * HERO_RATIO);
   const photo = decisionType ? DECISION_IMAGES[decisionType as DecisionType] : undefined;
@@ -225,15 +236,20 @@ export function DecisionResultView({ summary, baseline, decisionType, heroTop, b
               <>
                 <Text style={[s.verdict, s.verdictSpaced]}>{copy.bothNegativeVerdict}</Text>
                 <Text style={s.verdictDetail}>{copy.bothNegativeDetail(optionNames[0], optionNames[1])}</Text>
+                {normalGain > 0 && <NormalBetterNote name={optionNames[baseline!.normalRecommended]} gain={normalGain} />}
               </>
             ) : (
               <>
                 <Text style={s.verdict}>{copy.verdict(winner)}</Text>
                 <View style={s.deltaRow}>
-                  <OdometerText text={`+₱${summary.profitIncrease.toLocaleString()}`} colors={BrandGradient} style={s.deltaValue} />
+                  <View style={s.deltaAmount}>
+                    <Ionicons name="arrow-up" size={34} color={Colors.accent} />
+                    <OdometerText text={`₱${summary.profitIncrease.toLocaleString()}`} colors={BrandGradient} style={s.deltaValue} />
+                  </View>
                   <Text style={s.deltaUnit}>{copy.perHectare}</Text>
                 </View>
                 <Text style={s.verdictDetail}>{copy.verdictDetail(winner, loser)}</Text>
+                {normalGain > 0 && <NormalBetterNote name={optionNames[baseline!.normalRecommended]} gain={normalGain} />}
               </>
             )}
           </View>
@@ -247,24 +263,26 @@ export function DecisionResultView({ summary, baseline, decisionType, heroTop, b
 
         <View style={s.section}>
           <Text style={s.sectionTitle}>{copy.earningsHeading}</Text>
-          <EarningsGroup
-            caption={baseline?.forecastIsNormal ? copy.earningsSameAsNormal : copy.earningsForecast}
-            names={optionNames}
-            scores={scores}
-            maxScore={maxScore}
-            winner={bothNegative ? null : recommendedOption}
-            showTag
-          />
-          {showNormal && (
+          <View style={s.earningsRow}>
             <EarningsGroup
-              caption={copy.earningsNormal}
+              caption={baseline?.forecastIsNormal ? copy.earningsSameAsNormal : copy.earningsForecast}
               names={optionNames}
-              scores={baseline!.normalScores}
+              scores={scores}
               maxScore={maxScore}
-              winner={baseline!.normalBothNegative ? null : baseline!.normalRecommended}
-              showTag={false}
+              winner={bothNegative ? null : recommendedOption}
+              showTag
             />
-          )}
+            {showNormal && (
+              <EarningsGroup
+                caption={copy.earningsNormal}
+                names={optionNames}
+                scores={baseline!.normalScores}
+                maxScore={maxScore}
+                winner={baseline!.normalBothNegative ? null : baseline!.normalRecommended}
+                showTag={false}
+              />
+            )}
+          </View>
         </View>
 
         {baseline && <NormalYearSection baseline={baseline} optionNames={optionNames} bothNegative={bothNegative} />}
@@ -335,10 +353,13 @@ const s = StyleSheet.create({
   answerEyebrow: { fontSize: 14, fontWeight: '700', color: Colors.accent, marginBottom: 10 },
   verdict: { fontSize: 32, fontWeight: '800', color: Colors.ink, lineHeight: 38, letterSpacing: -0.6 },
   deltaRow: { flexDirection: 'row', alignItems: 'flex-end', flexWrap: 'wrap', gap: 8, marginTop: 18, marginBottom: 6 },
+  deltaAmount: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   deltaValue: { fontSize: 40, fontWeight: '800', lineHeight: 44 },
   deltaUnit: { fontSize: 14, color: Colors.inkSoft, paddingBottom: 8 },
   verdictSpaced: { marginBottom: 12 },
   verdictDetail: { fontSize: 15, color: Colors.inkMuted, lineHeight: 21 },
+  normalBetter: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 10 },
+  normalBetterText: { flex: 1, fontSize: 13, lineHeight: 18, color: Colors.inkSoft },
 
   hint: { alignSelf: 'center', alignItems: 'center', gap: 2 },
   hintText: { fontSize: 12, fontWeight: '700', letterSpacing: 0.4, color: Colors.inkSoft },
@@ -351,18 +372,20 @@ const s = StyleSheet.create({
   disclaimerText: { flex: 1, fontSize: 13, lineHeight: 19, color: Colors.inkMuted },
   sectionTitle: { fontSize: 15, fontWeight: '800', color: Colors.ink, marginBottom: 16 },
 
-  earningsGroup: { marginBottom: 18 },
-  groupCaption: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surfaceAlt, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, marginBottom: 14 },
-  groupCaptionText: { fontSize: 12, fontWeight: '700', color: Colors.inkSoft },
-  columns: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 36 },
-  column: { width: 110, alignItems: 'center' },
-  columnValue: { fontSize: 15, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8 },
-  columnValueWinner: { fontSize: 17, fontWeight: '800', color: Colors.ink },
+  // Forecast and normal-year groups sit side by side on one shared scale.
+  earningsRow: { flexDirection: 'row', gap: 12 },
+  earningsGroup: { flex: 1, marginBottom: 8 },
+  groupCaption: { alignSelf: 'center', backgroundColor: Colors.surfaceAlt, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 14 },
+  groupCaptionText: { fontSize: 12, fontWeight: '700', color: Colors.inkSoft, textAlign: 'center' },
+  columns: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 10 },
+  column: { flex: 1, maxWidth: 90, alignItems: 'center' },
+  columnValue: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8, fontVariant: ['tabular-nums'] },
+  columnValueWinner: { fontSize: 15, fontWeight: '800', color: Colors.ink },
   columnTrack: { height: COLUMN_MAX, justifyContent: 'flex-end' },
-  columnBar: { width: 64, borderRadius: 12 },
+  columnBar: { width: 44, borderRadius: 10 },
   columnBarWinner: { experimental_backgroundImage: brandGradientCss(180) },
   columnBarMuted: { experimental_backgroundImage: MUTED_COLUMN },
-  columnName: { fontSize: 14, fontWeight: '600', color: Colors.inkSoft, marginTop: 10, textAlign: 'center' },
+  columnName: { fontSize: 13, fontWeight: '600', color: Colors.inkSoft, marginTop: 10, textAlign: 'center' },
   columnNameWinner: { fontWeight: '800', color: Colors.ink },
   tag: { marginTop: 6, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
   tagText: { fontSize: 11, fontWeight: '700', color: Colors.accent },

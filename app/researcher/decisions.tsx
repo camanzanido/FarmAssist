@@ -13,7 +13,7 @@ import { deleteDecisionRemote, fetchDecisionsPage, type ResearcherDecisionRow } 
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
 import { useResearcherPage } from '@/src/hooks/use-researcher-page';
 import { getActionErrorMessage } from '@/src/utils/errors';
-import { formatCurrency } from '@/src/utils/formatters';
+import { ProfitAmount } from '@/src/components/ui/profit-amount';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useRef, useState } from 'react';
 import {
@@ -51,7 +51,7 @@ function DecisionRow({ decision: d, isDeleting, onDelete }: {
           {d.city ? ` · ${d.city}` : ''}
         </Text>
         <View style={s.cardMetaRow}>
-          {d.result !== '' && <Text style={s.cardProfit}>+{formatCurrency(d.profit_increase)}</Text>}
+          {d.result !== '' && <ProfitAmount value={d.profit_increase} />}
           <Text style={s.cardDate}>{formatDate(d.datetime)}</Text>
         </View>
       </View>
@@ -288,7 +288,6 @@ const s = StyleSheet.create({
   cardResult: { fontSize: 17, fontWeight: '800', color: Colors.ink },
   cardMeta: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 9 },
-  cardProfit: { fontSize: 14, fontWeight: '800', color: Colors.accent },
   cardDate: { fontSize: 12, color: Colors.inkDim },
 
   deleteBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.dangerBg },

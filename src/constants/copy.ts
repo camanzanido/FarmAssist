@@ -92,6 +92,8 @@ export const resultCopy = {
   answerEyebrow: 'Forecast result',
   verdict: (winner: string) => `${winner} is the\nbetter choice.`,
   perHectare: 'per hectare',
+  heroNormalBetter: (name: string, amount: string) =>
+    `In a normal year (no forecast), ${name} would earn ${amount} more per hectare than with your forecast.`,
   verdictDetail: (winner: string, loser: string) =>
     `Expected to earn more than ${loser} across this year's likely climate.`,
   earningsHeading: 'Expected earnings per hectare',

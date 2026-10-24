@@ -8,7 +8,7 @@ import { decisionResultLabel, helpCopy, homeCopy as copy } from '@/src/constants
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { useUpdateCheck } from '@/src/hooks/use-update-check';
-import { formatCurrency } from '@/src/utils/formatters';
+import { ProfitAmount } from '@/src/components/ui/profit-amount';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -157,7 +157,7 @@ export default function HomeScreen() {
                 <Text style={s.lastDecisionResult} numberOfLines={1}>{decisionResultLabel(lastDecision.result)}</Text>
                 <Text style={s.lastDecisionMeta}>{formatDate(lastDecision.datetime)} · saved on this phone</Text>
               </View>
-              {lastDecision.result !== '' && <Text style={s.lastDecisionProfit}>+{formatCurrency(lastDecision.profit_increase)}</Text>}
+              {lastDecision.result !== '' && <ProfitAmount value={lastDecision.profit_increase} size={15} />}
             </View>
           </View>
         )}
@@ -207,5 +207,4 @@ const s = StyleSheet.create({
   lastDecisionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.accentTint, borderRadius: 14, padding: 14, ...cardShadow },
   lastDecisionResult: { fontSize: 15, fontWeight: '700', color: Colors.ink },
   lastDecisionMeta: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
-  lastDecisionProfit: { fontSize: 15, fontWeight: '800', color: Colors.accent },
 });

@@ -10,7 +10,7 @@ import { contentColumn } from '@/src/constants/layout';
 import { decisionResultLabel, historyCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { deleteDecision, getDecisionsByUser, getStagedDecisionIds, type Decision } from '@/src/database/repositories/decisions';
-import { formatCurrency } from '@/src/utils/formatters';
+import { ProfitAmount } from '@/src/components/ui/profit-amount';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -89,7 +89,7 @@ const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen,
           <Text style={s.cardResult} numberOfLines={1}>{decisionResultLabel(item.result)}</Text>
           <Text style={s.cardType}>{decisionTypeLabel(item.decision_type)}</Text>
           <View style={s.cardMetaRow}>
-            {item.result !== '' && <Text style={s.cardProfit}>+{formatCurrency(item.profit_increase)}</Text>}
+            {item.result !== '' && <ProfitAmount value={item.profit_increase} />}
             <Text style={s.cardDate}>{formatDate(item.datetime)}</Text>
             <View style={[s.syncChip, isPending ? s.syncChipPending : s.syncChipSent]}>
               <Ionicons
@@ -368,7 +368,6 @@ const s = StyleSheet.create({
   cardResult: { fontSize: 17, fontWeight: '800', color: Colors.ink },
   cardType: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 9, flexWrap: 'wrap' },
-  cardProfit: { fontSize: 14, fontWeight: '800', color: Colors.accent },
   cardDate: { fontSize: 12, color: Colors.inkDim },
   syncChip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   syncChipPending: { backgroundColor: Colors.amberBg },
