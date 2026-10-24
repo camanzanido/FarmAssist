@@ -169,8 +169,10 @@ function chronological(decisions: Decision[]): Decision[] {
 
 // ---------- CSV ----------
 
+// Text starting with = + - @ tab or CR runs as a formula in Excel, so it gets a ' prefix; numbers stay numeric.
 function csvEscape(value: string | number): string {
-  const str = String(value);
+  let str = String(value);
+  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(str)) str = `'${str}`;
   return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
 }
 

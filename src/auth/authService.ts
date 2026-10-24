@@ -281,8 +281,13 @@ export async function signIn(login: string, password: string) {
 export async function signOut() {
 
   await db.disconnectAndClear({ clearLocal: false });
+  // Global revoke needs the network; offline it fails before clearing the stored session, so always fall back to local.
   const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  if (error) {
+    console.warn('Server sign-out failed, clearing this device only:', error);
+    const { error: localError } = await supabase.auth.signOut({ scope: 'local' });
+    if (localError) throw localError;
+  }
 }
 
 export async function restoreSession(): Promise<boolean> {

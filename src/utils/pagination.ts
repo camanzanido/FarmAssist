@@ -21,7 +21,7 @@ export async function fetchAllRows<T>(
   }
 }
 
-export const PAGE_SIZES = [15, 25, 50] as const;
+export const PAGE_SIZES = [5, 10, 20] as const;
 export type PageSize = (typeof PAGE_SIZES)[number];
 
 export interface PageWindow {

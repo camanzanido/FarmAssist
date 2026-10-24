@@ -304,7 +304,7 @@ const s = StyleSheet.create({
 
   content: { ...contentColumn, padding: 22, paddingTop: 12, paddingBottom: 40 },
   profileHeader: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },
-  avatar: { width: 64, height: 64, borderRadius: 20, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 23, fontWeight: '800', color: Colors.accentTintStrong },
   name: { fontSize: 22, fontWeight: '800', color: Colors.ink, letterSpacing: -0.3 },
   username: { fontSize: 14, color: Colors.inkSoft, marginTop: 2 },

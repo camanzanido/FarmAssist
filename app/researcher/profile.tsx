@@ -2,7 +2,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ChangePasswordSheet } from '@/src/components/profile/change-password-sheet';
 import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
-import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
+import { ResearcherColors as C } from '@/src/constants/colors';
 import { changePasswordCopy, profileCopy } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
@@ -58,7 +58,7 @@ export default function ResearcherProfileScreen() {
           </View>
         </View>
 
-        <View style={s.card}>
+        <View style={s.list}>
           <TouchableOpacity style={[s.row, s.rowBorder]} onPress={edit.open} activeOpacity={0.7} accessibilityRole="button">
             <Ionicons name="create-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.editProfile}</Text>
@@ -122,13 +122,13 @@ const s = StyleSheet.create({
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
 
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },
-  avatar: { width: 60, height: 60, borderRadius: 18, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 21, fontWeight: '800', color: C.accentDeepText },
   name: { fontSize: 20, fontWeight: '800', color: C.text, letterSpacing: -0.3 },
   username: { fontSize: 13.5, color: C.textSoft, marginTop: 2 },
 
-  card: { backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.cardBorder, marginBottom: 24, ...cardShadow },
-  row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 15 },
+  list: { borderTopWidth: 1, borderTopColor: C.divider, marginBottom: 24 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4, paddingVertical: 15 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: C.divider },
   rowLabel: { fontSize: 14.5, fontWeight: '600', color: C.text },
   rowValue: { fontSize: 13.5, color: C.textSoft, maxWidth: '45%', textAlign: 'right' },

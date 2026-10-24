@@ -12,13 +12,14 @@ export type MapPin = {
 };
 
 export type LeafletMapHandle = {
-  focus: (key: string) => void;
+  focus: (key: string, bottomCover?: number) => void;
 };
 
 type Props = {
   pins: MapPin[];
   selectedKey: string | null;
   topInset?: number;
+  bottomInset?: number;
   onPinPress?: (key: string) => void;
   onLoadError?: () => void;
   style?: StyleProp<ViewStyle>;
@@ -53,7 +54,9 @@ function buildHtml(topInset: number): string {
     function post(msg) { if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(msg)); }
     if (typeof L === 'undefined') { post({ type: 'error' }); return; }
 
-    var map = L.map('map', { zoomControl: false, attributionControl: true }).setView([12.8797, 121.7740], 6);
+    var topInset = ${topInset};
+    var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([12.8797, 121.7740], 6);
+    L.control.attribution({ position: 'topright' }).addTo(map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 18,
@@ -96,7 +99,7 @@ function buildHtml(topInset: number): string {
     }
 
     window.farmassist = {
-      setPins: function (pins, fit) {
+      setPins: function (pins, fit, bottomInset) {
         layer.clearLayers();
         markers = {};
         pins.forEach(function (p) {
@@ -108,7 +111,9 @@ function buildHtml(topInset: number): string {
         });
         if (fit && pins.length > 0) {
           if (pins.length === 1) map.setView([pins[0].lat, pins[0].lng], 11);
-          else map.fitBounds(pins.map(function (p) { return [p.lat, p.lng]; }), { padding: [36, 36], maxZoom: 12 });
+          else map.fitBounds(pins.map(function (p) { return [p.lat, p.lng]; }), {
+            paddingTopLeft: [36, 36 + topInset], paddingBottomRight: [36, 36 + bottomInset], maxZoom: 12,
+          });
         }
       },
       select: function (key) {
@@ -116,11 +121,14 @@ function buildHtml(topInset: number): string {
         selected = key;
         if (key) setSelectedClass(key, true);
       },
-      focus: function (key) {
+      focus: function (key, bottomCover) {
         var m = markers[key];
         if (!m) return;
         window.farmassist.select(key);
-        map.flyTo(m.getLatLng(), Math.max(map.getZoom(), 11), { duration: 0.6 });
+        var zoom = Math.max(map.getZoom(), 11);
+        var shift = Math.max(0, (bottomCover - topInset) / 2);
+        var center = map.unproject(map.project(m.getLatLng(), zoom).add([0, shift]), zoom);
+        map.flyTo(center, zoom, { duration: 0.6 });
         setTimeout(function () { m.openPopup(); }, 650);
       },
     };
@@ -132,7 +140,7 @@ function buildHtml(topInset: number): string {
 }
 
 export const LeafletMap = forwardRef<LeafletMapHandle, Props>(function LeafletMap(
-  { pins, selectedKey, topInset = 0, onPinPress, onLoadError, style },
+  { pins, selectedKey, topInset = 0, bottomInset = 0, onPinPress, onLoadError, style },
   ref
 ) {
   const webRef = useRef<WebView>(null);
@@ -149,8 +157,8 @@ export const LeafletMap = forwardRef<LeafletMapHandle, Props>(function LeafletMa
     if (!ready) return;
     const fit = lastSignature.current !== signature;
     lastSignature.current = signature;
-    run(`window.farmassist.setPins(${JSON.stringify(pins)}, ${fit});`);
-  }, [ready, pins, signature, run]);
+    run(`window.farmassist.setPins(${JSON.stringify(pins)}, ${fit}, ${bottomInset});`);
+  }, [ready, pins, signature, bottomInset, run]);
 
   useEffect(() => {
     if (!ready) return;
@@ -158,7 +166,7 @@ export const LeafletMap = forwardRef<LeafletMapHandle, Props>(function LeafletMa
   }, [ready, selectedKey, run]);
 
   useImperativeHandle(ref, () => ({
-    focus: (key: string) => run(`window.farmassist.focus(${JSON.stringify(key)});`),
+    focus: (key: string, bottomCover = 0) => run(`window.farmassist.focus(${JSON.stringify(key)}, ${bottomCover});`),
   }), [run]);
 
   const onMessage = (e: WebViewMessageEvent) => {

@@ -41,7 +41,7 @@ export default function ResearcherLayout() {
           name="decisions"
           options={{
             title: 'Decisions',
-            tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'list' : 'list-outline'} size={23} color={color} />,
+            tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={23} color={color} />,
           }}
         />
         <Tabs.Screen

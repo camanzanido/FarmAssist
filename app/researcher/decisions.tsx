@@ -19,10 +19,13 @@ import React, { useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator, FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type TypeFilter = 'all' | DecisionType;
 type DecisionsView = 'list' | 'map';
+
+// Height the floating view toggle takes over the map.
+const MAP_TOP_INSET = 58;
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
@@ -76,6 +79,7 @@ export default function ResearcherDecisionsScreen() {
   const [place, setPlace] = useState<Place | null>(null);
   const listRef = useRef<FlatList<ResearcherDecisionRow>>(null);
   const { confirm, notify } = useFeedback();
+  const insets = useSafeAreaInsets();
 
   const debouncedQuery = useDebouncedValue(query.trim());
   const filters = useMemo(
@@ -134,10 +138,6 @@ export default function ResearcherDecisionsScreen() {
 
   const header = (
     <View>
-      <Text style={s.countText}>
-        {isFiltered ? `${pageInfo.total.toLocaleString()} match` : `${pageInfo.total.toLocaleString()} total`}
-      </Text>
-
       {place && (
         <View style={s.placeChip}>
           <Ionicons name="location" size={15} color={Colors.accent} />
@@ -185,9 +185,9 @@ export default function ResearcherDecisionsScreen() {
   return (
     <SafeAreaView style={s.safe} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
-      <View style={s.topBar}>
-        <Text style={s.title}>Decisions</Text>
-        <View style={s.segment} accessibilityRole="tablist">
+      <View style={[s.topBar, view === 'map' && [s.topBarFloating, { top: insets.top }]]} pointerEvents="box-none">
+        {view === 'list' && <Text style={s.title}>Decisions</Text>}
+        <View style={[s.segment, view === 'map' && s.segmentFloating]} accessibilityRole="tablist">
           {(['list', 'map'] as const).map(v => (
             <TouchableOpacity
               key={v}
@@ -205,7 +205,7 @@ export default function ResearcherDecisionsScreen() {
 
       {mapMounted && (
         <View style={[s.fill, view !== 'map' && s.hidden]}>
-          <DecisionsMapView onShowDecisions={showPlace} />
+          <DecisionsMapView onShowDecisions={showPlace} topInset={MAP_TOP_INSET} />
         </View>
       )}
 
@@ -254,13 +254,14 @@ const s = StyleSheet.create({
   fill: { flex: 1 },
   hidden: { display: 'none' },
   topBar: { ...wideColumn, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
+  topBarFloating: { position: 'absolute', left: 0, right: 0, justifyContent: 'flex-end', zIndex: 10, elevation: 10 },
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
   segment: { flexDirection: 'row', backgroundColor: Colors.surfaceAlt, borderRadius: 999, padding: 3, borderWidth: 1, borderColor: Colors.border },
+  segmentFloating: { backgroundColor: Colors.surface, ...cardShadow },
   segmentBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 13, height: 34 },
   segmentBtnActive: { backgroundColor: Colors.ink },
   segmentText: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft },
   segmentTextActive: { color: Colors.onDark },
-  countText: { fontSize: 14, color: Colors.inkSoft, marginBottom: 14 },
   placeChip: {
     flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', maxWidth: '100%',
     backgroundColor: Colors.accentTint, borderRadius: 999, borderWidth: 1, borderColor: Colors.accentTintStrong,

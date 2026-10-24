@@ -28,5 +28,5 @@ React Native, SQLite, PowerSync, and Supabase
 - Testers: tag `vX.Y.Z-rcN` to publish a prerelease APK on GitHub Releases.
 - Everyone: tag `vX.Y.Z` for the final release; fixes to a released version get the next patch tag (`vX.Y.Z+1`).
 - Backend changes must stay backward compatible: add tables and columns, but never rename or drop anything an installed APK still reads until every user has updated.
-- Researcher accounts are created in the app (Users → Add user) through the `create-user` Edge Function. The first researcher is still bootstrapped with `scripts/seed.js` or the SQL editor.
+- Researcher accounts are created in the app (Users → Add user) through the `create-user` Edge Function. To bootstrap the first researcher (or recover if none is active), register in the app, then run `update public.users set user_type = 'researcher', status = 'active' where username = '<username>';` in the Supabase SQL editor.
 - Edge Functions live in `supabase/functions`. After `npx supabase login`, deploy a changed one with `npx supabase functions deploy <name> --project-ref <project-ref>`. `sign-in` and `register` run before anyone is signed in, so deploy those two with `--no-verify-jwt` added.

@@ -107,10 +107,7 @@ export default function ResearcherDashboardScreen() {
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor={Colors.ink} colors={[Colors.accent]} />}
         >
           <View style={s.header}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.eyebrow}>RESEARCHER</Text>
-              <Text style={s.title}>Overview</Text>
-            </View>
+            <Text style={s.title}>Overview</Text>
             <TouchableOpacity
               style={s.exportBtn}
               onPress={() => setExportOpen(true)}
@@ -154,10 +151,10 @@ export default function ResearcherDashboardScreen() {
 
           {isRangeLoading ? <ChartCardsSkeleton /> : (
             <>
-              <View style={s.card}>
-                <View style={s.cardHeadRow}>
-                  <Text style={s.cardTitle}>Decisions per month</Text>
-                  <Text style={s.cardHint}>Last 6</Text>
+              <View style={s.section}>
+                <View style={s.sectionHeadRow}>
+                  <Text style={s.sectionTitle}>Decisions per month</Text>
+                  <Text style={s.sectionHint}>Last 6</Text>
                 </View>
                 <View style={s.chartRow}>
                   {monthlyCounts.perMonth.map((m, i) => {
@@ -177,9 +174,9 @@ export default function ResearcherDashboardScreen() {
                 </View>
               </View>
 
-              <View style={s.card}>
-                <Text style={s.cardTitle}>Decision types</Text>
-                <Text style={s.cardHint}>{overview.range_total} total</Text>
+              <View style={s.section}>
+                <Text style={s.sectionTitle}>Decision types</Text>
+                <Text style={s.sectionHint}>{overview.range_total} total</Text>
                 <View style={s.stackedBar}>
                   {typeBreakdown.map(t => (
                     <View key={t.id} style={{ width: `${t.pct}%`, backgroundColor: TYPE_COLORS[t.id], height: '100%' }} />
@@ -198,8 +195,8 @@ export default function ResearcherDashboardScreen() {
               </View>
 
               {topMunicipalities.length > 0 && (
-                <View style={s.card}>
-                  <Text style={s.cardTitle}>Top municipalities</Text>
+                <View style={s.section}>
+                  <Text style={s.sectionTitle}>Top municipalities</Text>
                   <View style={{ gap: 12, marginTop: 14 }}>
                     {topMunicipalities.map(m => (
                       <View key={m.city}>
@@ -231,8 +228,7 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
 
-  header: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, marginBottom: 18 },
-  eyebrow: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: Colors.inkFaint, marginBottom: 5 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
 
   statRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
@@ -245,10 +241,10 @@ const s = StyleSheet.create({
 
   rangeRow: { marginTop: 8, marginBottom: 4 },
 
-  card: { backgroundColor: Colors.surface, borderRadius: 18, borderWidth: 1, borderColor: Colors.border, padding: 18, marginTop: 14, marginBottom: 4, ...cardShadow },
-  cardHeadRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 11 },
-  cardTitle: { fontSize: 14.5, fontWeight: '800', color: Colors.ink, marginBottom: 3 },
-  cardHint: { fontSize: 12, color: Colors.inkFaint, marginBottom: 16 },
+  section: { marginTop: 26 },
+  sectionHeadRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 11 },
+  sectionTitle: { fontSize: 14.5, fontWeight: '800', color: Colors.ink, marginBottom: 3 },
+  sectionHint: { fontSize: 12, color: Colors.inkFaint, marginBottom: 16 },
 
   chartRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 9, height: 110 },
   chartCol: { flex: 1, height: '100%', justifyContent: 'flex-end' },
@@ -272,6 +268,6 @@ const s = StyleSheet.create({
   muniBarBg: { height: 7, backgroundColor: Colors.divider, borderRadius: 4, overflow: 'hidden' },
   muniBarFill: { height: '100%', backgroundColor: Colors.accent, borderRadius: 4 },
 
-  exportBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface, marginBottom: 2 },
+  exportBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface },
   exportBtnText: { fontSize: 13, fontWeight: '700', color: Colors.ink },
 });

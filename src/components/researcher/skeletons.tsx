@@ -2,7 +2,7 @@ import { Skeleton, SkeletonGroup } from '@/src/components/ui/skeleton';
 import { cardShadow, Colors } from '@/src/constants/colors';
 import { useIsWide, wideColumn } from '@/src/constants/layout';
 import React from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 function Rows({ rows }: { rows: number }) {
   return (
@@ -61,28 +61,27 @@ export function OverviewSkeleton() {
   return (
     <SkeletonGroup>
       <View style={s.screen} accessibilityLabel="Loading" accessibilityRole="progressbar">
-        <Skeleton width={80} height={10} />
-        <Skeleton width={140} height={26} radius={8} style={s.gapSm} />
+        <Skeleton width={140} height={26} radius={8} />
         <View style={[s.statGrid, isWide && s.statGridWide, s.gapLg]}>
           <View style={s.statRow}>{[0, 1].map(statCard)}</View>
           <View style={s.statRow}>{[2, 3].map(statCard)}</View>
         </View>
-        <ChartCards />
+        <ChartSections />
       </View>
     </SkeletonGroup>
   );
 }
 
-function ChartCards() {
+function ChartSections() {
   return (
     <>
-      <View style={[s.card, s.gapMd]}>
+      <View style={s.section}>
         <Skeleton width="45%" height={14} />
         <View style={s.bars}>
           {[40, 65, 30, 80, 55, 95].map((h, i) => <Skeleton key={i} height={`${h}%`} radius={5} style={s.bar} />)}
         </View>
       </View>
-      <View style={[s.card, s.gapMd]}>
+      <View style={s.section}>
         <Skeleton width="40%" height={14} />
         <Skeleton height={12} radius={6} style={s.gapMd} />
         {[0, 1, 2].map(i => <Skeleton key={i} width="80%" height={12} style={s.gapSm} />)}
@@ -94,30 +93,26 @@ function ChartCards() {
 export function ChartCardsSkeleton() {
   return (
     <SkeletonGroup>
-      <ChartCards />
+      <ChartSections />
     </SkeletonGroup>
   );
 }
 
-export const MAP_HEIGHT_RATIO = 0.42;
-
 export function MapSkeleton() {
-  const { height } = useWindowDimensions();
   return (
     <SkeletonGroup>
       <View style={s.fill} accessibilityLabel="Loading" accessibilityRole="progressbar">
-        <Skeleton height={Math.round(height * MAP_HEIGHT_RATIO)} radius={0} />
-        <View style={s.mapBody}>
+        <Skeleton height="100%" radius={0} />
+        <View style={s.mapPanel}>
+          <View style={s.mapHandle} />
           <Skeleton height={46} radius={13} />
-          {[0, 1, 2, 3].map(i => (
-            <View key={i} style={s.compactRow}>
-              <View style={s.rowBody}>
-                <Skeleton width="45%" height={14} />
-                <Skeleton width="30%" height={10} />
-              </View>
-              <Skeleton width={90} height={12} />
+          <View style={s.compactRow}>
+            <View style={s.rowBody}>
+              <Skeleton width="45%" height={14} />
+              <Skeleton width="30%" height={10} />
             </View>
-          ))}
+            <Skeleton width={90} height={12} />
+          </View>
         </View>
       </View>
     </SkeletonGroup>
@@ -144,10 +139,15 @@ const s = StyleSheet.create({
   statGridWide: { flexDirection: 'row' },
   statRow: { flex: 1, flexDirection: 'row', gap: 10 },
   stat: { flex: 1, padding: 16 },
+  section: { marginTop: 26 },
   bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 9, height: 110, marginTop: 16 },
   bar: { flex: 1 },
 
-  mapBody: { ...wideColumn, padding: 16, gap: 10 },
+  mapPanel: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingTop: 10, gap: 10,
+    backgroundColor: Colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, ...cardShadow,
+  },
+  mapHandle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: Colors.borderStrong },
   compactRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     borderRadius: 14, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 14, paddingVertical: 11,

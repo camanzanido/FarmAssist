@@ -1,5 +1,4 @@
 import 'react-native-get-random-values';
-import { UserType } from '@/src/auth/types';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { resetPasswordRemote, updateUserRemote, type ResearcherUserRow } from '@/src/database/repositories/researcher';
@@ -14,9 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-type Pending =
-  | { kind: 'role'; role: UserType }
-  | { kind: 'status'; next: 'active' | 'inactive' };
+type Pending = { next: 'active' | 'inactive' };
 
 type PasswordReset = { step: 'form' } | { step: 'done'; password: string };
 
@@ -39,16 +36,6 @@ function formatShortDate(iso: string): string {
 }
 
 function describe(user: User, pending: Pending): Confirmation {
-  if (pending.kind === 'role') {
-    const toResearcher = pending.role === 'researcher';
-    return {
-      title: `Change role to ${toResearcher ? 'Researcher' : 'Farmer'}?`,
-      message: `${user.name} will ${toResearcher ? 'gain' : 'lose'} researcher access.`,
-      confirmText: 'Change role',
-      destructive: false,
-      icon: 'swap-horizontal-outline',
-    };
-  }
   const deactivating = pending.next === 'inactive';
   const isApproval = user.status === 'pending';
   const isResearcher = user.user_type === 'researcher';
@@ -91,23 +78,17 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
 
   if (!user) return <BottomSheet visible={false} onClose={onClose}>{null}</BottomSheet>;
 
-  const askRole = (role: UserType) => {
-    if (isSelf || role === user.user_type) return;
-    setError(null);
-    setPending({ kind: 'role', role });
-  };
-
   const askStatus = () => {
     if (isSelf) return;
     setError(null);
-    setPending({ kind: 'status', next: user.status === 'active' ? 'inactive' : 'active' });
+    setPending({ next: user.status === 'active' ? 'inactive' : 'active' });
   };
 
   const apply = async () => {
     if (!pending) return;
     setIsSaving(true);
     try {
-      const fields = pending.kind === 'role' ? { user_type: pending.role } : { status: pending.next };
+      const fields = { status: pending.next };
       await updateUserRemote(user.id, fields);
       onChanged({ ...user, ...fields });
       setPending(null);
@@ -247,24 +228,6 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
         </View>
       ) : (
         <>
-          <Text style={s.sectionLabel}>ROLE</Text>
-          <View style={s.roleBtnRow}>
-            {(['farmer', 'researcher'] as const).map(role => {
-              const active = user.user_type === role;
-              return (
-                <TouchableOpacity
-                  key={role}
-                  style={[s.roleBtn, active && s.roleBtnActive, isSelf && !active && s.disabled]}
-                  onPress={() => askRole(role)}
-                  disabled={isSelf}
-                  accessibilityState={{ selected: active, disabled: isSelf }}
-                >
-                  <Text style={[s.roleBtnText, active && s.roleBtnTextActive]}>{role === 'farmer' ? 'Farmer' : 'Researcher'}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
           <Text style={s.sectionLabel}>ACCOUNT</Text>
           {isDormant(user) && (
             <View style={s.dormantHint}>
@@ -295,7 +258,7 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
             <Text style={s.selfHint}>This account has no email, so only a researcher can reset its password.</Text>
           )}
 
-          {isSelf && <Text style={s.selfHint}>You can&apos;t change your own role or account status. Change your password from Profile.</Text>}
+          {isSelf && <Text style={s.selfHint}>You can&apos;t change your own account status. Change your password from Profile.</Text>}
         </>
       )}
     </BottomSheet>
@@ -304,17 +267,12 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
 
 const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 13, marginBottom: 20 },
-  avatar: { width: 52, height: 52, borderRadius: 16, backgroundColor: C.avatar, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: C.avatar, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 18, fontWeight: '800', color: C.text },
   name: { fontSize: 19, fontWeight: '800', color: C.text },
   meta: { fontSize: 13, color: C.textSoft, marginTop: 2 },
 
   sectionLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint, marginBottom: 10 },
-  roleBtnRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  roleBtn: { flex: 1, height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
-  roleBtnActive: { backgroundColor: C.accentStrong, borderColor: C.accentStrong },
-  roleBtnText: { fontSize: 14.5, fontWeight: '700', color: C.textSoft },
-  roleBtnTextActive: { color: C.accentDeepText },
 
   statusBtn: { flexDirection: 'row', gap: 8, height: 50, borderRadius: 12, borderWidth: 1, borderColor: C.dangerBorder, backgroundColor: C.dangerBg, alignItems: 'center', justifyContent: 'center' },
   statusBtnApprove: { borderColor: C.cardBorderStrong, backgroundColor: C.accentTint },

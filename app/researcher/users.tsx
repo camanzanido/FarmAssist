@@ -36,7 +36,7 @@ function UserRow({ user: u, onPress }: { user: ResearcherUserRow; onPress: (u: R
       activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={`${u.name}, @${u.username}${dormant ? ', no activity in over a year' : ''}`}
-      accessibilityHint="Opens role and account options"
+      accessibilityHint="Opens account options"
     >
       <View style={[s.avatar, isResearcher && s.avatarResearcher]}>
         <Text style={[s.avatarText, isResearcher && s.avatarTextResearcher]}>{userInitials(u.name)}</Text>
@@ -124,9 +124,6 @@ export default function ResearcherUsersScreen() {
           <Text style={s.addBtnText}>Add user</Text>
         </TouchableOpacity>
       </View>
-      <Text style={s.subtitle}>
-        {isFiltered ? `${pageInfo.total.toLocaleString()} match` : `${pageInfo.total.toLocaleString()} total`}
-      </Text>
 
       <View style={s.searchRow}>
         <Ionicons name="search-outline" size={19} color={C.textFaint} />
@@ -212,11 +209,10 @@ const s = StyleSheet.create({
   content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
   footer: { paddingBottom: 20 },
 
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.accentStrong, borderRadius: 999, paddingHorizontal: 14, height: 40 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.accentStrong, borderRadius: 12, paddingHorizontal: 14, height: 40 },
   addBtnText: { fontSize: 14, fontWeight: '800', color: C.accentDeepText },
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
-  subtitle: { fontSize: 14, color: C.textSoft, marginTop: 3, marginBottom: 16 },
 
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorderStrong, borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14 },
   searchInput: { flex: 1, fontSize: 15, color: C.text, padding: 0 },
@@ -225,7 +221,7 @@ const s = StyleSheet.create({
 
   userRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.cardBorder, padding: 14, marginBottom: 11, ...cardShadow },
   userRowInactive: { opacity: 0.55 },
-  avatar: { width: 44, height: 44, borderRadius: 14, backgroundColor: C.avatar, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.avatar, alignItems: 'center', justifyContent: 'center' },
   avatarResearcher: { backgroundColor: C.accentStrong },
   avatarText: { fontSize: 15, fontWeight: '800', color: C.text },
   avatarTextResearcher: { color: C.accentDeepText },

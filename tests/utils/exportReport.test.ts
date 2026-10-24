@@ -130,6 +130,15 @@ describe('buildCsv', () => {
     expect(csv).toContain(',"Corn, ""OPV""",');
   });
 
+  it('neutralises text that Excel would run as a formula but leaves negative numbers alone', () => {
+    const csv = buildCsv(
+      [decision('f', local(2026, 8, 3), { result: '=HYPERLINK("http://x",A1)', profit_increase: -500 })],
+      { includeFarmerLocation: false, includeClimate: false },
+      CTX,
+    );
+    expect(csv).toContain(`,"'=HYPERLINK(""http://x"",A1)",-500`);
+  });
+
   it('adds farmer/location and climate columns only when asked', () => {
     const csv = buildCsv(rows, { includeFarmerLocation: true, includeClimate: true }, CTX);
     const [header, first] = csv.slice(1).split('\r\n');
