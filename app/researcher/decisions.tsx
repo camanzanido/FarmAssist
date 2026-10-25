@@ -5,7 +5,7 @@ import { DecisionsMapView, type Place } from '@/src/components/researcher/decisi
 import { Pager } from '@/src/components/researcher/pager';
 import { ListRowsSkeleton, ListScreenSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
-import { ALL_DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
+import { DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { cardShadow, Colors } from '@/src/constants/colors';
 import { decisionResultLabel } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
@@ -91,7 +91,7 @@ export default function ResearcherDecisionsScreen() {
   } = useResearcherPage(fetchDecisionsPage, filters);
 
   const filterOptions = useMemo(
-    () => [{ value: 'all' as const, label: 'All' }, ...ALL_DECISIONS.map(d => ({ value: d.id, label: d.label }))],
+    () => [{ value: 'all' as const, label: 'All' }, ...DECISIONS.map(d => ({ value: d.id, label: d.label }))],
     []
   );
   const isFiltered = typeFilter !== 'all' || debouncedQuery.length > 0 || place !== null;

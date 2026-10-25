@@ -39,7 +39,7 @@ describe('createDecision', () => {
 
   it('persists the decision fields exactly as given', async () => {
     const decisionInput = makeDecisionInput({
-      decision_type: 'harvest',
+      decision_type: 'protect',
       result: 'Delay',
       profit_increase: 12345.5,
       climate_driest: 90,

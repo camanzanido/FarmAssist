@@ -140,6 +140,7 @@ export interface Overview {
   new_farmers_this_month: number;
   researchers: number;
   median_gain: number;
+  average_gain: number;
   range_total: number;
   per_month: { month: string; count: number }[];
   by_type: { decision_type: string; count: number }[];
@@ -153,7 +154,9 @@ export async function fetchOverview(since: Date | null): Promise<Overview> {
     .rpc('researcher_overview', { p_since: since?.toISOString() ?? null, p_tz: deviceTimeZone() })
     .abortSignal(signal));
   if (error) throw error;
-  return data as Overview;
+  // Before the average_gain migration the server only sends the median.
+  const overview = data as Overview;
+  return { ...overview, average_gain: overview.average_gain ?? overview.median_gain };
 }
 
 export interface CityStats {
@@ -162,12 +165,13 @@ export interface CityStats {
   decisions: number;
   farmers: number;
   median_gain: number;
+  average_gain: number;
 }
 
 export async function fetchCityStats(): Promise<CityStats[]> {
   const { data, error } = await withTimeout((signal) => supabase.rpc('researcher_city_stats').abortSignal(signal));
   if (error) throw error;
-  return (data ?? []) as CityStats[];
+  return ((data ?? []) as CityStats[]).map((c) => ({ ...c, average_gain: c.average_gain ?? c.median_gain }));
 }
 
 function applyRange<Q extends { gte: (c: string, v: string) => Q; lt: (c: string, v: string) => Q }>(

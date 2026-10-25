@@ -106,9 +106,9 @@ describe('reading staged decisions', () => {
   });
 
   it('keeps showing unclaimed decisions when a type filter is applied', async () => {
-    const id = await createAnonymous({ decision_type: 'harvest' });
+    const id = await createAnonymous({ decision_type: 'protect' });
 
-    expect((await getDecisionsByUser('user-1', 'harvest')).map((r) => r.id)).toEqual([id]);
+    expect((await getDecisionsByUser('user-1', 'protect')).map((r) => r.id)).toEqual([id]);
     expect(await getDecisionsByUser('user-1', 'crop_choice')).toHaveLength(0);
   });
 
@@ -155,7 +155,7 @@ describe('claimLocalDecisions', () => {
 
   it('preserves the decision payload and option snapshots across the copy', async () => {
     const id = await createAnonymous({
-      decision_type: 'harvest',
+      decision_type: 'protect',
       result: 'Delay',
       profit_increase: 12345.5,
       climate_driest: 70,
@@ -168,7 +168,7 @@ describe('claimLocalDecisions', () => {
     const after = await getDecision(id);
 
     expect(after).not.toBeNull();
-    expect(after!.decision_type).toBe('harvest');
+    expect(after!.decision_type).toBe('protect');
     expect(after!.result).toBe('Delay');
     expect(after!.profit_increase).toBe(12345.5);
     expect(after!.climate_driest).toBe(70);

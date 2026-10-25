@@ -3,7 +3,7 @@ import type { Decision } from '../database/repositories/decisions';
 import type { Location } from '../database/repositories/locations';
 import type { User } from '../database/repositories/users';
 import { formatCurrency } from './formatters';
-import { median } from './researcherStats';
+import { mean } from './researcherStats';
 
 // ---------- Date range ----------
 
@@ -210,7 +210,7 @@ export function buildPdfHtml(decisions: Decision[], opts: ExportOptions, ctx: Ex
   const summary = [
     `${rows.length} decision${rows.length === 1 ? '' : 's'}`,
     `${farmers} farmer${farmers === 1 ? '' : 's'}`,
-    `median gain ${formatCurrency(median(rows.map((d) => d.profit_increase)))}/ha`,
+    `average gain ${formatCurrency(mean(rows.map((d) => d.profit_increase)))}/ha`,
   ].join(' · ');
 
   const head = columns.map((c) => `<th>${htmlEscape(c.label)}</th>`).join('');

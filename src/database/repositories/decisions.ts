@@ -63,10 +63,11 @@ const decisionOptionCols = DECISION_OPTION_COLUMNS.join(', ');
 
 // Reads must span both tables — a user's history mixes synced decisions with
 // ones still staged (e.g. created before their location had downloaded).
+// The retired harvest type is skipped in case an old row is still on the phone.
 const ALL_DECISIONS = `
-  SELECT ${decisionCols} FROM ${DECISIONS}
+  SELECT ${decisionCols} FROM ${DECISIONS} WHERE decision_type <> 'harvest'
   UNION ALL
-  SELECT ${decisionCols} FROM ${LOCAL_DECISIONS}
+  SELECT ${decisionCols} FROM ${LOCAL_DECISIONS} WHERE decision_type <> 'harvest'
 `;
 
 /** A row is unsyncable while either uuid foreign key is still a placeholder. */

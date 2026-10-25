@@ -32,7 +32,7 @@ type CityRow = CityStats & { key: string; coord: CityCoordinate | undefined };
 export type Place = { city: string; province: string };
 
 function describeCity(row: CityStats): string {
-  return `${row.decisions} decision${row.decisions === 1 ? '' : 's'} · ${row.farmers} farmer${row.farmers === 1 ? '' : 's'} · median ${formatCurrency(row.median_gain)}`;
+  return `${row.decisions} decision${row.decisions === 1 ? '' : 's'} · ${row.farmers} farmer${row.farmers === 1 ? '' : 's'} · average ${formatCurrency(row.average_gain)}`;
 }
 
 function CityListRow({ row, selected, onPress, onView }: {
@@ -67,7 +67,7 @@ function CityListRow({ row, selected, onPress, onView }: {
       ) : (
         <View style={s.rowStats}>
           <Text style={s.rowCount}>{row.decisions} <Text style={s.rowUnit}>dec</Text> · {row.farmers} <Text style={s.rowUnit}>farmers</Text></Text>
-          <Text style={s.rowGain}>{formatCurrency(row.median_gain)}</Text>
+          <Text style={s.rowGain}>{formatCurrency(row.average_gain)}</Text>
         </View>
       )}
     </Pressable>

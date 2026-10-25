@@ -4,7 +4,7 @@ import { ChartCardsSkeleton, OverviewSkeleton } from '@/src/components/researche
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { DonutChart } from '@/src/components/ui/donut-chart';
 import { OdometerText } from '@/src/components/ui/odometer-text';
-import { ALL_DECISIONS, DecisionType } from '@/src/constants';
+import { DECISIONS, DecisionType } from '@/src/constants';
 import { cardShadow, Colors } from '@/src/constants/colors';
 import { useIsWide, wideColumn } from '@/src/constants/layout';
 import { fetchOverview, type Overview } from '@/src/database/repositories/researcher';
@@ -20,7 +20,6 @@ const TYPE_COLORS: Record<DecisionType, string> = {
   crop_choice: Colors.ink,
   crop_variety: Colors.accentSoft,
   protect: Colors.accentTintStrong,
-  harvest: Colors.barMuted,
 };
 
 // Below this width the types and municipalities columns stack instead of sharing a row.
@@ -47,7 +46,7 @@ function rangeStart(range: Range): Date | null {
 
 const EMPTY: Overview = {
   total: 0, this_month: 0, active_farmers: 0, new_farmers_this_month: 0, researchers: 0,
-  median_gain: 0, range_total: 0, per_month: [], by_type: [], top_cities: [],
+  median_gain: 0, average_gain: 0, range_total: 0, per_month: [], by_type: [], top_cities: [],
 };
 
 const monthKey = (year: number, month: number) => `${year}-${String(month + 1).padStart(2, '0')}`;
@@ -84,10 +83,9 @@ export default function ResearcherDashboardScreen() {
   const typeBreakdown = useMemo(() => {
     const total = overview.range_total || 1;
     const counts = new Map(overview.by_type.map(t => [t.decision_type, t.count]));
-    return ALL_DECISIONS.flatMap(d => {
+    return DECISIONS.map(d => {
       const count = counts.get(d.id) ?? 0;
-      if (d.legacy && count === 0) return [];
-      return [{ id: d.id, label: d.label, count, pct: Math.round((count / total) * 100) }];
+      return { id: d.id, label: d.label, count, pct: Math.round((count / total) * 100) };
     });
   }, [overview.by_type, overview.range_total]);
 
@@ -144,8 +142,8 @@ export default function ResearcherDashboardScreen() {
                 <Text style={s.statLabel}>Researchers</Text>
               </View>
               <View style={s.statCard}>
-                <OdometerText text={formatCurrency(overview.median_gain)} colors={ACCENT} style={s.statValue} />
-                <Text style={s.statLabel}>Median gain/ha</Text>
+                <OdometerText text={formatCurrency(overview.average_gain)} colors={ACCENT} style={s.statValue} />
+                <Text style={s.statLabel}>Average gain/ha</Text>
               </View>
             </View>
           </View>

@@ -1,6 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
-import { ALL_DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
+import { DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
 import { HistorySkeleton } from '@/src/components/skeletons/app-skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { PopoverMenu } from '@/src/components/ui/popover-menu';
@@ -183,12 +183,9 @@ export default function HistoryScreen() {
   const filterOptions = useMemo(
     () => [
       { value: 'all' as const, label: copy.filterAll },
-      // A retired type only gets a chip when this user still has decisions of it.
-      ...ALL_DECISIONS
-        .filter(d => !d.legacy || decisions.some(x => x.decision_type === d.id))
-        .map(d => ({ value: d.id, label: d.label })),
+      ...DECISIONS.map(d => ({ value: d.id, label: d.label })),
     ],
-    [decisions]
+    []
   );
 
   const sections = useMemo(() => {
