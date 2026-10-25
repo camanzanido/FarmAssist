@@ -80,6 +80,7 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
   const [range, setRange] = useState<ExportRange>({ preset: 'all', from: thisMonth, to: thisMonth });
   const [includeFarmerLocation, setIncludeFarmerLocation] = useState(true);
   const [includeClimate, setIncludeClimate] = useState(false);
+  const [includeCharts, setIncludeCharts] = useState(true);
   const [busy, setBusy] = useState<Action | null>(null);
   const [counts, setCounts] = useState<Counts>(null);
   const [countFailed, setCountFailed] = useState(false);
@@ -108,12 +109,14 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
 
   const buildPayload = async (): Promise<ExportPayload> => {
     const bounds = rangeBounds(range, new Date());
+    const charts = format === 'pdf' && includeCharts;
+    // The municipality chart needs locations even when the table leaves them out.
     const [decisions, users, locations] = await Promise.all([
       fetchDecisionsInRange(bounds),
       includeFarmerLocation ? fetchAllUsers() : Promise.resolve([] as User[]),
-      includeFarmerLocation ? fetchAllLocations() : Promise.resolve([] as Location[]),
+      includeFarmerLocation || charts ? fetchAllLocations() : Promise.resolve([] as Location[]),
     ]);
-    const opts = { includeFarmerLocation, includeClimate };
+    const opts = { includeFarmerLocation, includeClimate, includeCharts: charts };
     const ctx = {
       usersById: new Map(users.map(u => [u.id, u])),
       locationsById: new Map(locations.map(l => [l.id, l])),
@@ -234,12 +237,20 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
                 </View>
                 <Text style={s.includeLabel}>Farmer & location</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={s.includeRow} onPress={() => setIncludeClimate(v => !v)}>
+              <TouchableOpacity style={[s.includeRow, format === 'pdf' && s.includeRowBorder]} onPress={() => setIncludeClimate(v => !v)}>
                 <View style={[s.checkbox, includeClimate && s.checkboxChecked]}>
                   {includeClimate && <Ionicons name="checkmark" size={15} color={C.accentDeepText} />}
                 </View>
                 <Text style={s.includeLabel}>Climate probabilities</Text>
               </TouchableOpacity>
+              {format === 'pdf' && (
+                <TouchableOpacity style={s.includeRow} onPress={() => setIncludeCharts(v => !v)}>
+                  <View style={[s.checkbox, includeCharts && s.checkboxChecked]}>
+                    {includeCharts && <Ionicons name="checkmark" size={15} color={C.accentDeepText} />}
+                  </View>
+                  <Text style={s.includeLabel}>Charts</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {empty && <Text style={s.emptyHint}>No decisions in this period. Pick a different period to export.</Text>}

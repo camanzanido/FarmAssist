@@ -101,6 +101,13 @@ export const ForecastColors = {
 } as const;
 
 // Brand gradient stops, left to right.
+// One colour per decision type, shared by the Overview donut and the PDF report.
+export const DecisionTypeColors: Record<string, string> = {
+  crop_choice: Colors.ink,
+  crop_variety: Colors.accentSoft,
+  protect: Colors.accentTintStrong,
+};
+
 export const BrandGradient = ['#006D5B', '#0F7E66', '#58D09B'] as const;
 
 export const brandGradientCss = (angle = 90) =>

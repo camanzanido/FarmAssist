@@ -5,7 +5,7 @@ import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { DonutChart } from '@/src/components/ui/donut-chart';
 import { OdometerText } from '@/src/components/ui/odometer-text';
 import { DECISIONS, DecisionType } from '@/src/constants';
-import { cardShadow, Colors } from '@/src/constants/colors';
+import { cardShadow, Colors, DecisionTypeColors } from '@/src/constants/colors';
 import { useIsWide, wideColumn } from '@/src/constants/layout';
 import { fetchOverview, type Overview } from '@/src/database/repositories/researcher';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
@@ -16,11 +16,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { RefreshControl, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const TYPE_COLORS: Record<DecisionType, string> = {
-  crop_choice: Colors.ink,
-  crop_variety: Colors.accentSoft,
-  protect: Colors.accentTintStrong,
-};
+const TYPE_COLORS = DecisionTypeColors as Record<DecisionType, string>;
 
 // Below this width the types and municipalities columns stack instead of sharing a row.
 const SPLIT_MIN_WIDTH = 400;
