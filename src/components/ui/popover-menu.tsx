@@ -2,8 +2,15 @@ import { cardShadow, Colors } from '@/src/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
+import { EASE_OUT } from '@/src/constants/motion';
+import Animated, { FadeOut, Keyframe, useReducedMotion } from 'react-native-reanimated';
 import { AnimatedIcon, type IconMotion } from './animated-icon';
+
+// Grows from its top-right corner, where the trigger sits.
+const MENU_IN = new Keyframe({
+  0: { opacity: 0, transform: [{ translateY: -6 }, { scale: 0.95 }] },
+  100: { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }], easing: EASE_OUT },
+}).duration(180);
 
 export type PopoverItem = {
   key: string;
@@ -61,8 +68,8 @@ export function PopoverMenu({ icon, accessibilityLabel, items, style, iconSize =
         <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close menu" />
         {anchor && (
           <Animated.View
-            entering={reduceMotion ? undefined : FadeIn.duration(140)}
-            exiting={reduceMotion ? undefined : FadeOut.duration(100)}
+            entering={reduceMotion ? undefined : MENU_IN}
+            exiting={reduceMotion ? undefined : FadeOut.duration(140)}
             style={[s.menu, { top: anchor.top, right: anchor.right }]}
             accessibilityRole="menu"
           >

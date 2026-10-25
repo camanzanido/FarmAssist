@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import { BASE } from '@/src/constants/motion';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
 type Props = { size: number; color: string; open: boolean };
@@ -14,7 +15,7 @@ export function TrashIcon({ size, color, open }: Props) {
 
   useEffect(() => {
     const to = open ? 1 : 0;
-    lid.value = reduceMotion ? to : withTiming(to, { duration: 180, easing: Easing.out(Easing.cubic) });
+    lid.value = reduceMotion ? to : withTiming(to, BASE);
   }, [open, reduceMotion, lid]);
 
   const lidStyle = useAnimatedStyle(() => ({

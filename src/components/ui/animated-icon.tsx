@@ -1,7 +1,8 @@
+import { POP_UP, SETTLE_SPRING, SLOW } from '@/src/constants/motion';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import Animated, {
-  Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withTiming,
+  useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming,
 } from 'react-native-reanimated';
 
 export type IconMotion = 'spin' | 'flip' | 'pop' | 'wiggle';
@@ -15,8 +16,6 @@ type Props = {
   trigger: number;
 };
 
-const EASE = Easing.out(Easing.cubic);
-
 // Transform-only and on the UI thread, so it costs nothing on the JS side.
 export function AnimatedIcon({ name, size, color, motion, trigger }: Props) {
   const reduceMotion = useReducedMotion();
@@ -28,14 +27,10 @@ export function AnimatedIcon({ name, size, color, motion, trigger }: Props) {
     if (trigger === last.current) return;
     last.current = trigger;
     if (reduceMotion) return;
-    if (motion === 'spin') turn.value = withTiming(turn.value + 90, { duration: 220, easing: EASE });
-    else if (motion === 'flip') turn.value = withTiming(turn.value + 180, { duration: 220, easing: EASE });
-    else if (motion === 'pop') scale.value = withSequence(withTiming(1.2, { duration: 90, easing: EASE }), withTiming(1, { duration: 120 }));
-    else turn.value = withSequence(
-      withTiming(-14, { duration: 60 }),
-      withTiming(12, { duration: 80 }),
-      withTiming(0, { duration: 70, easing: EASE }),
-    );
+    if (motion === 'spin') turn.value = withTiming(turn.value + 90, SLOW);
+    else if (motion === 'flip') turn.value = withTiming(turn.value + 180, SLOW);
+    else if (motion === 'pop') scale.value = withSequence(withTiming(1.18, POP_UP), withSpring(1, SETTLE_SPRING));
+    else turn.value = withSequence(withTiming(-12, POP_UP), withSpring(0, { ...SETTLE_SPRING, damping: 9 }));
   }, [trigger, motion, reduceMotion, turn, scale]);
 
   const style = useAnimatedStyle(() => ({

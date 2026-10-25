@@ -2,16 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef, useSyncExternalStore } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { Easing, FadeIn, Keyframe, useReducedMotion } from 'react-native-reanimated';
+import { EASE_OUT } from '@/src/constants/motion';
+import Animated, { FadeIn, Keyframe, useReducedMotion } from 'react-native-reanimated';
 import type { DialogQueue } from './feedback-queue';
 import type { FeedbackTheme } from './feedback-theme';
 
 // Our own quick fade and scale; Android's Modal fade adds about 300ms before the card shows.
-const BACKDROP_IN = FadeIn.duration(120);
+const BACKDROP_IN = FadeIn.duration(180);
 const CARD_IN = new Keyframe({
-  0: { opacity: 0, transform: [{ scale: 0.96 }] },
-  100: { opacity: 1, transform: [{ scale: 1 }], easing: Easing.out(Easing.cubic) },
-}).duration(140);
+  0: { opacity: 0, transform: [{ scale: 0.94 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }], easing: EASE_OUT },
+}).duration(200);
 
 interface Props {
   queue: DialogQueue;
