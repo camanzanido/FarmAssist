@@ -114,15 +114,15 @@ export default function RegisterScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
           <View style={s.topRow}>
-            <TouchableOpacity onPress={() => router.back()} style={s.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
-              <Ionicons name="close" size={22} color={Colors.ink} />
-            </TouchableOpacity>
             <Image
               source={require('@/assets/images/FarmAssist-logo.png')}
               style={s.logo}
               resizeMode="contain"
               accessibilityIgnoresInvertColors
             />
+            <TouchableOpacity onPress={() => router.back()} style={s.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
+              <Ionicons name="close" size={22} color={Colors.ink} />
+            </TouchableOpacity>
           </View>
 
           <Text style={s.title}>{copy.registerTitle}</Text>
@@ -179,7 +179,7 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   scroll: { ...contentColumn, padding: 24, paddingBottom: 40 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  closeBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginLeft: -8 },
+  closeBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginRight: -8 },
   logo: { width: 40, height: 40 },
   title: { fontSize: 26, fontWeight: '800', color: Colors.ink, marginBottom: 22, letterSpacing: -0.4 },
 

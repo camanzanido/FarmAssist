@@ -28,7 +28,7 @@ const BANDS: { key: BandKey; color: string }[] = [
 // Draws the dry / average / wet split as a ring; with onChange, the two band boundaries can be dragged.
 export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels = resultCopy.normalYearLegend, onChange }: Props) {
   const interactive = !!onChange;
-  const handleR = interactive ? stroke * 0.62 : 0;
+  const handleR = interactive ? stroke * 0.4 : 0;
   const c = size / 2;
   const r = c - Math.max(stroke / 2, handleR) - 2;
   const circumference = 2 * Math.PI * r;
@@ -104,10 +104,10 @@ export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels
             key={key}
             cx={p.x}
             cy={p.y}
-            r={isActive ? handleR + 2 : handleR}
+            r={isActive ? handleR + 1.5 : handleR}
             fill={Colors.surface}
             stroke={Colors.ink}
-            strokeWidth={isActive ? 3 : 2}
+            strokeWidth={isActive ? 2.5 : 1.5}
           />
         );
       })

@@ -26,11 +26,11 @@ type Slide = (typeof copy.slides)[number];
 const SLIDES = copy.slides;
 const LAST = SLIDES.length - 1;
 
-const SLIDE_ART: Record<Slide['key'], number> = {
-  welcome: require('@/assets/images/onboarding-main-pic.png'),
-  compare: require('@/assets/images/compare.png'),
-  offline: require('@/assets/images/no-internet.png'),
-  sync: require('@/assets/images/sign-in.png'),
+// Line icons in a soft circle, the same style as the rest of the app; the welcome slide shows the logo.
+const SLIDE_ICONS: Record<Exclude<Slide['key'], 'welcome'>, keyof typeof Ionicons.glyphMap> = {
+  compare: 'git-compare-outline',
+  offline: 'cloud-offline-outline',
+  sync: 'sync-outline',
 };
 
 export default function OnboardingScreen() {
@@ -83,12 +83,18 @@ export default function OnboardingScreen() {
     return (
       <View style={[s.slide, { width }]}>
         <View style={s.slideInner} accessible accessibilityLabel={`${item.title}. ${item.body}`}>
-          <Image
-            source={SLIDE_ART[item.key]}
-            style={item.key === 'welcome' ? s.mainPic : s.art}
-            resizeMode="contain"
-            accessibilityIgnoresInvertColors
-          />
+          {item.key === 'welcome' ? (
+            <Image
+              source={require('@/assets/images/FarmAssist-logo.png')}
+              style={s.logo}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
+          ) : (
+            <View style={s.art}>
+              <Ionicons name={SLIDE_ICONS[item.key]} size={72} color={Colors.accent} />
+            </View>
+          )}
           {item.key === 'welcome' ? (
             // The wordmark stands in for the title; the slide's accessibilityLabel still reads it aloud.
             <Image
@@ -186,10 +192,12 @@ const s = StyleSheet.create({
   slide: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
   slideInner: { width: '100%', maxWidth: CONTENT_MAX_WIDTH, alignItems: 'center' },
   // Both sides are set: Android defaults a local image's height to its file size, which overrides aspectRatio.
-  mainPic: { width: 264, height: 285, marginBottom: 16 },
+  logo: { width: 150, height: 150, marginBottom: 20 },
   wordmark: { width: 313, maxWidth: '100%', height: 81 },
-  // One frame for all three so titles line up across slides; contain fits each image's own shape inside it.
-  art: { width: 260, maxWidth: '100%', height: 220, marginBottom: 24 },
+  art: {
+    width: 150, height: 150, borderRadius: 75, backgroundColor: Colors.accentTint,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 28,
+  },
   title: { fontSize: 26, fontWeight: '800', color: Colors.ink, textAlign: 'center', letterSpacing: -0.4 },
   body: { fontSize: 16, color: Colors.inkMuted, textAlign: 'center', lineHeight: 24, marginTop: 12, maxWidth: 440 },
 

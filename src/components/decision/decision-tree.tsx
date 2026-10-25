@@ -46,7 +46,6 @@ function OutcomeCard({ outcome: o }: { outcome: TreeOutcome }) {
   return (
     <View style={[s.outcome, notForecast && s.notForecast]}>
       <View style={s.outcomeTop}>
-        <View style={[s.outcomeDot, { backgroundColor: OUTCOME_COLORS[o.key] }]} />
         <Text style={s.outcomeLabel} numberOfLines={1}>{copy.outcomes[o.key]}</Text>
         <Text style={s.outcomePct}>{formatPct(o.probability)}</Text>
       </View>
@@ -73,11 +72,6 @@ function BranchColumn({ branch, dimmed }: { branch: TreeBranch; dimmed: boolean 
     >
       <Stem color={rail} />
       <View style={[s.option, branch.recommended && s.optionBest]}>
-        {branch.recommended && (
-          <View style={s.bestBadge}>
-            <Text style={s.bestBadgeText}>{copy.best}</Text>
-          </View>
-        )}
         <Text style={[s.optionName, branch.recommended && s.optionNameBest]} numberOfLines={2}>{branch.optionName}</Text>
         <Text style={s.expected}>{copy.expected}</Text>
         <Text style={[s.expectedValue, { color: branch.recommended ? Colors.accent : Colors.inkSoft }]}>{formatPeso(branch.expectedValue)}</Text>
@@ -179,8 +173,6 @@ const s = StyleSheet.create({
     paddingVertical: 10, paddingHorizontal: 8, ...cardShadow,
   },
   optionBest: { borderColor: Colors.accent, borderWidth: 1.5, backgroundColor: Colors.accentTint },
-  bestBadge: { backgroundColor: Colors.accent, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 5 },
-  bestBadgeText: { fontSize: 10, fontWeight: '800', color: Colors.onDark, letterSpacing: 0.6 },
   optionName: { fontSize: 15, fontWeight: '700', color: Colors.inkSoft, textAlign: 'center' },
   optionNameBest: { color: Colors.ink, fontWeight: '800' },
   expected: { fontSize: 11, color: Colors.inkFaint, marginTop: 4 },
@@ -191,7 +183,6 @@ const s = StyleSheet.create({
   outcome: { backgroundColor: Colors.surface, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, paddingVertical: 8, paddingHorizontal: 10 },
   notForecast: { opacity: 0.5 },
   outcomeTop: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  outcomeDot: { width: 8, height: 8, borderRadius: 2, transform: [{ rotate: '45deg' }] },
   outcomeLabel: { flex: 1, fontSize: 12, fontWeight: '600', color: Colors.ink },
   outcomePct: { fontSize: 12, fontWeight: '700', color: Colors.inkSoft, fontVariant: ['tabular-nums'] },
   outcomeValue: { fontSize: 14, fontWeight: '800', marginTop: 3, fontVariant: ['tabular-nums'] },

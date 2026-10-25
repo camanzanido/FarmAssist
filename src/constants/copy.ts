@@ -145,7 +145,6 @@ export const treeCopy = {
   heading: 'Decision tree',
   subtitle: 'Chance of each kind of year × what the option earns in it, added up.',
   rootLabel: 'Your choice',
-  best: 'BEST',
   expected: 'Expected',
   outcomes: { dry: 'Dry years', average: 'Average years', wet: 'Wet years' },
   notForecast: 'not forecast',
