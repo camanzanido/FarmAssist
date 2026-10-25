@@ -1,4 +1,4 @@
-import { cardShadow, Colors } from '@/src/constants/colors';
+import { cardSurface, Colors } from '@/src/constants/colors';
 import { aboutCopy as copy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
 import { Ionicons } from '@expo/vector-icons';
@@ -117,7 +117,7 @@ const s = StyleSheet.create({
   versionText: { fontSize: 12, fontWeight: '700', color: Colors.accent },
 
   sectionHeading: { fontSize: 12, fontWeight: '700', letterSpacing: 0.9, color: Colors.inkFaint, marginBottom: 10 },
-  card: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 16, marginBottom: 20, ...cardShadow },
+  card: { ...cardSurface, marginBottom: 20 },
   body: { fontSize: 14.5, color: Colors.inkMuted, lineHeight: 21, padding: 16 },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, minHeight: 56 },

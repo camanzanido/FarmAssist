@@ -7,7 +7,7 @@ import { GradientText } from '@/src/components/ui/gradient-text';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
-import { BrandGradient, brandGradientCss, cardShadow, Colors, ForecastColors } from '@/src/constants/colors';
+import { BrandGradient, brandGradientCss, CARD_PADDING, cardShadow, cardSurface, Colors, ForecastColors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy, predefinedCopy } from '@/src/constants/copy';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
@@ -637,7 +637,7 @@ const s = StyleSheet.create({
 
   // Naming step
   namingGroup: { gap: 12 },
-  namingCard: { backgroundColor: Colors.surface, borderRadius: 18, padding: 18, ...cardShadow, borderWidth: 1.5, borderColor: Colors.border },
+  namingCard: { ...cardSurface, padding: CARD_PADDING },
   namingCardInvalid: { borderColor: Colors.danger },
   badge: { alignSelf: 'flex-start', marginBottom: 10 },
   badgeText: { fontSize: 14, fontWeight: '700', color: Colors.inkSoft },
@@ -673,7 +673,7 @@ const s = StyleSheet.create({
   subtitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   scenariosHeading: { fontSize: 13, fontWeight: '700', letterSpacing: 0.6, color: Colors.inkFaint, marginBottom: 10, marginLeft: 2 },
 
-  scenarioCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 15, marginBottom: 12, borderWidth: 1, borderColor: Colors.border, ...cardShadow },
+  scenarioCard: { ...cardSurface, padding: CARD_PADDING, marginBottom: 12 },
   scenarioHeader: { marginBottom: 12 },
   optionTitle: { ...wizardHeader.title, fontSize: 30, lineHeight: 36, marginBottom: 6 },
   scenarioName: { fontSize: 16, fontWeight: '800', color: Colors.ink },
@@ -704,7 +704,7 @@ const s = StyleSheet.create({
   errorText: { color: Colors.danger, fontSize: 12, textAlign: 'center', marginTop: 12, fontWeight: '600' },
 
   // Climate step
-  climateCard: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 20, padding: 20, marginBottom: 16, ...cardShadow },
+  climateCard: { ...cardSurface, padding: CARD_PADDING, marginBottom: 16 },
   donutWrap: { alignItems: 'center', marginBottom: 8 },
   donutHint: { fontSize: 12, color: Colors.inkFaint, marginTop: 8, textAlign: 'center' },
 

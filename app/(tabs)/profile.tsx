@@ -2,7 +2,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
-import { brandGradientCss, cardShadow, Colors } from '@/src/constants/colors';
+import { brandGradientCss, CARD_PADDING, CARD_RADIUS, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { changePasswordCopy, helpCopy, profileCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
@@ -303,11 +303,11 @@ const s = StyleSheet.create({
   username: { fontSize: 14, color: Colors.inkSoft, marginTop: 2 },
 
   statsRow: { flexDirection: 'row', gap: 9, marginBottom: 20 },
-  statCard: { flex: 1, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 14, padding: 14, ...cardShadow },
+  statCard: { flex: 1, ...cardSurface, padding: CARD_PADDING },
   statValue: { fontSize: 22, fontWeight: '800', color: Colors.ink },
   statLabel: { fontSize: 12, color: Colors.inkFaint, marginTop: 2 },
 
-  offlineCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.amberBg, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 16, marginBottom: 20 },
+  offlineCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.amberBg, borderRadius: CARD_RADIUS, padding: CARD_PADDING, marginBottom: 20 },
   offlineInfo: { flex: 1 },
   offlineTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 8 },
   offlineTitle: { fontSize: 15, fontWeight: '800', color: Colors.amberText, flexShrink: 1 },
@@ -316,17 +316,17 @@ const s = StyleSheet.create({
   syncBtnBusy: { opacity: 0.6 },
   syncBtnText: { fontSize: 13, fontWeight: '700', color: Colors.amberText },
 
-  errorCard: { backgroundColor: Colors.dangerBg, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: 16, padding: 16, marginBottom: 20 },
+  errorCard: { backgroundColor: Colors.dangerBg, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: CARD_RADIUS, padding: CARD_PADDING, marginBottom: 20 },
   errorTitle: { fontSize: 15, fontWeight: '800', color: Colors.danger },
   errorBody: { fontSize: 13.5, color: Colors.dangerText, lineHeight: 19, marginBottom: 12 },
   errorDismissBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: 11, height: 40 },
   errorDismissBtnText: { fontSize: 13, fontWeight: '700', color: Colors.danger },
 
-  loadErrorCard: { backgroundColor: Colors.dangerBg, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: 16, padding: 16, marginBottom: 20 },
+  loadErrorCard: { backgroundColor: Colors.dangerBg, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: CARD_RADIUS, padding: CARD_PADDING, marginBottom: 20 },
   loadErrorTitle: { fontSize: 15, fontWeight: '800', color: Colors.danger },
   loadErrorBody: { fontSize: 13.5, color: Colors.dangerText, lineHeight: 19, marginBottom: 12 },
 
-  listCard: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 16, marginBottom: 20, ...cardShadow },
+  listCard: { ...cardSurface, marginBottom: 20 },
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 15 },
   listRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.divider },
   listRowLabel: { fontSize: 15, fontWeight: '600', color: Colors.ink },

@@ -1,5 +1,5 @@
 import { Skeleton, SkeletonGroup } from '@/src/components/ui/skeleton';
-import { cardShadow, Colors } from '@/src/constants/colors';
+import { CARD_PADDING, cardShadow, cardSurface, Colors } from '@/src/constants/colors';
 import { useIsWide, wideColumn } from '@/src/constants/layout';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -140,12 +140,12 @@ const s = StyleSheet.create({
   },
   rowBody: { flex: 1, gap: 8 },
 
-  card: { backgroundColor: Colors.surface, borderRadius: 18, borderWidth: 1, borderColor: Colors.border, padding: 18, ...cardShadow },
+  card: { ...cardSurface, padding: CARD_PADDING },
   statGrid: { gap: 10 },
   statGridWide: { flexDirection: 'row' },
   statRow: { flex: 1, flexDirection: 'row', gap: 10 },
   stat: { flex: 1, padding: 16 },
-  section: { marginTop: 26 },
+  section: { ...cardSurface, padding: CARD_PADDING, marginTop: 12 },
   bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 9, height: 110, marginTop: 16 },
   splitRow: { flexDirection: 'row', gap: 20 },
   typesCol: { flex: 2 },

@@ -5,7 +5,7 @@ import { HistorySkeleton } from '@/src/components/skeletons/app-skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { PopoverMenu } from '@/src/components/ui/popover-menu';
 import { TrashIcon } from '@/src/components/ui/trash-icon';
-import { brandGradientSoftCss, cardShadow, Colors } from '@/src/constants/colors';
+import { brandGradientSoftCss, CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { decisionResultLabel, historyCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
@@ -337,11 +337,9 @@ const s = StyleSheet.create({
 
   card: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.surface, borderRadius: 16,
-    borderWidth: 1, borderColor: Colors.border,
-    padding: 16, gap: 13,
+    ...cardSurface,
+    padding: CARD_PADDING, gap: 13,
     marginBottom: 11,
-    ...cardShadow,
   },
   cardPressed: { experimental_backgroundImage: brandGradientSoftCss(135), borderColor: Colors.accentTintStrong },
   cardMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 13 },

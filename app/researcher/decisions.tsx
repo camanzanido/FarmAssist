@@ -6,7 +6,7 @@ import { Pager } from '@/src/components/researcher/pager';
 import { ListRowsSkeleton, ListScreenSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
-import { cardShadow, Colors } from '@/src/constants/colors';
+import { CARD_PADDING, cardShadow, cardSurface, Colors } from '@/src/constants/colors';
 import { decisionResultLabel } from '@/src/constants/copy';
 import { wideColumn } from '@/src/constants/layout';
 import { deleteDecisionRemote, fetchDecisionsPage, type ResearcherDecisionRow } from '@/src/database/repositories/researcher';
@@ -280,8 +280,7 @@ const s = StyleSheet.create({
 
   card: {
     flexDirection: 'row', alignItems: 'center', gap: 13,
-    backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
-    padding: 16, marginBottom: 11, ...cardShadow,
+    ...cardSurface, padding: CARD_PADDING, marginBottom: 11,
   },
   iconWrap: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   cardBody: { flex: 1 },

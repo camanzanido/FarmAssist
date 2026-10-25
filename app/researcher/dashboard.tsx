@@ -5,7 +5,7 @@ import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { DonutChart } from '@/src/components/ui/donut-chart';
 import { OdometerText } from '@/src/components/ui/odometer-text';
 import { DECISIONS, DecisionType } from '@/src/constants';
-import { cardShadow, Colors, DecisionTypeColors } from '@/src/constants/colors';
+import { CARD_PADDING, cardSurface, Colors, DecisionTypeColors } from '@/src/constants/colors';
 import { useIsWide, wideColumn } from '@/src/constants/layout';
 import { fetchOverview, type Overview } from '@/src/database/repositories/researcher';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
@@ -198,7 +198,7 @@ export default function ResearcherDashboardScreen() {
                 </View>
 
                 {topMunicipalities.length > 0 && (
-                  <View style={splitRow ? s.muniCol : s.section}>
+                  <View style={splitRow ? s.muniCol : s.stackedMuni}>
                     <Text style={s.sectionTitle}>Top municipalities</Text>
                     <View style={{ gap: 12, marginTop: 14 }}>
                       {topMunicipalities.map(m => (
@@ -238,14 +238,15 @@ const s = StyleSheet.create({
   statRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
   statGridWide: { flexDirection: 'row', gap: 10 },
   statRowWide: { flex: 1 },
-  statCard: { flex: 1, backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1, borderColor: Colors.border, padding: 16, ...cardShadow },
+  statCard: { flex: 1, ...cardSurface, padding: CARD_PADDING },
   statValue: { fontSize: 28, lineHeight: 34, fontWeight: '800', color: Colors.ink, letterSpacing: -0.5 },
   statLabel: { fontSize: 12.5, color: Colors.inkSoft, marginTop: 3 },
   statDelta: { fontSize: 11.5, fontWeight: '700', color: Colors.accent, marginTop: 7 },
 
   rangeRow: { marginTop: 8, marginBottom: 4 },
 
-  section: { marginTop: 26 },
+  section: { ...cardSurface, padding: CARD_PADDING, marginTop: 12 },
+  stackedMuni: { marginTop: 26 },
   sectionHeadRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 11 },
   sectionTitle: { fontSize: 14.5, fontWeight: '800', color: Colors.ink, marginBottom: 3 },
   sectionHint: { fontSize: 12, color: Colors.inkFaint, marginBottom: 16 },

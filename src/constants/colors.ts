@@ -119,3 +119,10 @@ export const brandGradientSoftCss = (angle = 90) =>
 
 // Drop shadow for white cards on the white page.
 export const cardShadow = { shadowColor: '#0A3B28', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 } as const;
+
+// Every page card shares this surface; tinted cards keep their colour but use the same radius and padding.
+export const CARD_RADIUS = 16;
+export const CARD_PADDING = 16;
+export const cardSurface = {
+  backgroundColor: Colors.surface, borderRadius: CARD_RADIUS, borderWidth: 1, borderColor: Colors.border, ...cardShadow,
+} as const;

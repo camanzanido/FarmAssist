@@ -1,4 +1,4 @@
-import { cardShadow, Colors, ForecastColors } from '@/src/constants/colors';
+import { CARD_PADDING, cardShadow, cardSurface, Colors, ForecastColors } from '@/src/constants/colors';
 import { treeCopy as copy } from '@/src/constants/copy';
 import type { DecisionTree as Tree, OutcomeKey, TreeBranch, TreeOutcome } from '@/src/rcda/decisionTree';
 import React from 'react';
@@ -152,7 +152,7 @@ export function DecisionTree({ tree, bare = false }: { tree: Tree; bare?: boolea
 }
 
 const s = StyleSheet.create({
-  card: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 18, padding: 18, marginBottom: 14, ...cardShadow },
+  card: { ...cardSurface, padding: CARD_PADDING, marginBottom: 14 },
   bare: { paddingVertical: 4, marginBottom: 18 },
   heading: { fontSize: 14, fontWeight: '800', color: Colors.ink },
   subtitle: { fontSize: 13, color: Colors.inkSoft, lineHeight: 18, marginTop: 4, marginBottom: 18 },

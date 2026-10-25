@@ -2,7 +2,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { DECISIONS } from '@/src/constants';
 import { AnimatedIcon } from '@/src/components/ui/animated-icon';
 import { GradientText } from '@/src/components/ui/gradient-text';
-import { BrandGradient, brandGradientCss, cardShadow, Colors } from '@/src/constants/colors';
+import { BrandGradient, brandGradientCss, CARD_PADDING, CARD_RADIUS, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { decisionResultLabel, helpCopy, homeCopy as copy } from '@/src/constants/copy';
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
@@ -204,7 +204,7 @@ const s = StyleSheet.create({
 
   lastDecisionBlock: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 18 },
   lastDecisionHeading: { fontSize: 14, fontWeight: '700', color: Colors.accent, marginBottom: 11 },
-  lastDecisionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.accentTint, borderRadius: 14, padding: 14, ...cardShadow },
+  lastDecisionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.accentTint, borderRadius: CARD_RADIUS, padding: CARD_PADDING, ...cardShadow },
   lastDecisionResult: { fontSize: 15, fontWeight: '700', color: Colors.ink },
   lastDecisionMeta: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
 });

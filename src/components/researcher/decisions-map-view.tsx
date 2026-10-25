@@ -48,7 +48,6 @@ function CityListRow({ row, selected, onPress, onView }: {
       accessibilityRole="button"
       accessibilityHint="Shows this municipality on the map and lets you view its decisions"
     >
-      <View style={[s.rowDot, !row.coord && s.rowDotMissing]} />
       <View style={s.rowPlace}>
         <Text style={s.rowCity} numberOfLines={1}>{row.city}</Text>
         <Text style={s.rowProvince} numberOfLines={1}>{row.province}</Text>
@@ -333,8 +332,6 @@ const s = StyleSheet.create({
   },
   rowSelected: { borderColor: Colors.accent, backgroundColor: Colors.accentTint },
   rowPressed: { backgroundColor: Colors.surfaceAlt },
-  rowDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.accent },
-  rowDotMissing: { backgroundColor: Colors.barMuted },
   rowPlace: { flex: 1 },
   rowCity: { fontSize: 15, fontWeight: '800', color: Colors.ink },
   rowProvince: { fontSize: 12, color: Colors.inkFaint, marginTop: 1 },
