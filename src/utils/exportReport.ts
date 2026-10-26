@@ -139,7 +139,7 @@ const BASE_COLUMNS: Column[] = [
 ];
 
 const FARMER_COLUMNS: Column[] = [
-  { key: 'farmer', label: 'Farmer', raw: (d, c) => c.usersById.get(d.user_id)?.name ?? '' },
+  { key: 'farmer', label: 'Field user', raw: (d, c) => c.usersById.get(d.user_id)?.name ?? '' },
   { key: 'city', label: 'City', raw: (d, c) => c.locationsById.get(d.location_id)?.city ?? '' },
   { key: 'province', label: 'Province', raw: (d, c) => c.locationsById.get(d.location_id)?.province ?? '' },
 ];
@@ -309,7 +309,7 @@ export function buildPdfHtml(decisions: Decision[], opts: ExportOptions, ctx: Ex
   const farmers = new Set(rows.map((d) => d.user_id).filter(Boolean)).size;
   const summary = [
     `${rows.length} decision${rows.length === 1 ? '' : 's'}`,
-    `${farmers} farmer${farmers === 1 ? '' : 's'}`,
+    `${farmers} field user${farmers === 1 ? '' : 's'}`,
     `average gain ${formatCurrency(mean(rows.map((d) => d.profit_increase)))}/ha`,
   ].join(' · ');
 

@@ -9,6 +9,7 @@ import { UserSheet, userInitials } from '@/src/components/researcher/user-sheet'
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
+import { ROLE_SHORT, ROLE_TAG } from '@/src/constants/labels';
 import { wideColumn } from '@/src/constants/layout';
 import { fetchUserCounts, fetchUsersPage, type ResearcherUserRow, type UserCounts } from '@/src/database/repositories/researcher';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
@@ -55,7 +56,7 @@ function UserRow({ user: u, onPress }: { user: ResearcherUserRow; onPress: (u: R
       </View>
       <View style={[s.roleTag, isResearcher && s.roleTagResearcher, isPending && s.roleTagPending]}>
         <Text style={[s.roleTagText, isResearcher && s.roleTagTextResearcher, isPending && s.roleTagTextPending]}>
-          {isPending ? 'PENDING' : isResearcher ? 'RESEARCHER' : isInactive ? 'OFF' : 'FARMER'}
+          {isPending ? 'PENDING' : isResearcher ? ROLE_TAG.researcher : isInactive ? 'OFF' : ROLE_TAG.farmer}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
@@ -88,8 +89,8 @@ export default function ResearcherUsersScreen() {
 
   const filterOptions = useMemo(() => [
     { value: 'all' as const, label: `All ${counts.all}` },
-    { value: 'farmer' as const, label: `Farmers ${counts.farmer}` },
-    { value: 'researcher' as const, label: `Researchers ${counts.researcher}` },
+    { value: 'farmer' as const, label: `${ROLE_SHORT.farmer}s ${counts.farmer}` },
+    { value: 'researcher' as const, label: `${ROLE_SHORT.researcher}s ${counts.researcher}` },
   ], [counts]);
 
   const goToPage = (p: number) => {
@@ -110,7 +111,7 @@ export default function ResearcherUsersScreen() {
 
   const onUserCreated = ({ name, username, role }: { name: string; username: string; role: UserType }) => {
     setCreateOpen(false);
-    notify.success(`${role === 'researcher' ? 'Researcher' : 'Farmer'} account created`, `${name} can now sign in with the username ${username}.`);
+    notify.success(`${ROLE_SHORT[role]} account created`, `${name} can now sign in with the username ${username}.`);
     reloadPage();
     reloadCounts();
   };

@@ -1,11 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ImageSourcePropType } from 'react-native';
+import type { UserType } from '@/src/auth/types';
 
 // --- Types ---
 export type DecisionType = 'crop_choice' | 'crop_variety' | 'protect';
 export type FieldGroup = 'yield' | 'cost' | 'addCost';
 
 // --- Data ---
+// Farmers and extension workers share the 'farmer' role; researchers are the admins. Only the wording differs from the stored value.
+export const ROLE_LABEL: Record<UserType, string> = {
+  farmer: 'Field user (farmer or extension worker)',
+  researcher: 'Admin (researcher)',
+};
+export const ROLE_SHORT: Record<UserType, string> = { farmer: 'Field user', researcher: 'Admin' };
+export const ROLE_TAG: Record<UserType, string> = { farmer: 'FIELD', researcher: 'ADMIN' };
+
 export const PLACEHOLDERS: Record<DecisionType, [string, string]> = {
   crop_choice: ['e.g. Rice IR64', 'e.g. Corn OPV'],
   crop_variety: ['e.g. NSIC Rc222', 'e.g. NSIC Rc160'],

@@ -5,6 +5,7 @@ import { connectSync } from '@/src/auth/authService';
 import { brandGradientCss, CARD_PADDING, CARD_RADIUS, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { changePasswordCopy, helpCopy, profileCopy as copy } from '@/src/constants/copy';
+import { ROLE_SHORT } from '@/src/constants/labels';
 import { db } from '@/src/database/powersync/powersync';
 import { getDecisionsByUser, getStagedDecisionIds } from '@/src/database/repositories/decisions';
 import { getLocationsByUser, type Location } from '@/src/database/repositories/locations';
@@ -15,9 +16,9 @@ import { PopoverMenu } from '@/src/components/ui/popover-menu';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { displayEmail, realEmail } from '@/src/utils/accountEmail';
+import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -37,7 +38,7 @@ function formatSyncTime(date: Date | null): string {
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { confirm, notify } = useFeedback();
-  const router = useRouter();
+  const nav = useNavLock();
   const [passwordOpen, setPasswordOpen] = useState(false);
   const isAuthenticated = !!user;
   const sync = useSyncStatus();
@@ -112,10 +113,10 @@ export default function ProfileScreen() {
       {!isAuthenticated ? (
         <View style={s.signedOutScreen}>
           <View style={s.signedOutTop}>
-            <TouchableOpacity onPress={() => router.push('/about')} hitSlop={8} style={s.topIcon} accessibilityRole="button" accessibilityLabel={copy.about}>
+            <TouchableOpacity onPress={() => nav.push('/about')} hitSlop={8} style={s.topIcon} accessibilityRole="button" accessibilityLabel={copy.about}>
               <Ionicons name="information-circle-outline" size={24} color={Colors.ink} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/onboarding?replay=1')} hitSlop={8} style={s.topIcon} accessibilityRole="button" accessibilityLabel={copy.viewIntro}>
+            <TouchableOpacity onPress={() => nav.push('/onboarding?replay=1')} hitSlop={8} style={s.topIcon} accessibilityRole="button" accessibilityLabel={copy.viewIntro}>
               <Ionicons name="book-outline" size={23} color={Colors.ink} />
             </TouchableOpacity>
           </View>
@@ -129,10 +130,10 @@ export default function ProfileScreen() {
             <Text style={s.signedOutTitle}>{copy.signedOutTitle}</Text>
             <Text style={s.signedOutSubtitle}>{copy.signedOutSubtitle}</Text>
 
-            <TouchableOpacity style={s.primaryBtn} onPress={() => router.push('/(auth)/login')} activeOpacity={0.85}>
+            <TouchableOpacity style={s.primaryBtn} onPress={() => nav.push('/(auth)/login')} activeOpacity={0.85}>
               <Text style={s.primaryBtnText}>{copy.signIn}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={s.secondaryBtn} onPress={() => router.push('/(auth)/register')} activeOpacity={0.85}>
+            <TouchableOpacity style={s.secondaryBtn} onPress={() => nav.push('/(auth)/register')} activeOpacity={0.85}>
               <Text style={s.secondaryBtnText}>{copy.createAccount}</Text>
             </TouchableOpacity>
           </View>
@@ -237,19 +238,19 @@ export default function ProfileScreen() {
             <View style={[s.listRow, s.listRowBorder]}>
               <Ionicons name="shield-checkmark-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.accountType}</Text>
-              <Text style={s.listRowValue}>Farmer</Text>
+              <Text style={s.listRowValue}>{ROLE_SHORT.farmer}</Text>
             </View>
-            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => router.push('/about')} activeOpacity={0.7} accessibilityRole="button">
+            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/about')} activeOpacity={0.7} accessibilityRole="button">
               <Ionicons name="information-circle-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.about}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </TouchableOpacity>
-            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => router.push('/help')} activeOpacity={0.7} accessibilityRole="button">
+            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/help')} activeOpacity={0.7} accessibilityRole="button">
               <Ionicons name="help-circle-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{helpCopy.openHelp}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </TouchableOpacity>
-            <TouchableOpacity style={s.listRow} onPress={() => router.push('/onboarding?replay=1')} activeOpacity={0.7} accessibilityRole="button">
+            <TouchableOpacity style={s.listRow} onPress={() => nav.push('/onboarding?replay=1')} activeOpacity={0.7} accessibilityRole="button">
               <Ionicons name="book-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.viewIntro}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
@@ -263,7 +264,8 @@ export default function ProfileScreen() {
       )}
       <EditProfileSheet
         visible={edit.isOpen}
-        canChangeEmail={sync.connected}
+        online={sync.connected}
+        pendingEmail={edit.pendingEmail}
         onClose={edit.close}
         onSaved={edit.onSaved}
       />

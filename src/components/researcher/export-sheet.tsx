@@ -235,7 +235,7 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
                 <View style={[s.checkbox, includeFarmerLocation && s.checkboxChecked]}>
                   {includeFarmerLocation && <Ionicons name="checkmark" size={15} color={C.accentDeepText} />}
                 </View>
-                <Text style={s.includeLabel}>Farmer & location</Text>
+                <Text style={s.includeLabel}>Field user & location</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[s.includeRow, format === 'pdf' && s.includeRowBorder]} onPress={() => setIncludeClimate(v => !v)}>
                 <View style={[s.checkbox, includeClimate && s.checkboxChecked]}>

@@ -128,7 +128,7 @@ export default function ResearcherDashboardScreen() {
               </View>
               <View style={s.statCard}>
                 <OdometerText text={overview.active_farmers.toLocaleString()} colors={INK} style={s.statValue} />
-                <Text style={s.statLabel}>Active farmers</Text>
+                <Text style={s.statLabel}>Active field users</Text>
                 <Text style={s.statDelta}>+{overview.new_farmers_this_month} this month</Text>
               </View>
             </View>

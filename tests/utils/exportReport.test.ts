@@ -158,7 +158,7 @@ describe('buildPdfHtml', () => {
     expect(html).not.toContain('abc-123');
     expect(html).toContain('<td>Crop Choice</td>');
     expect(html).toContain('Period: September 2026');
-    expect(html).toContain('1 decision · 1 farmer');
+    expect(html).toContain('1 decision · 1 field user');
   });
 
   it('escapes user-entered text', () => {
@@ -173,7 +173,7 @@ describe('buildPdfHtml', () => {
   it('shows an empty-state row when the period has no decisions', () => {
     const html = buildPdfHtml([], { includeFarmerLocation: false, includeClimate: false }, CTX, meta);
     expect(html).toContain('No decisions in this period.');
-    expect(html).toContain('0 decisions · 0 farmers');
+    expect(html).toContain('0 decisions · 0 field users');
   });
 });
 
