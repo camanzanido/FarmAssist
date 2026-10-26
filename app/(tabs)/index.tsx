@@ -9,9 +9,9 @@ import { getDecisionsByUser, type Decision } from '@/src/database/repositories/d
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { useUpdateCheck } from '@/src/hooks/use-update-check';
 import { ProfitAmount } from '@/src/components/ui/profit-amount';
+import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,7 +23,7 @@ function formatDate(iso: string): string {
 }
 
 export default function HomeScreen() {
-  const router = useRouter();
+  const nav = useNavLock();
   const { user } = useAuth();
   const { connected } = useSyncStatus();
   const { update, dismiss } = useUpdateCheck();
@@ -53,7 +53,7 @@ export default function HomeScreen() {
   useFocusEffect(useCallback(() => { load(); setVisits(n => n + 1); }, [load]));
 
   const goToDecision = (decisionType: string) => {
-    router.push({ pathname: '/input-flow', params: { decisionType } });
+    nav.push({ pathname: '/input-flow', params: { decisionType } });
   };
 
   const isOffline = !!user && !connected;
@@ -80,7 +80,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={s.helpIcon}
               onPressIn={() => setHelpPresses(n => n + 1)}
-              onPress={() => router.push('/help')}
+              onPress={() => nav.push('/help')}
               hitSlop={6}
               accessibilityRole="button"
               accessibilityLabel={helpCopy.helpLabel}

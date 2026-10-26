@@ -14,6 +14,7 @@ import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { isForecastComputable } from '@/src/rcda/decisionTree';
 import { formatNumberDisplay, normalizeNumberInput } from '@/src/utils/numberInput';
 import { PredefinedOption, climateRowToFormValues } from '@/src/utils/predefinedOptions';
+import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -31,6 +32,7 @@ function emptyFive(): string[] {
 
 export default function DecisionInputFlow() {
   const router = useRouter();
+  const nav = useNavLock();
   const { confirm, notify } = useFeedback();
   const { user } = useAuth();
   const { connected } = useSyncStatus();
@@ -185,7 +187,7 @@ export default function DecisionInputFlow() {
       if (isDataValid()) setStep('weather');
     } else if (step === 'weather') {
       // Final navigation to results
-      router.push({
+      nav.push({
         pathname: '/result',
         params: {
           decisionType: decisionType,

@@ -11,9 +11,9 @@ import { decisionResultLabel, historyCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { deleteDecision, getDecisionsByUser, getStagedDecisionIds, type Decision } from '@/src/database/repositories/decisions';
 import { ProfitAmount } from '@/src/components/ui/profit-amount';
+import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -123,7 +123,7 @@ const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen,
 });
 
 export default function HistoryScreen() {
-  const router = useRouter();
+  const nav = useNavLock();
   const { user } = useAuth();
   const { confirm, notify } = useFeedback();
   const userId = user?.id ?? '';
@@ -199,8 +199,8 @@ export default function HistoryScreen() {
   }, [filtered]);
 
   const openDecision = useCallback(
-    (id: string) => router.push({ pathname: '/decision/[id]', params: { id } }),
-    [router]
+    (id: string) => nav.push({ pathname: '/decision/[id]', params: { id } }),
+    [nav]
   );
 
   const confirmDelete = useCallback(async (decision: Decision) => {
@@ -278,7 +278,7 @@ export default function HistoryScreen() {
           <Text style={s.emptySubtext}>{copy.emptySubtitle}</Text>
           <TouchableOpacity
             style={s.ctaBtn}
-            onPress={() => router.push('/decision-type')}
+            onPress={() => nav.push('/decision-type')}
             activeOpacity={0.8}
           >
             <Text style={s.ctaBtnText}>{copy.emptyCta}</Text>

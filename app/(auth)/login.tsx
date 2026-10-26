@@ -3,13 +3,15 @@ import { brandGradientCss, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { authCopy as copy, forgotPasswordCopy } from '@/src/constants/copy';
 import { formatLockTime } from '@/src/auth/signInThrottle';
+import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { useSignInThrottle } from '@/src/hooks/use-sign-in-throttle';
+import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { isEmailLogin } from '@/src/utils/accountEmail';
 import { getAuthErrorMessage, isInvalidCredentialsError } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 
@@ -22,10 +24,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState(false);
-  const { signIn, isLoading } = useAuth();
+  const { signIn } = useAuth();
   const { notify } = useFeedback();
   const router = useRouter();
+  const nav = useNavLock();
   const throttle = useSignInThrottle();
+  const { isSubmitting, run } = useSubmitOnce();
 
   function getFieldErrors(): FieldErrors {
     const errors: FieldErrors = {};
@@ -46,13 +50,15 @@ export default function LoginScreen() {
 
     if (throttle.isLocked) return;
 
-    try {
-      await signIn(login.trim(), password);
-      throttle.onSuccess();
-    } catch (e: any) {
-      if (isInvalidCredentialsError(e)) throttle.onFailure();
-      notify.error('Login failed', getAuthErrorMessage(e, 'Something went wrong. Please try again.'));
-    }
+    await run(async () => {
+      try {
+        await signIn(login.trim(), password);
+        throttle.onSuccess();
+      } catch (e: any) {
+        if (isInvalidCredentialsError(e)) throttle.onFailure();
+        notify.error('Login failed', getAuthErrorMessage(e, 'Something went wrong. Please try again.'));
+      }
+    });
   }
 
   return (
@@ -102,19 +108,22 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
           {touched && errors.password && <Text style={s.errorText}>{errors.password}</Text>}
-          <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={s.forgotRow} hitSlop={8} accessibilityRole="link">
+          <TouchableOpacity onPress={() => nav.push('/(auth)/forgot-password')} style={s.forgotRow} hitSlop={8} accessibilityRole="link">
             <Text style={s.forgotText}>{forgotPasswordCopy.link}</Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity
           onPress={handleLogin}
-          disabled={isLoading || throttle.isLocked}
-          style={[s.signInBtn, (isLoading || throttle.isLocked) && s.signInBtnDisabled]}
+          disabled={isSubmitting || throttle.isLocked}
+          style={[s.signInBtn, (isSubmitting || throttle.isLocked) && s.signInBtnDisabled]}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: isSubmitting || throttle.isLocked, busy: isSubmitting }}
         >
+          {isSubmitting && <ActivityIndicator color={Colors.onDark} />}
           <Text style={s.signInBtnText}>
-            {throttle.isLocked ? copy.lockedButton(formatLockTime(throttle.lockMs)) : isLoading ? copy.signingIn : copy.signIn}
+            {throttle.isLocked ? copy.lockedButton(formatLockTime(throttle.lockMs)) : isSubmitting ? copy.signingIn : copy.signIn}
           </Text>
         </TouchableOpacity>
         {throttle.isLocked ? (
@@ -123,7 +132,7 @@ export default function LoginScreen() {
           <Text style={s.throttleText}>{copy.attemptsLeft(throttle.attemptsLeft)}</Text>
         ) : null}
 
-        <TouchableOpacity onPress={() => router.push('/(auth)/register')} style={s.noAccountRow}>
+        <TouchableOpacity onPress={() => nav.push('/(auth)/register')} style={s.noAccountRow}>
           <Text style={s.noAccountText}>
             {copy.noAccount} <Text style={s.noAccountLink}>{copy.createOne}</Text>
           </Text>
@@ -173,9 +182,9 @@ const s = StyleSheet.create({
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 6 },
   forgotRow: { alignSelf: 'flex-end', marginTop: 10 },
-  forgotText: { fontSize: 13.5, fontWeight: '700', color: Colors.accent },
+  forgotText: { fontSize: 13.5, fontWeight: '700', color: Colors.ink },
 
-  signInBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 16, height: 60, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
+  signInBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 16, height: 60, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
   signInBtnDisabled: { opacity: 0.6 },
   signInBtnText: { fontSize: 17, fontWeight: '800', color: Colors.onDark },
   throttleText: { fontSize: 13, color: Colors.amberText, textAlign: 'center', marginTop: -4, marginBottom: 14 },

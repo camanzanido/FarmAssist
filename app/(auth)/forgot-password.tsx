@@ -3,6 +3,7 @@ import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { forgotPasswordCopy as copy } from '@/src/constants/copy';
+import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { isInternalEmail } from '@/src/utils/accountEmail';
 import { getAuthErrorMessage } from '@/src/utils/errors';
 import { validatePassword, validatePasswordConfirm } from '@/src/utils/passwordValidation';
@@ -29,7 +30,7 @@ export default function ForgotPasswordScreen() {
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const { isSubmitting: busy, run } = useSubmitOnce();
   const [serverError, setServerError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
 
@@ -48,48 +49,45 @@ export default function ForgotPasswordScreen() {
     setTouched(true);
     setServerError(null);
     if (emailError) return;
-    setBusy(true);
-    try {
-      await sendPasswordResetCode(email);
-      setStep('code');
-      setTouched(false);
-      setCooldown(RESEND_COOLDOWN_S);
-    } catch (err) {
-      setServerError(getAuthErrorMessage(err, copy.sendFailed));
-    } finally {
-      setBusy(false);
-    }
+    await run(async () => {
+      try {
+        await sendPasswordResetCode(email);
+        setStep('code');
+        setTouched(false);
+        setCooldown(RESEND_COOLDOWN_S);
+      } catch (err) {
+        setServerError(getAuthErrorMessage(err, copy.sendFailed));
+      }
+    });
   };
 
   const resend = async () => {
-    if (cooldown > 0 || busy) return;
+    if (cooldown > 0) return;
     setServerError(null);
-    setBusy(true);
-    try {
-      await sendPasswordResetCode(email);
-      setCooldown(RESEND_COOLDOWN_S);
-      notify.info(copy.resentTitle, copy.sentBody(email.trim()));
-    } catch (err) {
-      setServerError(getAuthErrorMessage(err, copy.sendFailed));
-    } finally {
-      setBusy(false);
-    }
+    await run(async () => {
+      try {
+        await sendPasswordResetCode(email);
+        setCooldown(RESEND_COOLDOWN_S);
+        notify.info(copy.resentTitle, copy.sentBody(email.trim()));
+      } catch (err) {
+        setServerError(getAuthErrorMessage(err, copy.sendFailed));
+      }
+    });
   };
 
   const reset = async () => {
     setTouched(true);
     setServerError(null);
     if (codeError || passwordError || confirmError) return;
-    setBusy(true);
-    try {
-      await resetPasswordWithCode(email, code, password);
-      notify.success(copy.doneTitle, copy.doneBody);
-      router.back();
-    } catch (err) {
-      setServerError(getAuthErrorMessage(err, copy.resetFailed));
-    } finally {
-      setBusy(false);
-    }
+    await run(async () => {
+      try {
+        await resetPasswordWithCode(email, code, password);
+        notify.success(copy.doneTitle, copy.doneBody);
+        router.back();
+      } catch (err) {
+        setServerError(getAuthErrorMessage(err, copy.resetFailed));
+      }
+    });
   };
 
   return (
