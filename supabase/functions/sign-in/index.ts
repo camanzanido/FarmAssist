@@ -7,6 +7,12 @@ const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const INTERNAL_EMAIL_DOMAIN = 'farmassist.invalid';
 const WRONG_LOGIN = 'Incorrect username or password.';
+const TOO_MANY = 'Too many sign-in attempts. Please wait a few minutes and try again.';
+
+// Supabase Auth sees every call from this function as one IP, so the per-user and per-device limits live here.
+const RATE_WINDOW_S = 15 * 60;
+const MAX_PER_USERNAME = 10;
+const MAX_PER_IP = 30;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -39,6 +45,17 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  const userKey = `user:${username}`;
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const checks = [admin.rpc('check_sign_in_rate', { p_key: userKey, p_max: MAX_PER_USERNAME, p_window_seconds: RATE_WINDOW_S })];
+  if (ip) checks.push(admin.rpc('check_sign_in_rate', { p_key: `ip:${ip}`, p_max: MAX_PER_IP, p_window_seconds: RATE_WINDOW_S }));
+  const results = await Promise.all(checks);
+  const rateError = results.find(r => r.error)?.error;
+  // A broken limiter shouldn't lock everyone out; Supabase Auth's own limit still applies behind it.
+  if (rateError) console.error('rate check failed:', rateError);
+  else if (results.some(r => r.data === false)) return fail(429, 'over_request_rate_limit', TOO_MANY);
+
   const { data: storedEmail, error: lookupError } = await admin.rpc('login_email_for_username', { p_username: username });
   if (lookupError) {
     console.error('username lookup failed:', lookupError);
@@ -54,7 +71,7 @@ Deno.serve(async (req) => {
   const { data, error } = await anon.auth.signInWithPassword({ email, password });
   if (error || !data.session) {
     if (error?.status === 429) {
-      return fail(429, 'over_request_rate_limit', 'Too many sign-in attempts. Please wait a few minutes and try again.');
+      return fail(429, 'over_request_rate_limit', TOO_MANY);
     }
     if (error?.code === 'email_not_confirmed') {
       return fail(400, 'email_not_confirmed', 'Open the confirmation link we emailed you, then sign in.');
@@ -66,6 +83,9 @@ Deno.serve(async (req) => {
     console.error('signInWithPassword failed:', error);
     return fail(500, 'server_error', 'Something went wrong. Please try again.');
   }
+
+  const { error: clearError } = await admin.rpc('clear_sign_in_rate', { p_key: userKey });
+  if (clearError) console.error('rate clear failed:', clearError);
 
   return json({ access_token: data.session.access_token, refresh_token: data.session.refresh_token }, 200);
 });
