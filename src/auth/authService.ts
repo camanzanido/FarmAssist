@@ -199,7 +199,7 @@ export async function signUp(input: SignUpParams) {
   // Start syncing if session was returned (email confirmation off) — skip for
   // researchers, who work online-only and don't use the local PowerSync mirror
   if (data.session && params.user_type !== 'researcher') {
-    await connectSync();
+    void connectSync().catch((e) => console.warn('Sync connect after sign-up failed:', e));
   }
 
   return data;
@@ -269,10 +269,12 @@ export async function signIn(login: string, password: string) {
   // Claim any decisions made locally before this sign-in
   await claimIfEligible(data.user.id, userType);
 
-  // Start syncing — PowerSync will pull all rows the user has RLS access to.
+  // Sync connects in the background so the person isn't kept on the sign-in screen while it starts.
   if (userType !== 'researcher') {
-    await connectSync();
-    claimAfterFirstSync(data.user.id, userType);
+    const userId = data.user.id;
+    void connectSync()
+      .then(() => claimAfterFirstSync(userId, userType))
+      .catch((e) => console.warn('Sync connect after sign-in failed:', e));
   }
 
   return data;

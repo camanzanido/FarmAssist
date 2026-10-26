@@ -5,6 +5,8 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
+
 const INTERNAL_EMAIL_DOMAIN = 'farmassist.invalid';
 const WRONG_LOGIN = 'Incorrect username or password.';
 const TOO_MANY = 'Too many sign-in attempts. Please wait a few minutes and try again.';
@@ -50,13 +52,17 @@ Deno.serve(async (req) => {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
   const checks = [admin.rpc('check_sign_in_rate', { p_key: userKey, p_max: MAX_PER_USERNAME, p_window_seconds: RATE_WINDOW_S })];
   if (ip) checks.push(admin.rpc('check_sign_in_rate', { p_key: `ip:${ip}`, p_max: MAX_PER_IP, p_window_seconds: RATE_WINDOW_S }));
-  const results = await Promise.all(checks);
+  // The email lookup runs alongside the rate checks; its result is only used once they pass.
+  const [lookup, ...results] = await Promise.all([
+    admin.rpc('login_email_for_username', { p_username: username }),
+    ...checks,
+  ]);
   const rateError = results.find(r => r.error)?.error;
   // A broken limiter shouldn't lock everyone out; Supabase Auth's own limit still applies behind it.
   if (rateError) console.error('rate check failed:', rateError);
   else if (results.some(r => r.data === false)) return fail(429, 'over_request_rate_limit', TOO_MANY);
 
-  const { data: storedEmail, error: lookupError } = await admin.rpc('login_email_for_username', { p_username: username });
+  const { data: storedEmail, error: lookupError } = lookup;
   if (lookupError) {
     console.error('username lookup failed:', lookupError);
     return fail(500, 'server_error', 'Something went wrong. Please try again.');
@@ -84,8 +90,10 @@ Deno.serve(async (req) => {
     return fail(500, 'server_error', 'Something went wrong. Please try again.');
   }
 
-  const { error: clearError } = await admin.rpc('clear_sign_in_rate', { p_key: userKey });
-  if (clearError) console.error('rate clear failed:', clearError);
+  // Clearing the counter doesn't affect the answer, so it finishes after the response is sent.
+  const clearing = admin.rpc('clear_sign_in_rate', { p_key: userKey })
+    .then(({ error: clearError }) => { if (clearError) console.error('rate clear failed:', clearError); });
+  EdgeRuntime.waitUntil(clearing);
 
   return json({ access_token: data.session.access_token, refresh_token: data.session.refresh_token }, 200);
 });
