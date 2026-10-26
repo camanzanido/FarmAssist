@@ -3,12 +3,13 @@ import StepIndicator from '@/src/components/decision/steps-indicator';
 import { DropdownField } from '@/src/components/ui/dropdown-field';
 import { Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { authCopy as copy } from '@/src/constants/copy';
+import { authCopy as copy, termsCopy } from '@/src/constants/copy';
 import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locations';
+import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { normalizeUsername } from '@/src/utils/accountEmail';
 import { getAuthErrorMessage } from '@/src/utils/errors';
-import { REGISTER_STEPS, validateRegister, validateRegisterStep, type RegisterForm, type RegisterStep } from '@/src/utils/registerValidation';
+import { REGISTER_STEPS, validateRegister, validateRegisterStep, type RegisterForm, type RegisterStep, type RegisterTextField } from '@/src/utils/registerValidation';
 import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -17,7 +18,7 @@ import { ActivityIndicator, BackHandler, KeyboardAvoidingView, Platform, ScrollV
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 
-const EMPTY_FORM: RegisterForm = { name: '', province: '', city: '', username: '', email: '', password: '', confirmPassword: '' };
+const EMPTY_FORM: RegisterForm = { name: '', province: '', city: '', username: '', email: '', password: '', confirmPassword: '', acceptedTerms: false };
 
 function Field({
   label, value, onChangeText, error, touched, ...rest
@@ -51,6 +52,7 @@ export default function RegisterScreen() {
   const { signUp } = useAuth();
   const { notify } = useFeedback();
   const router = useRouter();
+  const nav = useNavLock();
   const scrollRef = useRef<ScrollView>(null);
   const { isSubmitting, run } = useSubmitOnce();
 
@@ -59,7 +61,7 @@ export default function RegisterScreen() {
   const isTouched = touched[step];
   const citiesForProvince = form.province ? PH_PROVINCES_TO_CITIES[form.province] ?? [] : [];
 
-  const set = (field: keyof RegisterForm) => (value: string) => setForm(f => ({ ...f, [field]: value }));
+  const set = (field: RegisterTextField) => (value: string) => setForm(f => ({ ...f, [field]: value }));
 
   const goToStep = useCallback((next: RegisterStep) => {
     setStep(next);
@@ -182,6 +184,25 @@ export default function RegisterScreen() {
               <Field label={copy.password} value={form.password} onChangeText={set('password')} error={errors.password} touched={isTouched} secureTextEntry editable={!isSubmitting} />
               <Field label={copy.confirmPassword} value={form.confirmPassword} onChangeText={set('confirmPassword')} error={errors.confirmPassword} touched={isTouched} secureTextEntry editable={!isSubmitting} />
 
+              <View style={s.termsRow}>
+                <TouchableOpacity
+                  onPress={() => setForm(f => ({ ...f, acceptedTerms: !f.acceptedTerms }))}
+                  disabled={isSubmitting}
+                  style={[s.checkbox, form.acceptedTerms && s.checkboxOn, isTouched && !!errors.acceptedTerms && s.checkboxError]}
+                  hitSlop={10}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: form.acceptedTerms }}
+                  accessibilityLabel={`${termsCopy.agreeLabel} ${termsCopy.agreeLink}`}
+                >
+                  {form.acceptedTerms && <Ionicons name="checkmark" size={16} color={Colors.onDark} />}
+                </TouchableOpacity>
+                <Text style={s.termsText}>
+                  {termsCopy.agreeLabel}{' '}
+                  <Text style={s.termsLink} onPress={() => nav.push('/terms')} accessibilityRole="link">{termsCopy.agreeLink}</Text>
+                </Text>
+              </View>
+              {isTouched && errors.acceptedTerms && <Text style={[s.errorText, s.termsError]}>{errors.acceptedTerms}</Text>}
+
               <PressableScale
                 onPress={handleRegister}
                 disabled={isSubmitting}
@@ -224,6 +245,13 @@ const s = StyleSheet.create({
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 5 },
   noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: -6, marginBottom: 14 },
   noteText: { flex: 1, fontSize: 12.5, color: Colors.inkSoft, lineHeight: 17 },
+  termsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4, marginBottom: 4 },
+  checkbox: { width: 24, height: 24, borderRadius: 7, borderWidth: 1.5, borderColor: Colors.borderStrong, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center' },
+  checkboxOn: { backgroundColor: Colors.ink, borderColor: Colors.ink },
+  checkboxError: { borderColor: Colors.danger },
+  termsText: { flex: 1, fontSize: 14, color: Colors.inkSoft, lineHeight: 20 },
+  termsLink: { color: Colors.ink, fontWeight: '700', textDecorationLine: 'underline' },
+  termsError: { marginTop: 4, marginBottom: 4 },
 
   submitBtn: { backgroundColor: Colors.ink, borderRadius: 14, paddingVertical: 16, flexDirection: 'row', gap: 10, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginBottom: 16 },
   submitBtnDisabled: { opacity: 0.6 },

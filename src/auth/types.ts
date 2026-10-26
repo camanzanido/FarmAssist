@@ -8,6 +8,8 @@ export interface AuthUser {
   username: string;
   user_type: UserType;
   status: string;
+  terms_accepted_at?: string | null;
+  terms_version?: string | null;
 }
 
 export interface AuthState {

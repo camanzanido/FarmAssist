@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../src/auth/AuthContext';
 import { FeedbackProvider } from '../src/components/feedback/FeedbackProvider';
+import { TermsConsentGate } from '../src/components/terms/terms-consent-gate';
 import { PowerSyncProvider } from '../src/database/PowerSyncProvider';
 import { useOfflineClaimPrompt } from '../src/hooks/use-offline-claim-prompt';
 import { OnboardingProvider } from '../src/onboarding/OnboardingContext';
@@ -17,6 +18,7 @@ export default function RootLayout() {
         <OnboardingProvider>
           <FeedbackProvider>
             <OfflineClaimPrompt />
+            <TermsConsentGate />
             <Stack screenOptions={{ headerShown: false, animation: 'ios_from_right' }}
              initialRouteName="(tabs)"
             />

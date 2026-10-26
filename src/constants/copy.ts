@@ -510,3 +510,61 @@ export const helpCopy = {
   sheetClose: 'Got it',
   learnHow: 'Learn how it works',
 };
+
+// Draft text for adviser and ethics review; bump TERMS_VERSION in src/utils/terms.ts when it changes.
+export const termsCopy = {
+  title: 'Terms & Privacy',
+  back: 'Back',
+  updated: (version: string) => `Last updated ${version}`,
+  intro: 'Please read this before creating an account. In short: you can use FarmAssist offline without an account, and nothing leaves your phone until you sign in.',
+  sections: [
+    {
+      heading: 'What FarmAssist is',
+      body: 'FarmAssist is a research tool from UPLB-INREM and UPLB-ICS that helps you compare two farming options using the Rapid Climate Decision Analysis (RCDA) model. Its recommendations are estimates based on the numbers you enter and the seasonal forecast. They are not guarantees, and the final decision is always yours.',
+    },
+    {
+      heading: 'Using the app without an account',
+      body: 'Without an account, your decisions are saved only on this phone. They are not sent to anyone. If you later create an account, you can choose to back up those decisions.',
+    },
+    {
+      heading: 'What we collect when you have an account',
+      body: 'Your name, username, province and city or municipality, your email if you add one, and the decisions you make in the app (the options you compare, the yields, costs and prices you enter, the forecast you use, and the result).',
+    },
+    {
+      heading: 'Why we collect it',
+      body: 'To back up your decisions and keep them on all your devices, to let you load values prepared by researchers, and for research that studies how farmers use climate information. Research results are reported in summary form, never with your name.',
+    },
+    {
+      heading: 'Who can see it',
+      body: 'Only you and the FarmAssist research team (admin accounts) can see your account and decisions. We do not sell your data or share it with advertisers.',
+    },
+    {
+      heading: 'How it is stored',
+      body: 'Data is kept on your phone and on secure cloud servers (Supabase) used by the research project. Your password is never stored in readable form.',
+    },
+    {
+      heading: 'Your rights',
+      body: 'Under the Data Privacy Act of 2012 (Republic Act No. 10173), you can ask to see, correct, or delete your data, or withdraw your consent, at any time. Email us at the address below. Withdrawing consent closes your account, but the app keeps working offline.',
+    },
+    {
+      heading: 'Your responsibilities',
+      body: 'Keep your password private, enter information that is true to the best of your knowledge, and do not use the app to harm others.',
+    },
+    {
+      heading: 'Changes',
+      body: 'If these terms change, the app will show them again and ask you to agree before you continue.',
+    },
+  ],
+  contactHeading: 'Contact',
+  contactEmail: 'camanzanido@up.edu.ph',
+  agreeLabel: 'I agree to the',
+  agreeLink: 'Terms & Privacy',
+  agreeRequired: 'Please agree to the Terms & Privacy to create an account.',
+  gateTitle: 'Terms & Privacy',
+  gateBody: 'Before you continue, please read and agree to how FarmAssist uses your account information.',
+  gateRead: 'Read Terms & Privacy',
+  gateAccept: 'I agree',
+  gateLogOut: 'Log out',
+  gateFailed: "Couldn't save your answer. Please try again.",
+  profileRow: 'Terms & Privacy',
+} as const;

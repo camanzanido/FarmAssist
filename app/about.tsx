@@ -1,5 +1,5 @@
 import { Colors } from '@/src/constants/colors';
-import { aboutCopy as copy } from '@/src/constants/copy';
+import { aboutCopy as copy, termsCopy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
 import { InfoSection, infoRowStyles as rows } from '@/src/components/ui/info-section';
 import { Ionicons } from '@expo/vector-icons';
@@ -82,6 +82,13 @@ export default function AboutScreen() {
                 <Text style={s.rowSub}>{copy.contactEmail}</Text>
               </View>
               <Ionicons name="open-outline" size={17} color={Colors.inkFaint} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[rows.row, rows.divider]} onPress={() => router.push('/terms')} activeOpacity={0.7} accessibilityRole="link">
+              <View style={s.iconWrap}>
+                <Ionicons name="document-text-outline" size={18} color={Colors.ink} />
+              </View>
+              <Text style={s.rowLabel}>{termsCopy.profileRow}</Text>
+              <Ionicons name="chevron-forward" size={17} color={Colors.inkFaint} />
             </TouchableOpacity>
           </View>
         </InfoSection>

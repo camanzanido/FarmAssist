@@ -10,9 +10,11 @@ export type RegisterForm = {
   email: string;
   password: string;
   confirmPassword: string;
+  acceptedTerms: boolean;
 };
 
 export type RegisterField = keyof RegisterForm;
+export type RegisterTextField = Exclude<RegisterField, 'acceptedTerms'>;
 export type RegisterErrors = Partial<Record<RegisterField, string>>;
 
 export const REGISTER_STEPS = ['about', 'account'] as const;
@@ -34,6 +36,7 @@ export function validateRegisterStep(step: RegisterStep, form: RegisterForm): Re
   if (passwordError) errors.password = passwordError;
   const confirmError = validatePasswordConfirm(form.password, form.confirmPassword);
   if (confirmError) errors.confirmPassword = confirmError;
+  if (!form.acceptedTerms) errors.acceptedTerms = 'Please agree to the Terms & Privacy to create an account.';
   return errors;
 }
 

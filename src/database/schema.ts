@@ -53,6 +53,8 @@ export const AppSchema = new Schema({
     status: column.text,
     created_at: column.text,
     user_type: column.text,
+    terms_accepted_at: column.text,
+    terms_version: column.text,
   }),
 
   locations: new Table({

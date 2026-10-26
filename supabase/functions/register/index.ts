@@ -20,6 +20,7 @@ type Body = {
   password?: unknown;
   city?: unknown;
   province?: unknown;
+  accepted_terms_version?: unknown;
 };
 
 function json(body: Record<string, unknown>, status: number): Response {
@@ -48,6 +49,8 @@ Deno.serve(async (req) => {
   const password = typeof body.password === 'string' ? body.password : '';
   const city = text(body.city);
   const province = text(body.province);
+  // Old APKs never send this, so their accounts start without a recorded acceptance and are asked in the app.
+  const termsVersion = text(body.accepted_terms_version).slice(0, 40);
 
   if (!name || !city || !province) return fail(400, 'invalid_input', 'Fill in every field.');
   if (name.length > MAX_NAME_LENGTH) return fail(400, 'invalid_input', `Keep your name under ${MAX_NAME_LENGTH} characters.`);
@@ -88,6 +91,7 @@ Deno.serve(async (req) => {
 
   const { error: profileError } = await admin.from('users').insert({
     id, name, username, email, status: 'active', user_type: 'farmer',
+    ...(termsVersion ? { terms_accepted_at: new Date().toISOString(), terms_version: termsVersion } : {}),
   });
   const { error: locationError } = profileError
     ? { error: null }

@@ -8,6 +8,7 @@ import { upsertUser } from '../database/repositories/users';
 import { FunctionError, invokeFunction } from '../database/supabase/invokeFunction';
 import { supabase } from '../database/supabase/supabase';
 import { isEmailLogin, normalizeUsername } from '../utils/accountEmail';
+import { TERMS_VERSION, termsAcceptance } from '../utils/terms';
 import { withTimeout } from '../utils/withTimeout';
 import { UserType } from './types';
 
@@ -135,6 +136,7 @@ async function signUpWithoutEmail(params: SignUpParams) {
     password: params.password,
     city: params.city,
     province: params.province,
+    accepted_terms_version: TERMS_VERSION,
   });
   return signIn(params.username, params.password);
 }
@@ -180,6 +182,8 @@ export async function signUp(input: SignUpParams) {
     email: params.email,
     status: 'active',
     user_type: params.user_type,
+    // Registration can't be submitted without ticking the Terms box.
+    ...termsAcceptance(),
   };
 
   if (params.user_type === 'researcher') {

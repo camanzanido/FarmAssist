@@ -8,6 +8,7 @@ const VALID: RegisterForm = {
   email: '',
   password: 'secret1',
   confirmPassword: 'secret1',
+  acceptedTerms: true,
 };
 
 describe('validateRegisterStep', () => {
@@ -29,6 +30,14 @@ describe('validateRegisterStep', () => {
   it('allows a blank email but rejects a malformed one', () => {
     expect(validateRegisterStep('account', { ...VALID, email: '' }).email).toBeUndefined();
     expect(validateRegisterStep('account', { ...VALID, email: 'juan@' }).email).toBeDefined();
+  });
+});
+
+describe('terms agreement', () => {
+  it('is required on the account step only', () => {
+    const form = { ...VALID, acceptedTerms: false };
+    expect(validateRegisterStep('about', form)).toEqual({});
+    expect(validateRegisterStep('account', form).acceptedTerms).toBeDefined();
   });
 });
 

@@ -4,7 +4,7 @@ import { ChangePasswordSheet } from '@/src/components/profile/change-password-sh
 import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
 import { PopoverMenu } from '@/src/components/ui/popover-menu';
 import { ResearcherColors as C } from '@/src/constants/colors';
-import { changePasswordCopy, profileCopy } from '@/src/constants/copy';
+import { changePasswordCopy, profileCopy, termsCopy } from '@/src/constants/copy';
 import { ROLE_SHORT } from '@/src/constants/labels';
 import { wideColumn } from '@/src/constants/layout';
 import { updateUserRemote } from '@/src/database/repositories/researcher';
@@ -111,9 +111,14 @@ export default function ResearcherProfileScreen() {
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.about}</Text>
             <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
           </PressableScale>
-          <PressableScale style={s.row} onPress={() => nav.push('/onboarding?replay=1')} accessibilityRole="button">
+          <PressableScale style={[s.row, s.rowBorder]} onPress={() => nav.push('/onboarding?replay=1')} accessibilityRole="button">
             <Ionicons name="book-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.viewIntro}</Text>
+            <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
+          </PressableScale>
+          <PressableScale style={s.row} onPress={() => nav.push('/terms')} accessibilityRole="button">
+            <Ionicons name="document-text-outline" size={19} color={C.textSoft} />
+            <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{termsCopy.profileRow}</Text>
             <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
           </PressableScale>
         </View>

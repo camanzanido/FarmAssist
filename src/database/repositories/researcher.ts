@@ -213,7 +213,7 @@ export async function fetchUserRemote(userId: string): Promise<User | null> {
 
 export async function updateUserRemote(
   userId: string,
-  fields: Partial<Pick<User, 'name' | 'username' | 'email' | 'status' | 'user_type'>>
+  fields: Partial<Pick<User, 'name' | 'username' | 'email' | 'status' | 'user_type' | 'terms_accepted_at' | 'terms_version'>>
 ): Promise<void> {
   const { error } = await withTimeout((signal) =>
     supabase.from('users').update(fields).eq('id', userId).abortSignal(signal)

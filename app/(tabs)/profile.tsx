@@ -4,7 +4,7 @@ import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
 import { brandGradientCss, CARD_PADDING, CARD_RADIUS, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { changePasswordCopy, helpCopy, profileCopy as copy } from '@/src/constants/copy';
+import { changePasswordCopy, helpCopy, profileCopy as copy, termsCopy } from '@/src/constants/copy';
 import { ROLE_SHORT } from '@/src/constants/labels';
 import { db } from '@/src/database/powersync/powersync';
 import { getDecisionsByUser, getStagedDecisionIds } from '@/src/database/repositories/decisions';
@@ -251,9 +251,14 @@ export default function ProfileScreen() {
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{helpCopy.openHelp}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </PressableScale>
-            <PressableScale style={s.listRow} onPress={() => nav.push('/onboarding?replay=1')} accessibilityRole="button">
+            <PressableScale style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/onboarding?replay=1')} accessibilityRole="button">
               <Ionicons name="book-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.viewIntro}</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
+            </PressableScale>
+            <PressableScale style={s.listRow} onPress={() => nav.push('/terms')} accessibilityRole="button">
+              <Ionicons name="document-text-outline" size={20} color={Colors.ink} />
+              <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{termsCopy.profileRow}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </PressableScale>
           </View>
