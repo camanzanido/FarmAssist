@@ -23,7 +23,7 @@ export async function resetPasswordWithCode(email: string, code: string, newPass
   await scratch.auth.signOut({ scope: 'global' }).catch((e) => console.warn('Sign-out after reset failed:', e));
 }
 
-// Checks the current password on a scratch client, then changes it there, so the app's own session is untouched.
+// Checks the current password on a scratch client and changes it there; a fresh sign-in on a scratch client avoids Supabase's reauthentication rule.
 export async function changePassword(email: string, currentPassword: string, newPassword: string): Promise<void> {
   const scratch = createScratchClient();
   const { error: checkError } = await withTimeout(() =>
@@ -35,4 +35,8 @@ export async function changePassword(email: string, currentPassword: string, new
   if (updateError) throw updateError;
 
   await scratch.auth.signOut({ scope: 'local' }).catch((e) => console.warn('Scratch sign-out failed:', e));
+
+  // Supabase ends every other session when a password changes, including the app's, so sign the app in again.
+  const { error: resignError } = await withTimeout(() => supabase.auth.signInWithPassword({ email, password: newPassword }));
+  if (resignError) throw resignError;
 }

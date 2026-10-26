@@ -31,6 +31,13 @@ export function isInvalidCredentialsError(err: unknown): boolean {
   return errCode(err) === 'invalid_credentials' || errMessage(err).includes('Invalid login credentials');
 }
 
+const SESSION_MESSAGE = 'Your sign-in has expired. Log out, then sign in again.';
+
+// The server no longer has this device's session, e.g. after a password change elsewhere.
+export function isSessionMissingError(err: unknown): boolean {
+  return errCode(err) === 'session_not_found' || (err instanceof Error && err.name === 'AuthSessionMissingError');
+}
+
 function isRateLimitError(err: unknown): boolean {
   const status = err && typeof err === 'object' && 'status' in err ? (err as any).status : undefined;
   return status === 429 || errCode(err) === 'over_request_rate_limit';
@@ -40,6 +47,7 @@ function isRateLimitError(err: unknown): boolean {
 export function getAuthErrorMessage(err: unknown, fallback: string): string {
   if (isNetworkError(err)) return OFFLINE_MESSAGE;
   if (isRateLimitError(err)) return RATE_LIMIT_MESSAGE;
+  if (isSessionMissingError(err)) return SESSION_MESSAGE;
   const msg = errMessage(err);
   for (const key of Object.keys(AUTH_MESSAGE_OVERRIDES)) {
     if (msg.includes(key)) return AUTH_MESSAGE_OVERRIDES[key];
@@ -50,6 +58,7 @@ export function getAuthErrorMessage(err: unknown, fallback: string): string {
 
 export function getActionErrorMessage(err: unknown, fallback: string): string {
   if (isNetworkError(err)) return OFFLINE_MESSAGE;
+  if (isSessionMissingError(err)) return SESSION_MESSAGE;
   if (errCode(err) === '42501') return PERMISSION_MESSAGE;
   return fallback;
 }
