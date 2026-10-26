@@ -29,7 +29,11 @@ export function useEditProfile() {
 
   const onSaved = useCallback((result: ProfileSaveResult) => {
     setIsOpen(false);
-    if (result.pendingEmail) {
+    if (result.emailVerified) {
+      pendingRef.current = null;
+      setPendingEmail(null);
+      notify.success(copy.emailVerified);
+    } else if (result.pendingEmail) {
       pendingRef.current = result.pendingEmail;
       setPendingEmail(result.pendingEmail);
       notify.info(copy.emailConfirmTitle, copy.emailConfirmBody(result.pendingEmail));
