@@ -4,6 +4,7 @@ import { DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/
 import { HistorySkeleton } from '@/src/components/skeletons/app-skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { PopoverMenu } from '@/src/components/ui/popover-menu';
+import { usePressScale } from '@/src/components/ui/pressable-scale';
 import { TrashIcon } from '@/src/components/ui/trash-icon';
 import { brandGradientSoftCss, CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
@@ -26,6 +27,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function decisionTypeLabel(type: string): string {
@@ -64,6 +66,7 @@ type RowProps = {
 // Memoised so opening one row's delete dialog doesn't re-render the rest of the list.
 const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen, onDelete }: RowProps) {
   const [lidOpen, setLidOpen] = useState(false);
+  const press = usePressScale();
 
   const handleDelete = async () => {
     setLidOpen(true);
@@ -75,50 +78,54 @@ const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen,
   };
 
   return (
-    <Pressable
-      style={({ pressed }) => [s.card, pressed && s.cardPressed]}
-      onPress={() => onOpen(item.id)}
-      accessibilityRole="button"
-      accessibilityHint={copy.openHint}
-    >
-      <View style={s.cardMain}>
-        <View style={s.cardIconWrap}>
-          <Ionicons name={decisionTypeIcon(item.decision_type)} size={21} color={Colors.ink} />
-        </View>
-        <View style={s.cardBody}>
-          <Text style={s.cardResult} numberOfLines={1}>{decisionResultLabel(item.result)}</Text>
-          <Text style={s.cardType}>{decisionTypeLabel(item.decision_type)}</Text>
-          <View style={s.cardMetaRow}>
-            {item.result !== '' && <ProfitAmount value={item.profit_increase} />}
-            <Text style={s.cardDate}>{formatDate(item.datetime)}</Text>
-            <View style={[s.syncChip, isPending ? s.syncChipPending : s.syncChipSent]}>
-              <Ionicons
-                name={isPending ? 'cloud-offline-outline' : 'checkmark'}
-                size={11}
-                color={isPending ? Colors.amber : Colors.inkSoft}
-              />
-              <Text style={[s.syncChipText, isPending ? s.syncChipTextPending : s.syncChipTextSent]}>
-                {isPending ? copy.notSent : copy.sent}
-              </Text>
+    <Animated.View style={press.scaleStyle}>
+      <Pressable
+        style={({ pressed }) => [s.card, pressed && s.cardPressed]}
+        onPress={() => onOpen(item.id)}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        accessibilityRole="button"
+        accessibilityHint={copy.openHint}
+      >
+        <View style={s.cardMain}>
+          <View style={s.cardIconWrap}>
+            <Ionicons name={decisionTypeIcon(item.decision_type)} size={21} color={Colors.ink} />
+          </View>
+          <View style={s.cardBody}>
+            <Text style={s.cardResult} numberOfLines={1}>{decisionResultLabel(item.result)}</Text>
+            <Text style={s.cardType}>{decisionTypeLabel(item.decision_type)}</Text>
+            <View style={s.cardMetaRow}>
+              {item.result !== '' && <ProfitAmount value={item.profit_increase} />}
+              <Text style={s.cardDate}>{formatDate(item.datetime)}</Text>
+              <View style={[s.syncChip, isPending ? s.syncChipPending : s.syncChipSent]}>
+                <Ionicons
+                  name={isPending ? 'cloud-offline-outline' : 'checkmark'}
+                  size={11}
+                  color={isPending ? Colors.amber : Colors.inkSoft}
+                />
+                <Text style={[s.syncChipText, isPending ? s.syncChipTextPending : s.syncChipTextSent]}>
+                  {isPending ? copy.notSent : copy.sent}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
-      <TouchableOpacity
-        style={s.deleteBtn}
-        onPress={handleDelete}
-        disabled={deleting}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        accessibilityRole="button"
-        accessibilityLabel={copy.deleteLabel}
-      >
-        {deleting ? (
-          <ActivityIndicator size="small" color={Colors.danger} />
-        ) : (
-          <TrashIcon size={21} color={Colors.danger} open={lidOpen} />
-        )}
-      </TouchableOpacity>
-    </Pressable>
+        <TouchableOpacity
+          style={s.deleteBtn}
+          onPress={handleDelete}
+          disabled={deleting}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={copy.deleteLabel}
+        >
+          {deleting ? (
+            <ActivityIndicator size="small" color={Colors.danger} />
+          ) : (
+            <TrashIcon size={21} color={Colors.danger} open={lidOpen} />
+          )}
+        </TouchableOpacity>
+      </Pressable>
+    </Animated.View>
   );
 });
 

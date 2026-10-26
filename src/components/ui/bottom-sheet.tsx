@@ -1,4 +1,5 @@
 import { Colors } from '@/src/constants/colors';
+import { GLIDE_SPRING } from '@/src/constants/motion';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Keyboard, Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View,
@@ -9,9 +10,8 @@ import Animated, {
   Easing, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming,
 } from 'react-native-reanimated';
 
-const OPEN = { duration: 320, easing: Easing.out(Easing.cubic) };
 const CLOSE = { duration: 260, easing: Easing.in(Easing.cubic) };
-const SPRING_BACK = { damping: 20, stiffness: 220 };
+const SPRING_BACK = GLIDE_SPRING;
 const DISMISS_FRACTION = 0.25;
 const DISMISS_VELOCITY = 800;
 const MAX_HEIGHT_RATIO = 0.92;
@@ -66,7 +66,7 @@ export function BottomSheet({ visible, onClose, avoidKeyboard, style, scrollProp
     if (!visible) Keyboard.dismiss();
     if (visible) {
       dragY.value = 0;
-      progress.value = withTiming(1, reduceMotion ? { duration: 0 } : OPEN);
+      progress.value = reduceMotion ? 1 : withSpring(1, GLIDE_SPRING);
     } else {
       progress.value = withTiming(0, reduceMotion ? { duration: 0 } : CLOSE, finished => {
         if (finished) runOnJS(setMounted)(false);

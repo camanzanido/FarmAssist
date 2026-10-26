@@ -19,6 +19,7 @@ export default function ResearcherLayout() {
         screenOptions={{
           headerShown: false,
           freezeOnBlur: true,
+          animation: 'shift',
           tabBarButton: HapticTab,
           tabBarActiveTintColor: Colors.ink,
           tabBarInactiveTintColor: Colors.tabInactive,

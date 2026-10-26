@@ -16,6 +16,7 @@ import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { useResearcherPage } from '@/src/hooks/use-researcher-page';
 import { isDormant } from '@/src/utils/userActivity';
+import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -31,10 +32,9 @@ function UserRow({ user: u, onPress }: { user: ResearcherUserRow; onPress: (u: R
   const isResearcher = u.user_type === 'researcher';
   const dormant = isDormant(u);
   return (
-    <TouchableOpacity
+    <PressableScale
       style={[s.userRow, isInactive && s.userRowInactive]}
       onPress={() => onPress(u)}
-      activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={`${u.name}, @${u.username}${dormant ? ', no activity in over a year' : ''}`}
       accessibilityHint="Opens account options"
@@ -60,7 +60,7 @@ function UserRow({ user: u, onPress }: { user: ResearcherUserRow; onPress: (u: R
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

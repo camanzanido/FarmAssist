@@ -17,6 +17,7 @@ import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { displayEmail, realEmail } from '@/src/utils/accountEmail';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
+import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
@@ -130,12 +131,12 @@ export default function ProfileScreen() {
             <Text style={s.signedOutTitle}>{copy.signedOutTitle}</Text>
             <Text style={s.signedOutSubtitle}>{copy.signedOutSubtitle}</Text>
 
-            <TouchableOpacity style={s.primaryBtn} onPress={() => nav.push('/(auth)/login')} activeOpacity={0.85}>
+            <PressableScale style={s.primaryBtn} onPress={() => nav.push('/(auth)/login')} haptic>
               <Text style={s.primaryBtnText}>{copy.signIn}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.secondaryBtn} onPress={() => nav.push('/(auth)/register')} activeOpacity={0.85}>
+            </PressableScale>
+            <PressableScale style={s.secondaryBtn} onPress={() => nav.push('/(auth)/register')}>
               <Text style={s.secondaryBtnText}>{copy.createAccount}</Text>
-            </TouchableOpacity>
+            </PressableScale>
           </View>
         </View>
       ) : (
@@ -240,21 +241,21 @@ export default function ProfileScreen() {
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.accountType}</Text>
               <Text style={s.listRowValue}>{ROLE_SHORT.farmer}</Text>
             </View>
-            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/about')} activeOpacity={0.7} accessibilityRole="button">
+            <PressableScale style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/about')} accessibilityRole="button">
               <Ionicons name="information-circle-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.about}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
-            </TouchableOpacity>
-            <TouchableOpacity style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/help')} activeOpacity={0.7} accessibilityRole="button">
+            </PressableScale>
+            <PressableScale style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/help')} accessibilityRole="button">
               <Ionicons name="help-circle-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{helpCopy.openHelp}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
-            </TouchableOpacity>
-            <TouchableOpacity style={s.listRow} onPress={() => nav.push('/onboarding?replay=1')} activeOpacity={0.7} accessibilityRole="button">
+            </PressableScale>
+            <PressableScale style={s.listRow} onPress={() => nav.push('/onboarding?replay=1')} accessibilityRole="button">
               <Ionicons name="book-outline" size={20} color={Colors.ink} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.viewIntro}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
-            </TouchableOpacity>
+            </PressableScale>
           </View>
 
           <TouchableOpacity onPress={handleLogout} style={s.logoutRow}>

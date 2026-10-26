@@ -12,6 +12,7 @@ import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { displayEmail } from '@/src/utils/accountEmail';
 import { getActionErrorMessage } from '@/src/utils/errors';
+import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -105,16 +106,16 @@ export default function ResearcherProfileScreen() {
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Account type</Text>
             <Text style={s.rowValue}>{ROLE_SHORT.researcher}</Text>
           </View>
-          <TouchableOpacity style={[s.row, s.rowBorder]} onPress={() => nav.push('/about')} activeOpacity={0.7} accessibilityRole="button">
+          <PressableScale style={[s.row, s.rowBorder]} onPress={() => nav.push('/about')} accessibilityRole="button">
             <Ionicons name="information-circle-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.about}</Text>
             <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
-          </TouchableOpacity>
-          <TouchableOpacity style={s.row} onPress={() => nav.push('/onboarding?replay=1')} activeOpacity={0.7} accessibilityRole="button">
+          </PressableScale>
+          <PressableScale style={s.row} onPress={() => nav.push('/onboarding?replay=1')} accessibilityRole="button">
             <Ionicons name="book-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.viewIntro}</Text>
             <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
-          </TouchableOpacity>
+          </PressableScale>
         </View>
 
         <TouchableOpacity onPress={handleLogout} style={s.logoutRow} activeOpacity={0.8}>

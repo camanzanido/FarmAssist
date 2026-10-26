@@ -17,7 +17,7 @@ export default function RootLayout() {
         <OnboardingProvider>
           <FeedbackProvider>
             <OfflineClaimPrompt />
-            <Stack screenOptions={{ headerShown: false }}
+            <Stack screenOptions={{ headerShown: false, animation: 'ios_from_right' }}
              initialRouteName="(tabs)"
             />
           </FeedbackProvider>

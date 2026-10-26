@@ -1,4 +1,4 @@
-import { POP_UP, SETTLE_SPRING, SLOW } from '@/src/constants/motion';
+import { POP_UP, SETTLE_SPRING, SNAP_SPRING } from '@/src/constants/motion';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import Animated, {
@@ -27,8 +27,8 @@ export function AnimatedIcon({ name, size, color, motion, trigger }: Props) {
     if (trigger === last.current) return;
     last.current = trigger;
     if (reduceMotion) return;
-    if (motion === 'spin') turn.value = withTiming(turn.value + 90, SLOW);
-    else if (motion === 'flip') turn.value = withTiming(turn.value + 180, SLOW);
+    if (motion === 'spin') turn.value = withSpring(turn.value + 90, SNAP_SPRING);
+    else if (motion === 'flip') turn.value = withSpring(turn.value + 180, SNAP_SPRING);
     else if (motion === 'pop') scale.value = withSequence(withTiming(1.18, POP_UP), withSpring(1, SETTLE_SPRING));
     else turn.value = withSequence(withTiming(-12, POP_UP), withSpring(0, { ...SETTLE_SPRING, damping: 9 }));
   }, [trigger, motion, reduceMotion, turn, scale]);

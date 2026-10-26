@@ -8,6 +8,7 @@ import { useSignInThrottle } from '@/src/hooks/use-sign-in-throttle';
 import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { isEmailLogin } from '@/src/utils/accountEmail';
 import { getAuthErrorMessage, isInvalidCredentialsError } from '@/src/utils/errors';
+import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -113,19 +114,18 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
+        <PressableScale
           onPress={handleLogin}
           disabled={isSubmitting || throttle.isLocked}
           style={[s.signInBtn, (isSubmitting || throttle.isLocked) && s.signInBtnDisabled]}
-          activeOpacity={0.85}
           accessibilityRole="button"
           accessibilityState={{ disabled: isSubmitting || throttle.isLocked, busy: isSubmitting }}
-        >
+         haptic>
           {isSubmitting && <ActivityIndicator color={Colors.onDark} />}
           <Text style={s.signInBtnText}>
             {throttle.isLocked ? copy.lockedButton(formatLockTime(throttle.lockMs)) : isSubmitting ? copy.signingIn : copy.signIn}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
         {throttle.isLocked ? (
           <Text style={s.throttleText}>{copy.lockedMessage}</Text>
         ) : throttle.failures > 0 && throttle.attemptsLeft > 0 && throttle.attemptsLeft <= 2 ? (

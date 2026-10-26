@@ -8,6 +8,7 @@ import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { isInternalEmail, normalizeUsername, realEmail, validateUsername } from '@/src/utils/accountEmail';
 import { getActionErrorMessage, getAuthErrorMessage } from '@/src/utils/errors';
 import { cleanName, emailChanged, validateEmail, validateName } from '@/src/utils/profileValidation';
+import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -164,9 +165,9 @@ export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSav
           <TouchableOpacity style={s.cancelBtn} onPress={() => onSaved({ pendingEmail: codeFor, nameChanged })} disabled={saving}>
             <Text style={s.cancelText}>{copy.codeLater}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[s.saveBtn, saving && s.disabled]} onPress={verify} disabled={saving} activeOpacity={0.85}>
+          <PressableScale style={[s.saveBtn, saving && s.disabled]} onPress={verify} disabled={saving} haptic>
             {saving ? <ActivityIndicator color={Colors.onDark} /> : <Text style={s.saveText}>{copy.codeVerify}</Text>}
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </BottomSheet>
     );
@@ -240,9 +241,9 @@ export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSav
         <TouchableOpacity style={s.cancelBtn} onPress={onClose} disabled={saving}>
           <Text style={s.cancelText}>{copy.editCancel}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.saveBtn, saving && s.disabled]} onPress={save} disabled={saving} activeOpacity={0.85}>
+        <PressableScale style={[s.saveBtn, saving && s.disabled]} onPress={save} disabled={saving} haptic>
           {saving ? <ActivityIndicator color={Colors.onDark} /> : <Text style={s.saveText}>{copy.editSave}</Text>}
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     </BottomSheet>
   );

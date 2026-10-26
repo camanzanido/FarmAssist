@@ -1,6 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { DECISIONS } from '@/src/constants';
 import { AnimatedIcon } from '@/src/components/ui/animated-icon';
+import { usePressScale } from '@/src/components/ui/pressable-scale';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import { BrandGradient, brandGradientCss, CARD_PADDING, CARD_RADIUS, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
@@ -14,12 +15,43 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function DecisionCard({ decision: d, onPress }: { decision: (typeof DECISIONS)[number]; onPress: (id: string) => void }) {
+  const press = usePressScale();
+  return (
+    <Animated.View style={press.scaleStyle}>
+      <Pressable
+        style={({ pressed }) => [s.decisionRow, pressed && s.decisionRowPressed]}
+        onPress={() => onPress(d.id)}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        accessibilityRole="button"
+        accessibilityLabel={d.label}
+        accessibilityHint={d.description}
+      >
+        {({ pressed }) => (
+          <>
+            <View style={s.decisionIconWrap}>
+              <Ionicons name={d.icon} size={25} color={pressed ? Colors.onDark : Colors.ink} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[s.decisionLabel, pressed && s.textOnGradient]}>{d.label}</Text>
+              <Text style={[s.decisionDesc, pressed && s.descOnGradient]} numberOfLines={1}>{d.description}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={pressed ? Colors.onDark : Colors.ink} style={{ opacity: pressed ? 0.8 : 0.3 }} />
+          </>
+        )}
+      </Pressable>
+    </Animated.View>
+  );
 }
 
 export default function HomeScreen() {
@@ -125,27 +157,7 @@ export default function HomeScreen() {
 
         <View style={s.decisionList}>
           {DECISIONS.map(d => (
-            <Pressable
-              key={d.id}
-              style={({ pressed }) => [s.decisionRow, pressed && s.decisionRowPressed]}
-              onPress={() => goToDecision(d.id)}
-              accessibilityRole="button"
-              accessibilityLabel={d.label}
-              accessibilityHint={d.description}
-            >
-              {({ pressed }) => (
-                <>
-                  <View style={s.decisionIconWrap}>
-                    <Ionicons name={d.icon} size={25} color={pressed ? Colors.onDark : Colors.ink} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[s.decisionLabel, pressed && s.textOnGradient]}>{d.label}</Text>
-                    <Text style={[s.decisionDesc, pressed && s.descOnGradient]} numberOfLines={1}>{d.description}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={pressed ? Colors.onDark : Colors.ink} style={{ opacity: pressed ? 0.8 : 0.3 }} />
-                </>
-              )}
-            </Pressable>
+            <DecisionCard key={d.id} decision={d} onPress={goToDecision} />
           ))}
         </View>
 
