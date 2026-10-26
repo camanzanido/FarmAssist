@@ -121,10 +121,10 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
-        <Text style={s.greeting}>{copy.greeting(user?.name?.trim().split(/\s+/)[0])}</Text>
 
         <View style={s.topSpacer} />
 
+        <Text style={s.greeting}>{copy.greeting(user?.name?.trim().split(/\s+/)[0])}</Text>
         <Text style={s.heading}>
           {copy.headingBefore}
           <GradientText text={copy.headingAccent} colors={BrandGradient} />
@@ -190,7 +190,7 @@ const s = StyleSheet.create({
   // On tall screens the free space splits 1:2 above/below, so the content sits a little above centre instead of hugging the top.
   topSpacer: { flexGrow: 1 },
   bottomSpacer: { flexGrow: 2 },
-  greeting: { fontSize: 20, fontWeight: '700', color: Colors.ink, marginBottom: 12 },
+  greeting: { fontSize: 20, fontWeight: '700', color: Colors.ink, marginBottom: 6 },
   headerIcons: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   helpIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   offlineIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
