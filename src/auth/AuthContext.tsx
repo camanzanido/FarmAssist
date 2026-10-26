@@ -128,10 +128,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Keep auth state in sync with Supabase session changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
+      (event: AuthChangeEvent, session: Session | null) => {
         if (event === 'SIGNED_IN' && session) {
           dispatch({ type: 'SET_ONLINE', payload: true });
-          await loadUserProfile(session.user.id);
+          // supabase-js holds its auth lock until this callback returns, so a Supabase query awaited here deadlocks setSession.
+          const userId = session.user.id;
+          setTimeout(() => {
+            loadUserProfile(userId).catch(err => console.error('Failed to load profile after sign-in:', err));
+          }, 0);
         }
         if (event === 'SIGNED_OUT') {
           dispatch({ type: 'CLEAR_USER' });
@@ -145,15 +149,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [loadUserProfile]);
 
+  // Sign-in and sign-up leave isLoading alone: it unmounts the auth stack, so a failed attempt would wipe the form.
   const handleSignIn = useCallback(async (login: string, password: string) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    try {
-      const { user } = await signIn(login, password);
-      if (user) await loadUserProfile(user.id);
-      dispatch({ type: 'SET_ONLINE', payload: true });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
+    const { user } = await signIn(login, password);
+    if (user) await loadUserProfile(user.id);
+    dispatch({ type: 'SET_ONLINE', payload: true });
   }, [loadUserProfile]);
 
   const handleSignUp = useCallback(async (params: {
@@ -165,13 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     city: string;
     province: string;
   }) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    try {
-      const { user } = await signUp(params);
-      if (user) await loadUserProfile(user.id);
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
+    const { user } = await signUp(params);
+    if (user) await loadUserProfile(user.id);
   }, [loadUserProfile]);
 
   const refreshProfile = useCallback(async () => {
