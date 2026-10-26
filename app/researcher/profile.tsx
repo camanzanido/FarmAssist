@@ -5,11 +5,14 @@ import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
 import { PopoverMenu } from '@/src/components/ui/popover-menu';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { changePasswordCopy, profileCopy } from '@/src/constants/copy';
+import { ROLE_SHORT } from '@/src/constants/labels';
 import { wideColumn } from '@/src/constants/layout';
+import { updateUserRemote } from '@/src/database/repositories/researcher';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
+import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { displayEmail } from '@/src/utils/accountEmail';
+import { getActionErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,9 +24,9 @@ function initials(name: string): string {
 }
 
 export default function ResearcherProfileScreen() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, refreshProfile } = useAuth();
   const { confirm, notify } = useFeedback();
-  const router = useRouter();
+  const nav = useNavLock();
   const edit = useEditProfile();
   const [passwordOpen, setPasswordOpen] = useState(false);
 
@@ -36,6 +39,25 @@ export default function ResearcherProfileScreen() {
       icon: 'log-out-outline',
     });
     if (confirmed) await signOut();
+  }
+
+  async function handleDeactivate() {
+    if (!user) return;
+    const confirmed = await confirm({
+      title: 'Deactivate your account?',
+      message: 'You will lose access to admin tools right away. Another admin cannot turn it back on; it has to be reactivated in the Supabase dashboard.',
+      confirmText: 'Deactivate',
+      tone: 'destructive',
+      icon: 'person-remove-outline',
+    });
+    if (!confirmed) return;
+    try {
+      await updateUserRemote(user.id, { status: 'inactive' });
+      await refreshProfile();
+    } catch (err) {
+      console.error('Failed to deactivate own account:', err);
+      notify.error('Could not deactivate', getActionErrorMessage(err, 'Please try again.'));
+    }
   }
 
   if (!user) return null;
@@ -81,14 +103,14 @@ export default function ResearcherProfileScreen() {
           <View style={[s.row, s.rowBorder]}>
             <Ionicons name="shield-checkmark-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>Account type</Text>
-            <Text style={s.rowValue}>Researcher</Text>
+            <Text style={s.rowValue}>{ROLE_SHORT.researcher}</Text>
           </View>
-          <TouchableOpacity style={[s.row, s.rowBorder]} onPress={() => router.push('/about')} activeOpacity={0.7} accessibilityRole="button">
+          <TouchableOpacity style={[s.row, s.rowBorder]} onPress={() => nav.push('/about')} activeOpacity={0.7} accessibilityRole="button">
             <Ionicons name="information-circle-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.about}</Text>
             <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
           </TouchableOpacity>
-          <TouchableOpacity style={s.row} onPress={() => router.push('/onboarding?replay=1')} activeOpacity={0.7} accessibilityRole="button">
+          <TouchableOpacity style={s.row} onPress={() => nav.push('/onboarding?replay=1')} activeOpacity={0.7} accessibilityRole="button">
             <Ionicons name="book-outline" size={19} color={C.textSoft} />
             <Text style={[s.rowLabel, { flex: 1, marginLeft: 12 }]}>{profileCopy.viewIntro}</Text>
             <Ionicons name="chevron-forward" size={17} color={C.textFaint} />
@@ -98,8 +120,11 @@ export default function ResearcherProfileScreen() {
         <TouchableOpacity onPress={handleLogout} style={s.logoutRow} activeOpacity={0.8}>
           <Text style={s.logoutText}>Log out</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={handleDeactivate} style={s.deactivateRow} activeOpacity={0.8} accessibilityRole="button">
+          <Text style={s.deactivateText}>Deactivate my account</Text>
+        </TouchableOpacity>
       </ScrollView>
-      <EditProfileSheet visible={edit.isOpen} canChangeEmail onClose={edit.close} onSaved={edit.onSaved} />
+      <EditProfileSheet visible={edit.isOpen} online pendingEmail={edit.pendingEmail} onClose={edit.close} onSaved={edit.onSaved} />
       <ChangePasswordSheet
         visible={passwordOpen}
         onClose={() => setPasswordOpen(false)}
@@ -137,4 +162,6 @@ const s = StyleSheet.create({
 
   logoutRow: { alignItems: 'center', paddingVertical: 10 },
   logoutText: { fontSize: 15, fontWeight: '700', color: C.danger },
+  deactivateRow: { alignItems: 'center', paddingVertical: 10, marginTop: 4 },
+  deactivateText: { fontSize: 13.5, fontWeight: '600', color: C.textSoft, textDecorationLine: 'underline' },
 });

@@ -78,8 +78,11 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
 
   if (!user) return <BottomSheet visible={false} onClose={onClose}>{null}</BottomSheet>;
 
+  // Pending researcher accounts from old APKs still need approving; every other admin account is off limits.
+  const isPeerAdmin = !isSelf && user.user_type === 'researcher' && user.status !== 'pending';
+
   const askStatus = () => {
-    if (isSelf) return;
+    if (isSelf || isPeerAdmin) return;
     setError(null);
     setPending({ next: user.status === 'active' ? 'inactive' : 'active' });
   };
@@ -101,7 +104,7 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
   };
 
   const startReset = () => {
-    if (isSelf) return;
+    if (isSelf || user.user_type !== 'farmer') return;
     setError(null);
     setTempPassword(generateTempPassword());
     setReset({ step: 'form' });
@@ -226,6 +229,15 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
             </TouchableOpacity>
           </View>
         </View>
+      ) : isSelf || isPeerAdmin ? (
+        <View style={s.lockedCard}>
+          <Ionicons name="lock-closed-outline" size={18} color={C.textSoft} />
+          <Text style={s.lockedText}>
+            {isSelf
+              ? 'This is your account. Change your password or deactivate it from Profile.'
+              : 'Admin accounts are managed by their owner. You can manage field user accounts.'}
+          </Text>
+        </View>
       ) : (
         <>
           <Text style={s.sectionLabel}>ACCOUNT</Text>
@@ -236,29 +248,28 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
             </View>
           )}
           <TouchableOpacity
-            style={[s.statusBtn, user.status !== 'active' && s.statusBtnApprove, isSelf && s.statusBtnDisabled]}
+            style={[s.statusBtn, user.status !== 'active' && s.statusBtnApprove]}
             onPress={askStatus}
-            disabled={isSelf}
           >
             <Ionicons
               name={user.status === 'active' ? 'person-remove-outline' : 'person-add-outline'}
               size={17}
-              color={isSelf ? C.textFaint : user.status === 'active' ? C.danger : C.accent}
+              color={user.status === 'active' ? C.danger : C.accent}
             />
-            <Text style={[s.statusText, user.status !== 'active' && s.approveText, isSelf && s.statusTextDisabled]}>
+            <Text style={[s.statusText, user.status !== 'active' && s.approveText]}>
               {user.status === 'active' ? 'Deactivate account' : user.status === 'pending' ? 'Approve account' : 'Reactivate account'}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[s.resetBtn, isSelf && s.statusBtnDisabled]} onPress={startReset} disabled={isSelf}>
-            <Ionicons name="key-outline" size={17} color={isSelf ? C.textFaint : C.text} />
-            <Text style={[s.resetText, isSelf && s.statusTextDisabled]}>Reset password</Text>
-          </TouchableOpacity>
-          {!isSelf && !realEmail(user.email) && (
-            <Text style={s.selfHint}>This account has no email, so only a researcher can reset its password.</Text>
+          {user.user_type === 'farmer' && (
+            <TouchableOpacity style={s.resetBtn} onPress={startReset}>
+              <Ionicons name="key-outline" size={17} color={C.text} />
+              <Text style={s.resetText}>Reset password</Text>
+            </TouchableOpacity>
           )}
-
-          {isSelf && <Text style={s.selfHint}>You can&apos;t change your own account status. Change your password from Profile.</Text>}
+          {user.user_type === 'farmer' && !realEmail(user.email) && (
+            <Text style={s.selfHint}>This account has no email, so only an admin can reset its password.</Text>
+          )}
         </>
       )}
     </BottomSheet>
@@ -276,10 +287,10 @@ const s = StyleSheet.create({
 
   statusBtn: { flexDirection: 'row', gap: 8, height: 50, borderRadius: 12, borderWidth: 1, borderColor: C.dangerBorder, backgroundColor: C.dangerBg, alignItems: 'center', justifyContent: 'center' },
   statusBtnApprove: { borderColor: C.cardBorderStrong, backgroundColor: C.accentTint },
-  statusBtnDisabled: { borderColor: C.cardBorder, backgroundColor: C.fill },
   statusText: { fontSize: 14.5, fontWeight: '700', color: C.danger },
   approveText: { color: C.accent },
-  statusTextDisabled: { color: C.textFaint },
+  lockedCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.fill, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 14 },
+  lockedText: { flex: 1, fontSize: 13.5, color: C.textSoft, lineHeight: 19 },
   dormantHint: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amberBorder, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 12, marginBottom: 10 },
   dormantHintText: { flex: 1, fontSize: 13, color: C.amber, fontWeight: '600' },
   selfHint: { fontSize: 12.5, color: C.textFaint, textAlign: 'center', marginTop: 12 },

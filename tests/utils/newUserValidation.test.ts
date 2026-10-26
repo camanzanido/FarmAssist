@@ -36,3 +36,10 @@ describe('validateOptionalEmail', () => {
     expect(validateOptionalEmail('juan@farmassist.invalid')).not.toBeNull();
   });
 });
+
+describe('validateNewUser for admin accounts', () => {
+  it('requires an email', () => {
+    expect(validateNewUser({ ...VALID, email: '' }, 'researcher').email).toBeDefined();
+    expect(validateNewUser(VALID, 'researcher')).toEqual({});
+  });
+});

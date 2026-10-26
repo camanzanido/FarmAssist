@@ -62,6 +62,17 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  // A researcher who sets another researcher's password could sign in as them, so only farmer accounts qualify.
+  const { data: target, error: targetError } = await admin.from('users').select('user_type').eq('id', userId).maybeSingle();
+  if (targetError) {
+    console.error('target lookup failed:', targetError);
+    return fail(500, 'server_error', 'Something went wrong. Please try again.');
+  }
+  if (target?.user_type === 'researcher') {
+    return fail(403, 'forbidden', 'You can only reset passwords for field user accounts.');
+  }
+
   const { error } = await admin.auth.admin.updateUserById(userId, { password });
   if (error) {
     if (error.status === 404) return fail(404, 'not_found', 'That account no longer exists.');

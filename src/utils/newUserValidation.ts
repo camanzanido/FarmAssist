@@ -18,7 +18,7 @@ export interface NewUserForm {
 export type NewUserErrors = Partial<Record<keyof NewUserForm, string>>;
 
 // Mirrors the create-user function's checks so most mistakes are caught before a network round trip.
-export function validateNewUser(form: NewUserForm): NewUserErrors {
+export function validateNewUser(form: NewUserForm, role: 'farmer' | 'researcher' = 'farmer'): NewUserErrors {
   const errors: NewUserErrors = {};
   const name = cleanName(form.name);
   if (!name) errors.name = 'Enter their name.';
@@ -29,6 +29,8 @@ export function validateNewUser(form: NewUserForm): NewUserErrors {
 
   const emailError = validateOptionalEmail(form.email);
   if (emailError) errors.email = emailError;
+  // No one else can reset an admin's password, so admins need an email to reset their own.
+  else if (role === 'researcher' && !cleanEmail(form.email)) errors.email = 'Admin accounts need an email.';
 
   if (form.password.length < TEMP_PASSWORD_MIN_LENGTH) {
     errors.password = `Use at least ${TEMP_PASSWORD_MIN_LENGTH} characters.`;

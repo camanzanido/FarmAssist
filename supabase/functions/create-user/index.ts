@@ -76,12 +76,14 @@ Deno.serve(async (req) => {
   }
   if (givenEmail && !EMAIL_REGEX.test(givenEmail)) return fail(400, 'invalid_input', 'Enter a valid email address.');
   if (givenEmail.endsWith(`@${INTERNAL_EMAIL_DOMAIN}`)) return fail(400, 'invalid_input', 'Enter a valid email address.');
+  // Researchers can't reset each other's passwords, so a researcher needs an email to reset their own.
+  if (userType === 'researcher' && !givenEmail) return fail(400, 'invalid_input', 'Admin accounts need an email.');
   // Without an email the account gets a hidden one; only a researcher can then reset its password.
   const email = givenEmail || `${username}@${INTERNAL_EMAIL_DOMAIN}`;
   if (password.length < MIN_PASSWORD_LENGTH) {
     return fail(400, 'invalid_input', `The password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
   }
-  if (!USER_TYPES.includes(userType)) return fail(400, 'invalid_input', 'Choose Farmer or Researcher.');
+  if (!USER_TYPES.includes(userType)) return fail(400, 'invalid_input', 'Choose Field user or Admin.');
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },

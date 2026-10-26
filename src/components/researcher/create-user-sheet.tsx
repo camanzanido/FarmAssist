@@ -2,6 +2,7 @@ import { UserType } from '@/src/auth/types';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { DropdownField } from '@/src/components/ui/dropdown-field';
 import { ResearcherColors as C } from '@/src/constants/colors';
+import { ROLE_SHORT } from '@/src/constants/labels';
 import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locations';
 import { createUserRemote } from '@/src/database/repositories/researcher';
 import { FunctionError } from '@/src/database/supabase/invokeFunction';
@@ -38,7 +39,7 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
     setServerError(null);
   }, [visible]);
 
-  const errors = validateNewUser(form);
+  const errors = validateNewUser(form, role);
   const show = (key: keyof NewUserForm) => submitted && errors[key];
   const set = (key: keyof NewUserForm) => (value: string) => setForm(f => ({ ...f, [key]: value }));
   const cities = form.province ? PH_PROVINCES_TO_CITIES[form.province] ?? [] : [];
@@ -100,7 +101,7 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
             accessibilityRole="button"
             accessibilityState={{ selected: role === r }}
           >
-            <Text style={[s.roleText, role === r && s.roleTextActive]}>{r === 'farmer' ? 'Farmer' : 'Researcher'}</Text>
+            <Text style={[s.roleText, role === r && s.roleTextActive]}>{ROLE_SHORT[r]}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -110,8 +111,8 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
 
       {field('name', 'NAME', { placeholder: 'Full name', autoCapitalize: 'words', textContentType: 'name' })}
       {field('username', 'USERNAME', { placeholder: 'e.g. juan.dc', autoCapitalize: 'none', autoCorrect: false })}
-      {field('email', 'EMAIL (OPTIONAL)', { placeholder: 'name@example.com', autoCapitalize: 'none', autoCorrect: false, keyboardType: 'email-address', textContentType: 'emailAddress' })}
-      {!form.email.trim() && <Text style={s.roleHint}>{NO_EMAIL_HINT}</Text>}
+      {field('email', role === 'researcher' ? 'EMAIL' : 'EMAIL (OPTIONAL)', { placeholder: 'name@example.com', autoCapitalize: 'none', autoCorrect: false, keyboardType: 'email-address', textContentType: 'emailAddress' })}
+      {role === 'farmer' && !form.email.trim() && <Text style={s.roleHint}>{NO_EMAIL_HINT}</Text>}
 
       <Text style={s.label}>TEMPORARY PASSWORD</Text>
       <View style={[s.input, s.passwordRow, show('password') && s.inputError]}>
