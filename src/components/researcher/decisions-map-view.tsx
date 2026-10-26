@@ -2,7 +2,7 @@ import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
 import { LeafletMap, type LeafletMapHandle, type MapPin } from '@/src/components/researcher/leaflet-map';
 import { MapSkeleton } from '@/src/components/researcher/skeletons';
-import { cardShadow, Colors } from '@/src/constants/colors';
+import { cardShadow, cardSurface, Colors } from '@/src/constants/colors';
 import { cityCoordinateKey, ensureCoordinates, type CityCoordinate } from '@/src/database/repositories/cityCoordinates';
 import { fetchCityStats, type CityStats } from '@/src/database/repositories/researcher';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
@@ -18,7 +18,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-g
 import Animated, { Easing, runOnJS, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const ROW_HEIGHT = 62;
-const ROW_GAP = 8;
+const ROW_GAP = 10;
 const EMPTY: CityStats[] = [];
 
 const PANEL_TOP_GAP = 8;
@@ -32,7 +32,7 @@ type CityRow = CityStats & { key: string; coord: CityCoordinate | undefined };
 export type Place = { city: string; province: string };
 
 function describeCity(row: CityStats): string {
-  return `${row.decisions} decision${row.decisions === 1 ? '' : 's'} · ${row.farmers} farmer${row.farmers === 1 ? '' : 's'} · average ${formatCurrency(row.average_gain)}`;
+  return `${row.decisions} decision${row.decisions === 1 ? '' : 's'} · ${row.farmers} field user${row.farmers === 1 ? '' : 's'} · average ${formatCurrency(row.average_gain)}`;
 }
 
 function CityListRow({ row, selected, onPress, onView }: {
@@ -65,7 +65,7 @@ function CityListRow({ row, selected, onPress, onView }: {
         </TouchableOpacity>
       ) : (
         <View style={s.rowStats}>
-          <Text style={s.rowCount}>{row.decisions} <Text style={s.rowUnit}>dec</Text> · {row.farmers} <Text style={s.rowUnit}>farmers</Text></Text>
+          <Text style={s.rowCount}>{row.decisions} <Text style={s.rowUnit}>dec</Text> · {row.farmers} <Text style={s.rowUnit}>users</Text></Text>
           <Text style={s.rowGain}>{formatCurrency(row.average_gain)}</Text>
         </View>
       )}
@@ -323,12 +323,11 @@ const s = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 15, color: Colors.ink, padding: 0 },
 
-  list: { paddingHorizontal: 16, paddingTop: 2 },
+  list: { paddingHorizontal: 16, paddingTop: 4 },
   row: {
     height: ROW_HEIGHT, marginBottom: ROW_GAP,
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: Colors.surface, borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
-    paddingHorizontal: 14,
+    ...cardSurface, paddingHorizontal: 14,
   },
   rowSelected: { borderColor: Colors.accent, backgroundColor: Colors.accentTint },
   rowPressed: { backgroundColor: Colors.surfaceAlt },

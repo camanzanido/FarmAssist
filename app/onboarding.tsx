@@ -26,11 +26,11 @@ type Slide = (typeof copy.slides)[number];
 const SLIDES = copy.slides;
 const LAST = SLIDES.length - 1;
 
-// Line icons in a soft circle, the same style as the rest of the app; the welcome slide shows the logo.
+// Filled glyphs read heavier than outlines, since Ionicons has no stroke weight; the welcome slide shows the logo.
 const SLIDE_ICONS: Record<Exclude<Slide['key'], 'welcome'>, keyof typeof Ionicons.glyphMap> = {
-  compare: 'git-compare-outline',
-  offline: 'cloud-offline-outline',
-  sync: 'sync-outline',
+  compare: 'git-compare',
+  offline: 'cloud-offline',
+  sync: 'sync',
 };
 
 export default function OnboardingScreen() {
@@ -92,7 +92,7 @@ export default function OnboardingScreen() {
             />
           ) : (
             <View style={s.art}>
-              <Ionicons name={SLIDE_ICONS[item.key]} size={72} color={Colors.accent} />
+              <Ionicons name={SLIDE_ICONS[item.key]} size={104} color={Colors.accent} />
             </View>
           )}
           {item.key === 'welcome' ? (
@@ -194,10 +194,7 @@ const s = StyleSheet.create({
   // Both sides are set: Android defaults a local image's height to its file size, which overrides aspectRatio.
   logo: { width: 150, height: 150, marginBottom: 20 },
   wordmark: { width: 313, maxWidth: '100%', height: 81 },
-  art: {
-    width: 150, height: 150, borderRadius: 75, backgroundColor: Colors.accentTint,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 28,
-  },
+  art: { width: 150, height: 150, alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
   title: { fontSize: 26, fontWeight: '800', color: Colors.ink, textAlign: 'center', letterSpacing: -0.4 },
   body: { fontSize: 16, color: Colors.inkMuted, textAlign: 'center', lineHeight: 24, marginTop: 12, maxWidth: 440 },
 
