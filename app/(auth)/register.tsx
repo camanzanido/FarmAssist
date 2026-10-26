@@ -9,10 +9,11 @@ import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { normalizeUsername } from '@/src/utils/accountEmail';
 import { getAuthErrorMessage } from '@/src/utils/errors';
 import { REGISTER_STEPS, validateRegister, validateRegisterStep, type RegisterForm, type RegisterStep } from '@/src/utils/registerValidation';
+import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, BackHandler, Image, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, BackHandler, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
 
@@ -121,13 +122,6 @@ export default function RegisterScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView ref={scrollRef} contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
           <View style={s.topRow}>
-            <Image
-              source={require('@/assets/images/FarmAssist-logo.png')}
-              style={s.logo}
-              resizeMode="contain"
-              accessibilityIgnoresInvertColors
-            />
-            <StepIndicator current={stepIndex} total={REGISTER_STEPS.length} context={step === 'about' ? copy.stepAbout : copy.stepAccount} />
             <TouchableOpacity
               onPress={handleClose}
               disabled={isSubmitting}
@@ -137,10 +131,15 @@ export default function RegisterScreen() {
             >
               <Ionicons name={step === 'account' ? 'arrow-back' : 'close'} size={22} color={Colors.ink} />
             </TouchableOpacity>
+            <StepIndicator current={stepIndex} total={REGISTER_STEPS.length} />
           </View>
 
           <Text style={s.title}>{step === 'about' ? copy.registerTitle : copy.registerAccountTitle}</Text>
           <Text style={s.subtitle}>{step === 'about' ? copy.registerSubtitle : copy.registerAccountSubtitle}</Text>
+
+          <Text style={s.sectionTitle} accessibilityRole="header">
+            {step === 'about' ? copy.sectionPersonal : copy.sectionAccount}
+          </Text>
 
           {step === 'about' ? (
             <>
@@ -166,9 +165,9 @@ export default function RegisterScreen() {
                 disabledHint="Select a province first"
               />
 
-              <TouchableOpacity onPress={handleNext} style={s.submitBtn} activeOpacity={0.85} accessibilityRole="button">
+              <PressableScale onPress={handleNext} style={s.submitBtn} accessibilityRole="button" haptic>
                 <Text style={s.submitBtnText}>{copy.next}</Text>
-              </TouchableOpacity>
+              </PressableScale>
             </>
           ) : (
             <>
@@ -183,17 +182,16 @@ export default function RegisterScreen() {
               <Field label={copy.password} value={form.password} onChangeText={set('password')} error={errors.password} touched={isTouched} secureTextEntry editable={!isSubmitting} />
               <Field label={copy.confirmPassword} value={form.confirmPassword} onChangeText={set('confirmPassword')} error={errors.confirmPassword} touched={isTouched} secureTextEntry editable={!isSubmitting} />
 
-              <TouchableOpacity
+              <PressableScale
                 onPress={handleRegister}
                 disabled={isSubmitting}
                 style={[s.submitBtn, isSubmitting && s.submitBtnDisabled]}
-                activeOpacity={0.85}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
-              >
+               haptic>
                 {isSubmitting && <ActivityIndicator color={Colors.onDark} />}
                 <Text style={s.submitBtnText}>{isSubmitting ? copy.creatingAccount : copy.createAccount}</Text>
-              </TouchableOpacity>
+              </PressableScale>
             </>
           )}
 
@@ -213,11 +211,11 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   scroll: { ...contentColumn, padding: 24, paddingBottom: 40 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
-  closeBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginRight: -8 },
-  logo: { width: 40, height: 40 },
+  closeBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginLeft: -8 },
   title: { fontSize: 26, fontWeight: '800', color: Colors.ink, marginBottom: 22, letterSpacing: -0.4 },
 
   subtitle: { fontSize: 14, color: Colors.inkSoft, lineHeight: 20, marginTop: -12, marginBottom: 22 },
+  sectionTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: Colors.inkFaint, textTransform: 'uppercase', marginBottom: 12 },
 
   field: { marginBottom: 14 },
   label: { fontSize: 13, fontWeight: '600', color: Colors.inkSoft, marginBottom: 6 },
