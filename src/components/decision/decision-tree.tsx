@@ -1,4 +1,5 @@
-import { CARD_PADDING, cardShadow, cardSurface, Colors, ForecastColors } from '@/src/constants/colors';
+import { BrandGradient, brandGradientCss, CARD_PADDING, cardShadow, cardSurface, Colors, ForecastColors } from '@/src/constants/colors';
+import { GradientBorder } from '@/src/components/ui/gradient-border';
 import { treeCopy as copy } from '@/src/constants/copy';
 import type { DecisionTree as Tree, OutcomeKey, TreeBranch, TreeOutcome } from '@/src/rcda/decisionTree';
 import React from 'react';
@@ -11,8 +12,10 @@ const OUTCOME_COLORS: Record<OutcomeKey, string> = {
 };
 
 const RAIL = Colors.borderStrong;
-const RAIL_BEST = Colors.accent;
+const PATH_TOP = BrandGradient[0];
+const PATH_BOTTOM = BrandGradient[2];
 const LINE = 2;
+const OPTION_RADIUS = 14;
 const STEM = 14;
 
 export function formatPeso(value: number): string {
@@ -41,9 +44,9 @@ function HalfBar({ side, color, edge }: { side: 'left' | 'right'; color: string;
   );
 }
 
-function OutcomeCard({ outcome: o }: { outcome: TreeOutcome }) {
+function OutcomeCard({ outcome: o, overRail }: { outcome: TreeOutcome; overRail: boolean }) {
   const notForecast = o.value === null;
-  return (
+  const card = (
     <View style={[s.outcome, notForecast && s.notForecast]}>
       <View style={s.outcomeTop}>
         <Text style={s.outcomeLabel} numberOfLines={1}>{copy.outcomes[o.key]}</Text>
@@ -57,10 +60,13 @@ function OutcomeCard({ outcome: o }: { outcome: TreeOutcome }) {
       </View>
     </View>
   );
+  // A faded card over the best path's rail needs a solid backing, or the line shows through it.
+  return overRail && notForecast ? <View style={s.outcomeBacking}>{card}</View> : card;
 }
 
 function BranchColumn({ branch, dimmed }: { branch: TreeBranch; dimmed: boolean }) {
-  const rail = branch.recommended ? RAIL_BEST : RAIL;
+  // The best column draws one continuous gradient rail behind its cards; its stems become transparent spacers.
+  const rail = branch.recommended ? 'transparent' : RAIL;
   return (
     <View
       style={s.column}
@@ -70,17 +76,18 @@ function BranchColumn({ branch, dimmed }: { branch: TreeBranch; dimmed: boolean 
           .map((o) => `${copy.outcomes[o.key]} ${formatPct(o.probability)}${o.value === null ? '' : `, ${formatPeso(o.value)}`}`)
           .join('. ')}
     >
+      {branch.recommended && <View style={s.bestRail} />}
       <Stem color={rail} />
-      <View style={[s.option, branch.recommended && s.optionBest]}>
+      <GradientBorder active={branch.recommended} radius={OPTION_RADIUS} fill={Colors.accentTint} style={s.option}>
         <Text style={[s.optionName, branch.recommended && s.optionNameBest]} numberOfLines={2}>{branch.optionName}</Text>
         <Text style={s.expected}>{copy.expected}</Text>
         <Text style={[s.expectedValue, { color: branch.recommended ? Colors.accent : Colors.inkSoft }]}>{formatPeso(branch.expectedValue)}</Text>
-      </View>
+      </GradientBorder>
       <View style={[s.outcomes, dimmed && s.dimmed]}>
         {branch.outcomes.map((o) => (
           <React.Fragment key={o.key}>
             <Stem color={rail} height={10} />
-            <OutcomeCard outcome={o} />
+            <OutcomeCard outcome={o} overRail={branch.recommended} />
           </React.Fragment>
         ))}
       </View>
@@ -111,8 +118,9 @@ function Formula({ branch }: { branch: TreeBranch }) {
 
 export function DecisionTree({ tree, bare = false }: { tree: Tree; bare?: boolean }) {
   const best = tree.branches.find((b) => b.recommended);
-  const railFor = (i: number) => (tree.branches[i]?.recommended ? RAIL_BEST : RAIL);
-  const trunk = best ? RAIL_BEST : RAIL;
+  // The best path flows dark at "Your choice" to light at "Best decision".
+  const topFor = (i: number) => (tree.branches[i]?.recommended ? PATH_TOP : RAIL);
+  const bottomFor = (i: number) => (tree.branches[i]?.recommended ? PATH_BOTTOM : RAIL);
 
   return (
     <View style={bare ? s.bare : s.card}>
@@ -123,22 +131,22 @@ export function DecisionTree({ tree, bare = false }: { tree: Tree; bare?: boolea
         <View style={s.root}>
           <Text style={s.rootLabel}>{copy.rootLabel}</Text>
         </View>
-        <Stem color={trunk} />
+        <Stem color={best ? PATH_TOP : RAIL} />
       </View>
 
       <View style={s.columns}>
-        <HalfBar side="left" color={railFor(0)} edge="top" />
-        <HalfBar side="right" color={railFor(1)} edge="top" />
+        <HalfBar side="left" color={topFor(0)} edge="top" />
+        <HalfBar side="right" color={topFor(1)} edge="top" />
         {tree.branches.map((b) => (
           <BranchColumn key={b.optionIndex} branch={b} dimmed={!!best && !b.recommended} />
         ))}
-        <HalfBar side="left" color={railFor(0)} edge="bottom" />
-        <HalfBar side="right" color={railFor(1)} edge="bottom" />
+        <HalfBar side="left" color={bottomFor(0)} edge="bottom" />
+        <HalfBar side="right" color={bottomFor(1)} edge="bottom" />
       </View>
 
       <View style={s.center}>
-        <Stem color={trunk} />
-        <View style={[s.conclusion, !best && s.conclusionNone]}>
+        <Stem color={best ? PATH_BOTTOM : RAIL} />
+        <View style={[s.conclusion, best ? s.conclusionBest : s.conclusionNone]}>
           <Text style={[s.conclusionText, !best && s.conclusionTextNone]} numberOfLines={2}>
             {best ? copy.conclusionBest(best.optionName) : copy.conclusionNone}
           </Text>
@@ -160,6 +168,11 @@ const s = StyleSheet.create({
   center: { alignItems: 'center' },
   stem: { width: LINE, alignSelf: 'center' },
   halfBar: { position: 'absolute', height: LINE },
+  bestRail: {
+    position: 'absolute', top: 0, bottom: 0, left: '50%', width: LINE, marginLeft: -LINE / 2,
+    experimental_backgroundImage: `linear-gradient(180deg, ${BrandGradient[0]} 0%, ${BrandGradient[1]} 50%, ${BrandGradient[2]} 100%)`,
+  },
+  outcomeBacking: { backgroundColor: Colors.surface, borderRadius: 12 },
 
   root: { backgroundColor: Colors.ink, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 18, ...cardShadow },
   rootLabel: { fontSize: 14, fontWeight: '800', color: Colors.onDark },
@@ -169,10 +182,9 @@ const s = StyleSheet.create({
   column: { flex: 1, paddingHorizontal: 5 },
 
   option: {
-    alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, borderWidth: 1, borderColor: Colors.border,
+    alignItems: 'center', backgroundColor: Colors.surface, borderRadius: OPTION_RADIUS, borderWidth: 1, borderColor: Colors.border,
     paddingVertical: 10, paddingHorizontal: 8, ...cardShadow,
   },
-  optionBest: { borderColor: Colors.accent, borderWidth: 1.5, backgroundColor: Colors.accentTint },
   optionName: { fontSize: 15, fontWeight: '700', color: Colors.inkSoft, textAlign: 'center' },
   optionNameBest: { color: Colors.ink, fontWeight: '800' },
   expected: { fontSize: 11, color: Colors.inkFaint, marginTop: 4 },
@@ -193,6 +205,7 @@ const s = StyleSheet.create({
   probFill: { height: '100%', borderRadius: 2, opacity: 0.8 },
 
   conclusion: { backgroundColor: Colors.ink, borderRadius: 999, paddingVertical: 9, paddingHorizontal: 18, maxWidth: '90%' },
+  conclusionBest: { experimental_backgroundImage: brandGradientCss(90) },
   conclusionNone: { backgroundColor: Colors.dangerBg },
   conclusionText: { fontSize: 14, fontWeight: '800', color: Colors.onDark, textAlign: 'center' },
   conclusionTextNone: { color: Colors.danger },

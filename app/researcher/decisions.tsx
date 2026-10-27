@@ -188,7 +188,7 @@ export default function ResearcherDecisionsScreen() {
       <View style={[s.topBar, view === 'map' && [s.topBarFloating, { top: insets.top }]]} pointerEvents="box-none">
         {view === 'list' && <Text style={s.title}>Decisions</Text>}
         <View style={[s.segment, view === 'map' && s.segmentFloating]} accessibilityRole="tablist">
-          {(['list', 'map'] as const).map(v => (
+          {(['map', 'list'] as const).map(v => (
             <TouchableOpacity
               key={v}
               style={[s.segmentBtn, view === v && s.segmentBtnActive]}
@@ -289,5 +289,5 @@ const s = StyleSheet.create({
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 9 },
   cardDate: { fontSize: 12, color: Colors.inkDim },
 
-  deleteBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.dangerBg },
+  deleteBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 });

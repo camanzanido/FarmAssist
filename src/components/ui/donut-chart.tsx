@@ -1,6 +1,8 @@
 import { Colors } from '@/src/constants/colors';
-import React from 'react';
+import { arcDash } from '@/src/utils/donutArc';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, G } from 'react-native-svg';
 
 export type DonutSegment = { key: string; value: number; color: string };
@@ -14,7 +16,8 @@ type Props = {
   accessibilityLabel?: string;
 };
 
-const GAP_DEG = 1.5;
+const GAP_DEG = 4;
+const ENTER_MS = 800;
 
 // A read-only ring of proportional segments, starting at 12 o'clock and running clockwise.
 export function DonutChart({ segments, size = 132, stroke = 18, centerValue, centerLabel, accessibilityLabel }: Props) {
@@ -25,34 +28,48 @@ export function DonutChart({ segments, size = 132, stroke = 18, centerValue, cen
   const shown = segments.filter(seg => seg.value > 0);
   const gap = shown.length > 1 ? (GAP_DEG / 360) * circumference : 0;
 
+  const reduceMotion = useReducedMotion();
+  const progress = useSharedValue(reduceMotion ? 1 : 0);
+  useEffect(() => {
+    progress.value = reduceMotion ? 1 : withTiming(1, { duration: ENTER_MS, easing: Easing.out(Easing.cubic) });
+  }, [reduceMotion, progress]);
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ rotate: `${(progress.value - 1) * 120}deg` }, { scale: 0.85 + progress.value * 0.15 }],
+  }));
+
   let start = 0;
   return (
     <View style={{ width: size, height: size }} accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel}>
-      <Svg width={size} height={size}>
-        <Circle cx={c} cy={c} r={r} stroke={Colors.divider} strokeWidth={stroke} fill="none" />
-        {total > 0 && (
-          <G rotation={-90} origin={`${c}, ${c}`}>
-            {shown.map(seg => {
-              const length = (seg.value / total) * circumference;
-              const arc = (
-                <Circle
-                  key={seg.key}
-                  cx={c}
-                  cy={c}
-                  r={r}
-                  stroke={seg.color}
-                  strokeWidth={stroke}
-                  fill="none"
-                  strokeDasharray={`${Math.max(length - gap, 0.5)} ${circumference}`}
-                  strokeDashoffset={-start}
-                />
-              );
-              start += length;
-              return arc;
-            })}
-          </G>
-        )}
-      </Svg>
+      <Animated.View style={ringStyle}>
+        <Svg width={size} height={size}>
+          <Circle cx={c} cy={c} r={r} stroke={Colors.divider} strokeWidth={stroke} fill="none" />
+          {total > 0 && (
+            <G rotation={-90} origin={`${c}, ${c}`}>
+              {shown.map(seg => {
+                const length = (seg.value / total) * circumference;
+                const { dash, lead, cap } = arcDash(length, gap, stroke);
+                const arc = (
+                  <Circle
+                    key={seg.key}
+                    cx={c}
+                    cy={c}
+                    r={r}
+                    stroke={seg.color}
+                    strokeWidth={stroke}
+                    strokeLinecap={cap}
+                    fill="none"
+                    strokeDasharray={`${dash} ${circumference}`}
+                    strokeDashoffset={-(start + lead)}
+                  />
+                );
+                start += length;
+                return arc;
+              })}
+            </G>
+          )}
+        </Svg>
+      </Animated.View>
       {(centerValue || centerLabel) && (
         <View style={[StyleSheet.absoluteFill, s.center]} pointerEvents="none">
           {centerValue && <Text style={s.value}>{centerValue}</Text>}

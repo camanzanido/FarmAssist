@@ -11,12 +11,70 @@ import { normalizeUsername } from '@/src/utils/accountEmail';
 import { cleanEmail, cleanName } from '@/src/utils/profileValidation';
 import { NewUserForm, validateNewUser } from '@/src/utils/newUserValidation';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import * as Clipboard from 'expo-clipboard';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const NO_EMAIL_HINT = "Without an email, they can't reset a forgotten password themselves. You can reset it for them from Users.";
+const NO_EMAIL_HINT = "Without an email, they can't reset a forgotten password themselves. You can reset it for them from Field Users.";
 
 const EMPTY: NewUserForm = { name: '', username: '', email: '', password: '', province: '', city: '' };
+
+interface CreatedAccount { name: string; username: string; password: string; role: UserType }
+
+export const credentialsText = ({ name, username, password }: CreatedAccount) =>
+  `FarmAssist account for ${name}\nUsername: ${username}\nTemporary password: ${password}\nPlease change your password after signing in.`;
+
+function CreatedView({ account, onDone }: { account: CreatedAccount; onDone: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  const copy = async () => {
+    try {
+      await Clipboard.setStringAsync(credentialsText(account));
+      setCopied(true);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy credentials:', err);
+    }
+  };
+
+  return (
+    <>
+      <View style={s.createdIcon}>
+        <Ionicons name="checkmark-circle" size={30} color={C.accent} />
+      </View>
+      <Text style={s.title}>Account created</Text>
+      <Text style={s.subtitle}>{account.name} can sign in now. Send them these details.</Text>
+
+      <View style={s.credBox}>
+        <Text style={s.credLabel}>USERNAME</Text>
+        <Text style={s.credValue} selectable>{account.username}</Text>
+        <View style={s.credDivider} />
+        <Text style={s.credLabel}>TEMPORARY PASSWORD</Text>
+        <Text style={s.credValue} selectable>{account.password}</Text>
+      </View>
+
+      <TouchableOpacity
+        style={[s.copyBtn, copied && s.copyBtnDone]}
+        onPress={copy}
+        accessibilityRole="button"
+        accessibilityLabel={copied ? 'Credentials copied' : 'Copy credentials'}
+      >
+        <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={18} color={copied ? C.accent : C.text} />
+        <Text style={[s.copyText, copied && s.copyTextDone]}>{copied ? 'Copied' : 'Copy credentials'}</Text>
+      </TouchableOpacity>
+
+      <Text style={s.roleHint}>This password won&apos;t be shown again. Ask them to change it after signing in (Profile → Change password).</Text>
+      {account.role === 'researcher' && <Text style={s.roleHint}>Admin accounts don&apos;t appear in Field Users.</Text>}
+
+      <TouchableOpacity style={[s.saveBtn, s.doneBtn]} onPress={onDone} accessibilityRole="button">
+        <Text style={s.saveText}>Done</Text>
+      </TouchableOpacity>
+    </>
+  );
+}
 
 export function CreateUserSheet({ visible, onClose, onCreated }: {
   visible: boolean;
@@ -29,9 +87,12 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [created, setCreated] = useState<CreatedAccount | null>(null);
 
+  // Reset on open, not close, so the exit animation doesn't flash the empty form.
   useEffect(() => {
     if (!visible) return;
+    setCreated(null);
     setForm(EMPTY);
     setRole('farmer');
     setShowPassword(false);
@@ -61,6 +122,7 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
         city: form.city.trim(),
         province: form.province.trim(),
       });
+      setCreated({ name, username, password: form.password, role });
       onCreated({ name, username, role });
     } catch (err) {
       console.error('Failed to create user:', err);
@@ -84,6 +146,14 @@ export function CreateUserSheet({ visible, onClose, onCreated }: {
       {show(key) && <Text style={s.error}>{errors[key]}</Text>}
     </>
   );
+
+  if (created) {
+    return (
+      <BottomSheet visible={visible} onClose={onClose} style={s.sheet}>
+        <CreatedView account={created} onDone={onClose} />
+      </BottomSheet>
+    );
+  }
 
   return (
     <BottomSheet visible={visible} onClose={onClose} avoidKeyboard style={s.sheet} scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
@@ -208,4 +278,15 @@ const s = StyleSheet.create({
   saveBtn: { flex: 1.4, height: 52, borderRadius: 14, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
   saveText: { fontSize: 15.5, fontWeight: '800', color: C.accentDeepText },
   disabled: { opacity: 0.5 },
+
+  createdIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: C.accentTint, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  credBox: { backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorderStrong, borderRadius: 14, padding: 14, marginTop: 12 },
+  credLabel: { fontSize: 11.5, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint, marginBottom: 4 },
+  credValue: { fontSize: 16.5, fontWeight: '700', color: C.text },
+  credDivider: { height: 1, backgroundColor: C.cardBorder, marginVertical: 12 },
+  copyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 50, borderRadius: 14, borderWidth: 1.5, borderColor: C.cardBorderStrong, marginTop: 14, marginBottom: 6 },
+  copyBtnDone: { borderColor: C.accent, backgroundColor: C.accentTint },
+  copyText: { fontSize: 15, fontWeight: '700', color: C.text },
+  copyTextDone: { color: C.accent },
+  doneBtn: { flex: 0, height: 52, marginTop: 22 },
 });

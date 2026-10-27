@@ -362,7 +362,7 @@ export function buildPdfHtml(decisions: Decision[], opts: ExportOptions, ctx: Ex
 
 // ---------- File name ----------
 
-export function exportFileName(range: ExportRange, now: Date, extension: 'csv' | 'pdf'): string {
+export function exportFileName(range: ExportRange, now: Date, extension: 'csv' | 'pdf', suffix = ''): string {
   const pad = (n: number) => String(n + 1).padStart(2, '0');
   const bounds = rangeBounds(range, now);
   let span = 'all-time';
@@ -373,5 +373,5 @@ export function exportFileName(range: ExportRange, now: Date, extension: 'csv' |
       ? `${from.year}-${pad(from.month)}`
       : `${from.year}-${pad(from.month)}_to_${to.year}-${pad(to.month)}`;
   }
-  return `farmassist-decisions_${span}.${extension}`;
+  return `farmassist-decisions_${span}${suffix}.${extension}`;
 }

@@ -2,7 +2,8 @@ import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
 import { LeafletMap, type LeafletMapHandle, type MapPin } from '@/src/components/researcher/leaflet-map';
 import { MapSkeleton } from '@/src/components/researcher/skeletons';
-import { cardShadow, cardSurface, Colors } from '@/src/constants/colors';
+import { GradientBorder } from '@/src/components/ui/gradient-border';
+import { CARD_RADIUS, cardShadow, cardSurface, Colors } from '@/src/constants/colors';
 import { cityCoordinateKey, ensureCoordinates, type CityCoordinate } from '@/src/database/repositories/cityCoordinates';
 import { fetchCityStats, type CityStats, type Place } from '@/src/database/repositories/researcher';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
@@ -43,31 +44,40 @@ function CityListRow({ row, selected, onPress, onView }: {
 }) {
   return (
     <Pressable
-      style={({ pressed }) => [s.row, selected && s.rowSelected, pressed && s.rowPressed]}
+      style={s.row}
       onPress={() => onPress(row)}
       accessibilityRole="button"
       accessibilityHint="Shows this municipality on the map and lets you view its decisions"
     >
-      <View style={s.rowPlace}>
-        <Text style={s.rowCity} numberOfLines={1}>{row.city}</Text>
-        <Text style={s.rowProvince} numberOfLines={1}>{row.province}</Text>
-      </View>
-      {selected ? (
-        <TouchableOpacity
-          style={s.viewBtn}
-          onPress={() => onView(row)}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel={`View ${row.decisions} decisions in ${row.city}, ${row.province}`}
+      {({ pressed }) => (
+        <GradientBorder
+          active={selected}
+          radius={CARD_RADIUS}
+          fill={Colors.accentTint}
+          style={[s.rowCard, !selected && pressed && s.rowPressed]}
         >
-          <Text style={s.viewBtnText}>View {row.decisions}</Text>
-          <Ionicons name="arrow-forward" size={16} color={Colors.onDark} />
-        </TouchableOpacity>
-      ) : (
-        <View style={s.rowStats}>
-          <Text style={s.rowCount}>{row.decisions} <Text style={s.rowUnit}>dec</Text> · {row.farmers} <Text style={s.rowUnit}>users</Text></Text>
-          <Text style={s.rowGain}>{formatCurrency(row.average_gain)}</Text>
-        </View>
+          <View style={s.rowPlace}>
+            <Text style={s.rowCity} numberOfLines={1}>{row.city}</Text>
+            <Text style={s.rowProvince} numberOfLines={1}>{row.province}</Text>
+          </View>
+          {selected ? (
+            <TouchableOpacity
+              style={s.viewBtn}
+              onPress={() => onView(row)}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel={`View ${row.decisions} decisions in ${row.city}, ${row.province}`}
+            >
+              <Text style={s.viewBtnText}>View {row.decisions}</Text>
+              <Ionicons name="arrow-forward" size={16} color={Colors.onDark} />
+            </TouchableOpacity>
+          ) : (
+            <View style={s.rowStats}>
+              <Text style={s.rowCount}>{row.decisions} <Text style={s.rowUnit}>dec</Text> · {row.farmers} <Text style={s.rowUnit}>users</Text></Text>
+              <Text style={s.rowGain}>{formatCurrency(row.average_gain)}</Text>
+            </View>
+          )}
+        </GradientBorder>
       )}
     </Pressable>
   );
@@ -316,7 +326,7 @@ const s = StyleSheet.create({
 
   panel: {
     position: 'absolute', left: 0, right: 0, bottom: 0,
-    backgroundColor: Colors.bg, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    backgroundColor: Colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20,
     borderWidth: 1, borderBottomWidth: 0, borderColor: Colors.border, ...cardShadow,
   },
   handleZone: { height: 26, alignItems: 'center', justifyContent: 'center' },
@@ -333,12 +343,8 @@ const s = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, color: Colors.ink, padding: 0 },
 
   list: { paddingHorizontal: 16, paddingTop: 4 },
-  row: {
-    height: ROW_HEIGHT, marginBottom: ROW_GAP,
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    ...cardSurface, paddingHorizontal: 14,
-  },
-  rowSelected: { borderColor: Colors.accent, backgroundColor: Colors.accentTint },
+  row: { height: ROW_HEIGHT, marginBottom: ROW_GAP },
+  rowCard: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, ...cardSurface, paddingHorizontal: 14 },
   rowPressed: { backgroundColor: Colors.surfaceAlt },
   rowPlace: { flex: 1 },
   rowCity: { fontSize: 15, fontWeight: '800', color: Colors.ink },

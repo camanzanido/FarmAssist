@@ -3,6 +3,7 @@ import { resultCopy } from '@/src/constants/copy';
 import {
   angleToPercent, applyDrag, continueDrag, nearestBoundary, percentToPoint, startDrag, type Boundary,
 } from '@/src/utils/forecastSplit';
+import { arcDash } from '@/src/utils/donutArc';
 import React, { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -18,6 +19,8 @@ type Props = {
 };
 
 type BandKey = 'dry' | 'average' | 'wet';
+
+const GAP_DEG = 4;
 
 const BANDS: { key: BandKey; color: string }[] = [
   { key: 'dry', color: ForecastColors.dry },
@@ -74,11 +77,15 @@ export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels
   const shownIndex = active === 'dry' ? 0 : active === 'wet' ? 2 : interactive ? 1 : split.indexOf(Math.max(...split));
   const shown = BANDS[shownIndex];
 
+  // Same 4° gaps and rounded ends as the Overview donut; a lone band is a full ring.
+  const bandsShown = split.filter(v => v > 0).length;
+  const gap = bandsShown > 1 ? (GAP_DEG / 360) * circumference : 0;
   let start = 0;
   const arcs = BANDS.map((band, i) => {
     const from = start;
     start += split[i];
     if (split[i] <= 0) return null;
+    const { dash, lead, cap } = arcDash((split[i] / 100) * circumference, gap, stroke);
     return (
       <Circle
         key={band.key}
@@ -87,9 +94,10 @@ export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels
         r={r}
         stroke={band.color}
         strokeWidth={stroke}
+        strokeLinecap={cap}
         fill="none"
-        strokeDasharray={`${(split[i] / 100) * circumference} ${circumference}`}
-        rotation={-90 + from * 3.6}
+        strokeDasharray={`${dash} ${circumference}`}
+        rotation={-90 + from * 3.6 + (lead / circumference) * 360}
         origin={`${c}, ${c}`}
       />
     );

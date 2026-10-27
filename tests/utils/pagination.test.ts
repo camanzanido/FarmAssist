@@ -1,4 +1,4 @@
-import { fetchAllRows, pageRange, pageWindow } from '../../src/utils/pagination';
+import { fetchAllRows, pageRange, pageWindow, slicePage } from '../../src/utils/pagination';
 
 function fakeTable(size: number, serverCap = Infinity) {
   const rows = Array.from({ length: size }, (_, i) => i);
@@ -62,5 +62,27 @@ describe('pageWindow', () => {
 
   it('reports one empty page for no rows', () => {
     expect(pageWindow(1, 15, 0, 0)).toEqual({ page: 1, pageCount: 1, start: 0, end: 0, total: 0 });
+  });
+});
+
+describe('slicePage', () => {
+  const items = Array.from({ length: 12 }, (_, i) => i);
+
+  it('returns the first page', () => {
+    expect(slicePage(items, 1, 5)).toEqual({ rows: [0, 1, 2, 3, 4], info: { page: 1, pageCount: 3, start: 1, end: 5, total: 12 } });
+  });
+
+  it('returns a short last page', () => {
+    expect(slicePage(items, 3, 5)).toEqual({ rows: [10, 11], info: { page: 3, pageCount: 3, start: 11, end: 12, total: 12 } });
+  });
+
+  it('falls back to the last page when the list shrinks under the current page', () => {
+    const { rows, info } = slicePage(items.slice(0, 6), 3, 5);
+    expect(rows).toEqual([5]);
+    expect(info).toMatchObject({ page: 2, start: 6, end: 6 });
+  });
+
+  it('returns nothing for an empty list', () => {
+    expect(slicePage([], 2, 5)).toEqual({ rows: [], info: { page: 1, pageCount: 1, start: 0, end: 0, total: 0 } });
   });
 });

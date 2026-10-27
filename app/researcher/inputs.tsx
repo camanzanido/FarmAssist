@@ -2,6 +2,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { EmptyState } from '@/src/components/researcher/empty-state';
+import { Pager } from '@/src/components/researcher/pager';
 import { ListScreenSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import {
@@ -17,11 +18,12 @@ import { fetchAllLocations } from '@/src/database/repositories/researcher';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { getActionErrorMessage } from '@/src/utils/errors';
 import { formatCurrency } from '@/src/utils/formatters';
+import { PAGE_SIZES, slicePage, type PageSize } from '@/src/utils/pagination';
 import {
   climateRowToFormValues, OptionAverage, placeLabel, PredefinedOption, predefinedKey,
 } from '@/src/utils/predefinedOptions';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -78,6 +80,19 @@ export default function ResearcherInputsScreen() {
   const [sheetMode, setSheetMode] = useState<PredefinedFormMode>('create');
   const [formInitial, setFormInitial] = useState<PredefinedFormInitial>(() => blankPredefinedForm());
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(PAGE_SIZES[0]);
+  const listRef = useRef<FlatList<ListItem>>(null);
+
+  // Any change to what's listed starts again from the first page.
+  const changeTab = (t: Tab) => { setTab(t); setPage(1); };
+  const changeTypeFilter = (t: TypeFilter) => { setTypeFilter(t); setPage(1); };
+  const changeQuery = (q: string) => { setQuery(q); setPage(1); };
+  const changePageSize = (size: PageSize) => { setPageSize(size); setPage(1); };
+  const goToPage = (p: number) => {
+    setPage(p);
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  };
 
   const publishedByKey = useMemo(() => new Map(published.map((p) => [predefinedKey(p), p])), [published]);
   const publishedIds = useMemo(() => new Map(published.map((p) => [predefinedKey(p), p.id])), [published]);
@@ -231,6 +246,7 @@ export default function ResearcherInputsScreen() {
       : filteredPublished.map(o => ({ key: `p:${o.id}`, kind: 'published' as const, option: o })),
     [tab, filteredAverages, filteredPublished]
   );
+  const { rows: pageItems, info: pageInfo } = useMemo(() => slicePage(items, page, pageSize), [items, page, pageSize]);
 
   const header = (
     <View>
@@ -250,7 +266,7 @@ export default function ResearcherInputsScreen() {
           <TouchableOpacity
             key={key}
             style={[s.segmentBtn, tab === key && s.segmentBtnActive]}
-            onPress={() => setTab(key)}
+            onPress={() => changeTab(key)}
             accessibilityState={{ selected: tab === key }}
           >
             <Text style={[s.segmentText, tab === key && s.segmentTextActive]}>{label} ({count})</Text>
@@ -263,14 +279,14 @@ export default function ResearcherInputsScreen() {
         <TextInput
           style={s.searchInput}
           value={query}
-          onChangeText={setQuery}
+          onChangeText={changeQuery}
           placeholder="Option, municipality, or province"
           placeholderTextColor={C.textMuted}
         />
       </View>
 
       <View style={s.filterRow}>
-        <AnimatedFilterBar options={filterOptions} selected={typeFilter} onSelect={setTypeFilter} />
+        <AnimatedFilterBar options={filterOptions} selected={typeFilter} onSelect={changeTypeFilter} />
       </View>
     </View>
   );
@@ -300,12 +316,17 @@ export default function ResearcherInputsScreen() {
         skeleton={<ListScreenSkeleton />}
       >
         <FlatList
-          data={items}
+          ref={listRef}
+          data={pageItems}
           keyExtractor={item => item.key}
           renderItem={({ item }) => item.kind === 'average' ? renderAverage(item.average) : renderPublished(item.option)}
           ListHeaderComponent={header}
           ListEmptyComponent={empty}
-          ListFooterComponent={<View style={{ height: 20 }} />}
+          ListFooterComponent={
+            <View style={s.footer}>
+              <Pager info={pageInfo} pageSize={pageSize} onPage={goToPage} onPageSize={changePageSize} />
+            </View>
+          }
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -335,6 +356,7 @@ export default function ResearcherInputsScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
   content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
+  footer: { paddingBottom: 20 },
 
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },

@@ -62,7 +62,8 @@ export function OverviewSkeleton() {
     <SkeletonGroup>
       <View style={s.screen} accessibilityLabel="Loading" accessibilityRole="progressbar">
         <Skeleton width={140} height={26} radius={8} />
-        <View style={[s.statGrid, isWide && s.statGridWide, s.gapLg]}>
+        <Skeleton width={130} height={34} radius={17} style={s.gapLg} />
+        <View style={[s.statGrid, isWide && s.statGridWide, s.gapMd]}>
           <View style={s.statRow}>{[0, 1].map(statCard)}</View>
           <View style={s.statRow}>{[2, 3].map(statCard)}</View>
         </View>
@@ -73,21 +74,24 @@ export function OverviewSkeleton() {
 }
 
 function ChartSections() {
+  const isWide = useIsWide();
   return (
     <>
       <View style={s.section}>
         <Skeleton width="45%" height={14} />
-        <View style={s.bars}>
-          {[40, 65, 30, 80, 55, 95].map((h, i) => <Skeleton key={i} height={`${h}%`} radius={5} style={s.bar} />)}
-        </View>
+        <Skeleton height={110} radius={10} style={s.gapMd} />
       </View>
-      <View style={[s.section, s.splitRow]}>
-        <View style={s.typesCol}>
+      <View style={isWide && s.splitRow}>
+        <View style={[s.section, isWide && s.typesCol]}>
           <Skeleton width="70%" height={14} />
-          <Skeleton width={120} height={120} radius={60} style={[s.gapMd, s.donut]} />
-          {[0, 1, 2].map(i => <Skeleton key={i} width="90%" height={12} style={s.gapSm} />)}
+          <View style={[s.typesBody, s.gapMd]}>
+            <Skeleton width={112} height={112} radius={56} />
+            <View style={s.legend}>
+              {[0, 1, 2].map(i => <Skeleton key={i} width="90%" height={12} />)}
+            </View>
+          </View>
         </View>
-        <View style={s.muniCol}>
+        <View style={[s.section, isWide && s.muniCol]}>
           <Skeleton width="55%" height={14} />
           {[0, 1, 2, 3].map(i => <Skeleton key={i} height={10} radius={5} style={s.gapMd} />)}
         </View>
@@ -146,12 +150,11 @@ const s = StyleSheet.create({
   statRow: { flex: 1, flexDirection: 'row', gap: 10 },
   stat: { flex: 1, padding: 16 },
   section: { ...cardSurface, padding: CARD_PADDING, marginTop: 12 },
-  bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 9, height: 110, marginTop: 16 },
-  splitRow: { flexDirection: 'row', gap: 20 },
+  splitRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   typesCol: { flex: 2 },
   muniCol: { flex: 3 },
-  donut: { alignSelf: 'center' },
-  bar: { flex: 1 },
+  typesBody: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  legend: { flex: 1, gap: 12 },
 
   mapPanel: {
     position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingTop: 10, gap: 10,

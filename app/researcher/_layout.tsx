@@ -48,7 +48,7 @@ export default function ResearcherLayout() {
         <Tabs.Screen
           name="users"
           options={{
-            title: 'Users',
+            title: 'Field Users',
             tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'people' : 'people-outline'} size={23} color={color} />,
           }}
         />

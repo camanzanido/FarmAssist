@@ -1,15 +1,17 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
+import { LocationFilterSheet } from '@/src/components/researcher/location-filter-sheet';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Skeleton } from '@/src/components/ui/skeleton';
 import { DECISION_LABELS } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import type { Location } from '@/src/database/repositories/locations';
 import {
-  countDecisionsInRange, fetchAllLocations, fetchAllUsers, fetchDecisionsInRange,
+  countDecisionsInRange, fetchAllLocations, fetchAllUsers, fetchDecisionsInRange, type Place,
 } from '@/src/database/repositories/researcher';
 import type { User } from '@/src/database/repositories/users';
 import { canSaveToFolder, ExportPayload, saveExportToFolder, shareExport } from '@/src/services/exportFile';
 import { getActionErrorMessage } from '@/src/utils/errors';
+import { placesFileSuffix, placesLabel } from '@/src/utils/placeFilter';
 import {
   buildCsv,
   buildPdfHtml,
@@ -74,8 +76,10 @@ function MonthStepper({ label, value, max, onChange }: {
 
 type Counts = { inRange: number; total: number } | null;
 
-export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+export function ExportSheet({ visible, onClose, initialPlaces = [] }: { visible: boolean; onClose: () => void; initialPlaces?: Place[] }) {
   const thisMonth = yearMonthOf(new Date());
+  const [places, setPlaces] = useState<Place[]>(initialPlaces);
+  const [locationOpen, setLocationOpen] = useState(false);
   const [format, setFormat] = useState<Format>('excel');
   const [range, setRange] = useState<ExportRange>({ preset: 'all', from: thisMonth, to: thisMonth });
   const [includeFarmerLocation, setIncludeFarmerLocation] = useState(true);
@@ -88,7 +92,13 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
 
   const now = new Date();
   const periodLabel = rangeLabel(range, now);
-  const rangeKey = JSON.stringify(range);
+  const scopeLabel = places.length > 0 ? `${periodLabel} · ${places.length === 1 ? `${places[0].city}, ${places[0].province}` : placesLabel(places)}` : periodLabel;
+  const rangeKey = JSON.stringify([range, places]);
+
+  // Each time the sheet opens it starts from the Overview's current location filter.
+  useEffect(() => {
+    if (visible) setPlaces(initialPlaces);
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!visible) return;
@@ -96,8 +106,8 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
     setCounts(null);
     setCountFailed(false);
     Promise.all([
-      countDecisionsInRange(rangeBounds(range, new Date())),
-      countDecisionsInRange({ start: null, end: null }),
+      countDecisionsInRange(rangeBounds(range, new Date()), places),
+      countDecisionsInRange({ start: null, end: null }, places),
     ])
       .then(([inRange, total]) => { if (!cancelled) setCounts({ inRange, total }); })
       .catch(err => {
@@ -112,7 +122,7 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
     const charts = format === 'pdf' && includeCharts;
     // The municipality chart needs locations even when the table leaves them out.
     const [decisions, users, locations] = await Promise.all([
-      fetchDecisionsInRange(bounds),
+      fetchDecisionsInRange(bounds, places),
       includeFarmerLocation ? fetchAllUsers() : Promise.resolve([] as User[]),
       includeFarmerLocation || charts ? fetchAllLocations() : Promise.resolve([] as Location[]),
     ]);
@@ -123,12 +133,13 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
       typeLabels: DECISION_LABELS as Record<string, string>,
     };
     const generatedAt = new Date();
+    const suffix = placesFileSuffix(places);
     return format === 'excel'
-      ? { kind: 'csv', fileName: exportFileName(range, generatedAt, 'csv'), content: buildCsv(decisions, opts, ctx) }
+      ? { kind: 'csv', fileName: exportFileName(range, generatedAt, 'csv', suffix), content: buildCsv(decisions, opts, ctx) }
       : {
         kind: 'pdf',
-        fileName: exportFileName(range, generatedAt, 'pdf'),
-        html: buildPdfHtml(decisions, opts, ctx, { rangeLabel: periodLabel, generatedAt }),
+        fileName: exportFileName(range, generatedAt, 'pdf', suffix),
+        html: buildPdfHtml(decisions, opts, ctx, { rangeLabel: scopeLabel, generatedAt }),
       };
   };
 
@@ -167,14 +178,15 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
   const primary: Action = canSaveToFolder ? 'save' : 'share';
 
   return (
+    <>
     <BottomSheet visible={visible} onClose={onClose}>
             <Text style={s.title}>Export decisions</Text>
             {counts ? (
               <Text style={s.subtitle}>
-                {counts.inRange.toLocaleString()} of {counts.total.toLocaleString()} decisions · {periodLabel}
+                {counts.inRange.toLocaleString()} of {counts.total.toLocaleString()} decisions · {scopeLabel}
               </Text>
             ) : countFailed ? (
-              <Text style={s.subtitle}>{periodLabel} · couldn&apos;t count decisions</Text>
+              <Text style={s.subtitle}>{scopeLabel} · couldn&apos;t count decisions</Text>
             ) : (
               <Skeleton width={190} height={14} style={s.subtitleSkeleton} />
             )}
@@ -199,6 +211,18 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
                 <MonthStepper label="To" value={range.to} max={thisMonth} onChange={setTo} />
               </View>
             )}
+
+            <Text style={s.sectionLabel}>LOCATION</Text>
+            <TouchableOpacity
+              style={[s.chip, s.locationChip, places.length > 0 && s.chipActive]}
+              onPress={() => setLocationOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={`Location: ${placesLabel(places)}`}
+            >
+              <Ionicons name="location-outline" size={15} color={places.length > 0 ? C.accentDeepText : C.textSoft} />
+              <Text style={[s.chipText, places.length > 0 && s.chipTextActive]} numberOfLines={1}>{placesLabel(places)}</Text>
+              <Ionicons name="chevron-down" size={14} color={places.length > 0 ? C.accentDeepText : C.textSoft} />
+            </TouchableOpacity>
 
             <Text style={s.sectionLabel}>FORMAT</Text>
             <View style={s.formatRow}>
@@ -285,6 +309,8 @@ export function ExportSheet({ visible, onClose }: { visible: boolean; onClose: (
               )}
             </View>
     </BottomSheet>
+    <LocationFilterSheet visible={visible && locationOpen} selected={places} onClose={() => setLocationOpen(false)} onApply={setPlaces} />
+    </>
   );
 }
 
@@ -298,6 +324,7 @@ const s = StyleSheet.create({
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 12 },
   chip: { borderWidth: 1, borderColor: C.cardBorder, borderRadius: 999, paddingHorizontal: 13, paddingVertical: 8 },
   chipActive: { backgroundColor: C.accentStrong, borderColor: C.accentStrong },
+  locationChip: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', maxWidth: '100%' },
   chipText: { fontSize: 13, fontWeight: '600', color: C.textSoft },
   chipTextActive: { color: C.accentDeepText, fontWeight: '800' },
 

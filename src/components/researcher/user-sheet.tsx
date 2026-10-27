@@ -235,7 +235,7 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
           <Text style={s.lockedText}>
             {isSelf
               ? 'This is your account. Change your password or deactivate it from Profile.'
-              : 'Admin accounts are managed by their owner. You can manage field user accounts.'}
+              : 'Admin accounts are managed by the system owner. You can manage field user accounts.'}
           </Text>
         </View>
       ) : (

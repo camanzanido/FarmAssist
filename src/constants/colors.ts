@@ -1,6 +1,6 @@
 
 export const Colors = {
-  bg: '#FFFFFF',
+  bg: '#F8F8FF',
   surface: '#FFFFFF',
   border: '#E2EAE5',
   borderStrong: '#D3DDD7',
@@ -43,6 +43,12 @@ export const Colors = {
   amberBorderStrong: '#E2CFA8',
   dangerBorder: '#EFC6C0',
   dangerText: '#8A3A30',
+  toastSuccessBg: '#D5EADB',
+  toastSuccessBorder: '#B2D6BE',
+  toastErrorBg: '#F7D9D4',
+  toastErrorBorder: '#EBB5AD',
+  toastWarnBg: '#F7E6C2',
+  toastWarnBorder: '#E6CB92',
   tabInactive: '#5A625D',
   barMuted: '#C9D3CD',
   surfaceAlt: '#F3F8F5',
@@ -117,7 +123,15 @@ export const brandGradientCss = (angle = 90) =>
 export const brandGradientSoftCss = (angle = 90) =>
   `linear-gradient(${angle}deg, rgba(0,109,91,0.14) 0%, rgba(15,126,102,0.12) 50%, rgba(88,208,155,0.18) 100%)`;
 
-// Drop shadow for white cards on the white page.
+// Overview stat cards, brand colours only, darkest to lightest so text sits on the darker side.
+export const StatGradients = {
+  ink: `linear-gradient(135deg, ${Colors.ink} 0%, ${BrandGradient[0]} 100%)`,
+  teal: `linear-gradient(135deg, ${BrandGradient[0]} 0%, ${BrandGradient[1]} 100%)`,
+  brand: `linear-gradient(135deg, ${BrandGradient[0]} 0%, ${BrandGradient[1]} 55%, ${BrandGradient[2]} 100%)`,
+  soft: brandGradientSoftCss(135),
+} as const;
+
+// Drop shadow for white cards on the off-white page.
 export const cardShadow = { shadowColor: '#0A3B28', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 } as const;
 
 // Every page card shares this surface; tinted cards keep their colour but use the same radius and padding.
