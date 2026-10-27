@@ -4,7 +4,7 @@ import { LeafletMap, type LeafletMapHandle, type MapPin } from '@/src/components
 import { MapSkeleton } from '@/src/components/researcher/skeletons';
 import { cardShadow, cardSurface, Colors } from '@/src/constants/colors';
 import { cityCoordinateKey, ensureCoordinates, type CityCoordinate } from '@/src/database/repositories/cityCoordinates';
-import { fetchCityStats, type CityStats } from '@/src/database/repositories/researcher';
+import { fetchCityStats, type CityStats, type Place } from '@/src/database/repositories/researcher';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { formatCurrency } from '@/src/utils/formatters';
@@ -29,7 +29,7 @@ const FLING_PROJECTION = 0.12;
 type Snap = 'peek' | 'half' | 'full';
 type CityRow = CityStats & { key: string; coord: CityCoordinate | undefined };
 
-export type Place = { city: string; province: string };
+export type { Place };
 
 function describeCity(row: CityStats): string {
   return `${row.decisions} decision${row.decisions === 1 ? '' : 's'} · ${row.farmers} field user${row.farmers === 1 ? '' : 's'} · average ${formatCurrency(row.average_gain)}`;
@@ -139,18 +139,27 @@ export function DecisionsMapView({ onShowDecisions, topInset = 0 }: { onShowDeci
 
   // Half open leaves room to see the focused pin above the list.
   const halfCover = panelHeight - offsets.half;
+  // Tapping the selected row again clears the selection.
   const focusRow = useCallback((row: CityRow) => {
+    if (row.key === selectedKey) {
+      setSelectedKey(null);
+      return;
+    }
     setSelectedKey(row.key);
     setSnap('half');
     if (row.coord) mapRef.current?.focus(row.key, halfCover);
-  }, [halfCover]);
+  }, [halfCover, selectedKey]);
 
   const onPinPress = useCallback((key: string) => {
+    if (key === selectedKey) {
+      setSelectedKey(null);
+      return;
+    }
     setSelectedKey(key);
     setSnap(current => (current === 'peek' ? 'half' : current));
     const index = filtered.findIndex(r => r.key === key);
     if (index >= 0) listRef.current?.scrollToIndex({ index, viewPosition: 0.1, animated: true });
-  }, [filtered]);
+  }, [filtered, selectedKey]);
 
   const settle = useCallback((next: Snap) => setSnap(next), []);
   const panelPan = Gesture.Pan()

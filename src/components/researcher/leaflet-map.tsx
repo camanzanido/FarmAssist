@@ -120,6 +120,7 @@ function buildHtml(topInset: number): string {
         if (selected) setSelectedClass(selected, false);
         selected = key;
         if (key) setSelectedClass(key, true);
+        else map.closePopup();
       },
       focus: function (key, bottomCover) {
         var m = markers[key];
@@ -129,7 +130,7 @@ function buildHtml(topInset: number): string {
         var shift = Math.max(0, (bottomCover - topInset) / 2);
         var center = map.unproject(map.project(m.getLatLng(), zoom).add([0, shift]), zoom);
         map.flyTo(center, zoom, { duration: 0.6 });
-        setTimeout(function () { m.openPopup(); }, 650);
+        setTimeout(function () { if (selected === key) m.openPopup(); }, 650);
       },
     };
     post({ type: 'ready' });
