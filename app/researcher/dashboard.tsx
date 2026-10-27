@@ -1,5 +1,6 @@
 import { ResearcherAsyncState } from '@/src/components/researcher/async-state';
 import { ExportSheet } from '@/src/components/researcher/export-sheet';
+import { LocationFilterSheet } from '@/src/components/researcher/location-filter-sheet';
 import { ChartCardsSkeleton, OverviewSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { DonutChart } from '@/src/components/ui/donut-chart';
@@ -7,7 +8,7 @@ import { OdometerText } from '@/src/components/ui/odometer-text';
 import { DECISIONS, DecisionType } from '@/src/constants';
 import { CARD_PADDING, cardSurface, Colors, DecisionTypeColors } from '@/src/constants/colors';
 import { useIsWide, wideColumn } from '@/src/constants/layout';
-import { fetchOverview, type Overview } from '@/src/database/repositories/researcher';
+import { fetchOverview, type Overview, type Place } from '@/src/database/repositories/researcher';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { formatCurrency } from '@/src/utils/formatters';
 import { monthsBack } from '@/src/utils/researcherStats';
@@ -45,16 +46,24 @@ const EMPTY: Overview = {
   median_gain: 0, average_gain: 0, range_total: 0, per_month: [], by_type: [], top_cities: [],
 };
 
+function placesLabel(places: Place[]): string {
+  if (places.length === 0) return 'All locations';
+  if (places.length === 1) return places[0].city;
+  return `${places.length} locations`;
+}
+
 const monthKey = (year: number, month: number) => `${year}-${String(month + 1).padStart(2, '0')}`;
 
 export default function ResearcherDashboardScreen() {
   const [range, setRange] = useState<Range>('season');
   const [isRangeLoading, setIsRangeLoading] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [locationOpen, setLocationOpen] = useState(false);
   const isWide = useIsWide();
   const splitRow = useWindowDimensions().width >= SPLIT_MIN_WIDTH;
 
-  const fetchForRange = useCallback(() => fetchOverview(rangeStart(range)), [range]);
+  const fetchForRange = useCallback(() => fetchOverview(rangeStart(range), places), [range, places]);
   const { data: overview, isLoading, isRefreshing, error, reload, refresh } = useResearcherFetch(fetchForRange, EMPTY);
 
   const isFirstRange = useRef(true);
@@ -67,7 +76,7 @@ export default function ResearcherDashboardScreen() {
     setIsRangeLoading(true);
     reload().finally(() => { if (!cancelled) setIsRangeLoading(false); });
     return () => { cancelled = true; };
-  }, [range, reload]);
+  }, [range, places, reload]);
 
   const monthlyCounts = useMemo(() => {
     const counts = new Map(overview.per_month.map(m => [m.month, m.count]));
@@ -118,6 +127,11 @@ export default function ResearcherDashboardScreen() {
               <Text style={s.exportBtnText}>Export</Text>
             </TouchableOpacity>
           </View>
+          {places.length > 0 && (
+            <Text style={s.filterHint} numberOfLines={2}>
+              Only {places.map(p => p.city).join(', ')}
+            </Text>
+          )}
 
           <View style={isWide && s.statGridWide}>
             <View style={[s.statRow, isWide && s.statRowWide]}>
@@ -145,7 +159,21 @@ export default function ResearcherDashboardScreen() {
           </View>
 
           <View style={s.rangeRow}>
-            <AnimatedFilterBar options={RANGE_OPTIONS} selected={range} onSelect={setRange} />
+            <View style={s.rangeBar}>
+              <AnimatedFilterBar options={RANGE_OPTIONS} selected={range} onSelect={setRange} />
+            </View>
+            <TouchableOpacity
+              style={[s.locationChip, places.length > 0 && s.locationChipActive]}
+              onPress={() => setLocationOpen(true)}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={`Location filter: ${placesLabel(places)}`}
+            >
+              <Ionicons name="location-outline" size={15} color={places.length > 0 ? Colors.onDark : Colors.inkMuted} />
+              <Text style={[s.locationChipText, places.length > 0 && s.locationChipTextActive]} numberOfLines={1}>
+                {placesLabel(places)}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {isRangeLoading ? <ChartCardsSkeleton /> : (
@@ -224,6 +252,7 @@ export default function ResearcherDashboardScreen() {
       </ResearcherAsyncState>
 
       <ExportSheet visible={exportOpen} onClose={() => setExportOpen(false)} />
+      <LocationFilterSheet visible={locationOpen} selected={places} onClose={() => setLocationOpen(false)} onApply={setPlaces} />
     </SafeAreaView>
   );
 }
@@ -243,7 +272,16 @@ const s = StyleSheet.create({
   statLabel: { fontSize: 12.5, color: Colors.inkSoft, marginTop: 3 },
   statDelta: { fontSize: 11.5, fontWeight: '700', color: Colors.accent, marginTop: 7 },
 
-  rangeRow: { marginTop: 8, marginBottom: 4 },
+  rangeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 4 },
+  rangeBar: { flex: 1 },
+  locationChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5, maxWidth: 140,
+    borderWidth: 1.5, borderColor: Colors.chipBorder, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8,
+  },
+  locationChipActive: { backgroundColor: Colors.ink, borderColor: Colors.ink },
+  locationChipText: { flexShrink: 1, fontSize: 13, fontWeight: '600', color: Colors.inkMuted },
+  locationChipTextActive: { fontWeight: '700', color: Colors.onDark },
+  filterHint: { fontSize: 12.5, fontWeight: '600', color: Colors.accent, marginTop: -10, marginBottom: 14 },
 
   section: { ...cardSurface, padding: CARD_PADDING, marginTop: 12 },
   stackedMuni: { marginTop: 26 },

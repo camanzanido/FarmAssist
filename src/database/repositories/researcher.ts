@@ -37,6 +37,9 @@ export async function fetchAllLocations(): Promise<Location[]> {
     .abortSignal(signal));
 }
 
+// A municipality, identified by name pair because several location rows can share one.
+export type Place = { city: string; province: string };
+
 export interface PagedRows<T> {
   rows: T[];
   total: number;
@@ -63,7 +66,7 @@ export async function fetchDecisionsPage(params: {
   pageSize: number;
   type: string | null;
   query: string;
-  place?: { city: string; province: string } | null;
+  place?: Place | null;
 }): Promise<PagedRows<ResearcherDecisionRow>> {
   const term = sanitizeSearchTerm(params.query);
   const build = (head: boolean) => {
@@ -84,15 +87,19 @@ export async function fetchDecisionsPage(params: {
   return { rows: (data ?? []) as ResearcherDecisionRow[], total: count ?? 0 };
 }
 
+// Peer admins are hidden: an admin sees field users, their own account and pending requests.
+const visibleUsersFilter = (selfId: string) => `user_type.eq.farmer,id.eq.${selfId},status.eq.pending`;
+
 export async function fetchUsersPage(params: {
   page: number;
   pageSize: number;
   role: string | null;
   query: string;
+  selfId: string;
 }): Promise<PagedRows<ResearcherUserRow>> {
   const term = sanitizeSearchTerm(params.query);
   const build = (head: boolean) => {
-    let q = supabase.from('researcher_users').select('*', { count: 'exact', head });
+    let q = supabase.from('researcher_users').select('*', { count: 'exact', head }).or(visibleUsersFilter(params.selfId));
     if (params.role) q = q.eq('user_type', params.role);
     if (term) q = q.or(ilikeAny(['name', 'username'], term));
     return q;
@@ -118,19 +125,18 @@ async function countOnly(build: (head: boolean) => { abortSignal: (s: AbortSigna
 export interface UserCounts {
   all: number;
   farmer: number;
-  researcher: number;
 }
 
-export async function fetchUserCounts(): Promise<UserCounts> {
+export async function fetchUserCounts(selfId: string): Promise<UserCounts> {
   const count = (role?: string) => withTimeout(async (signal) => {
-    let q = supabase.from('users').select('id', { count: 'exact', head: true });
+    let q = supabase.from('users').select('id', { count: 'exact', head: true }).or(visibleUsersFilter(selfId));
     if (role) q = q.eq('user_type', role);
     const { count: n, error } = await q.abortSignal(signal);
     if (error) throw error;
     return n ?? 0;
   });
-  const [all, farmer, researcher] = await Promise.all([count(), count('farmer'), count('researcher')]);
-  return { all, farmer, researcher };
+  const [all, farmer] = await Promise.all([count(), count('farmer')]);
+  return { all, farmer };
 }
 
 export interface Overview {
@@ -149,9 +155,11 @@ export interface Overview {
 
 export const deviceTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
-export async function fetchOverview(since: Date | null): Promise<Overview> {
+// p_places is only sent when filtering, so the unfiltered call still works before the location filter migration.
+export async function fetchOverview(since: Date | null, places: Place[] = []): Promise<Overview> {
+  const args = { p_since: since?.toISOString() ?? null, p_tz: deviceTimeZone() };
   const { data, error } = await withTimeout((signal) => supabase
-    .rpc('researcher_overview', { p_since: since?.toISOString() ?? null, p_tz: deviceTimeZone() })
+    .rpc('researcher_overview', places.length > 0 ? { ...args, p_places: places } : args)
     .abortSignal(signal));
   if (error) throw error;
   // Before the average_gain migration the server only sends the median.
