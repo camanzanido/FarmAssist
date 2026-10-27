@@ -10,6 +10,7 @@ export const SETTLE_SPRING = { damping: 18, stiffness: 220, mass: 0.7 };
 // iOS-style springs, set by duration and damping ratio like UIKit: 1 settles without bounce, lower adds a little.
 export const GLIDE_SPRING = { duration: 420, dampingRatio: 1 };
 export const SNAP_SPRING = { duration: 360, dampingRatio: 0.85 };
+export const ICON_SPRING = { duration: 280, dampingRatio: 0.8 };
 export const PRESS_IN_SPRING = { duration: 140, dampingRatio: 1 };
 export const PRESS_OUT_SPRING = { duration: 320, dampingRatio: 0.7 };
 export const PRESSED_SCALE = 0.97;

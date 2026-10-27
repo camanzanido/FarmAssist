@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { EASE_OUT } from '@/src/constants/motion';
 import Animated, { FadeOut, Keyframe, useReducedMotion } from 'react-native-reanimated';
-import { AnimatedIcon, type IconMotion } from './animated-icon';
+import { MotionIcon, useIconMotion, type IconMotion } from './animated-icon';
 
 // Grows from its top-right corner, where the trigger sits.
 const MENU_IN = new Keyframe({
@@ -27,8 +27,6 @@ type Props = {
   style?: StyleProp<ViewStyle>;
   iconSize?: number;
   motion?: IconMotion;
-  // Plays the motion from outside instead of on every press.
-  motionTrigger?: number;
 };
 
 type Anchor = { top: number; right: number };
@@ -36,15 +34,14 @@ type Anchor = { top: number; right: number };
 const MENU_WIDTH = 210;
 
 // An icon button that opens a small menu anchored under it; tapping outside closes it.
-export function PopoverMenu({ icon, accessibilityLabel, items, style, iconSize = 23, motion = 'pop', motionTrigger }: Props) {
+export function PopoverMenu({ icon, accessibilityLabel, items, style, iconSize = 23, motion = 'pop' }: Props) {
   const { width } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const triggerRef = useRef<View>(null);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
-  const [presses, setPresses] = useState(0);
+  const iconMotion = useIconMotion(motion);
 
   const open = () => {
-    if (motionTrigger === undefined) setPresses(n => n + 1);
     triggerRef.current?.measureInWindow((x, y, w, h) => {
       setAnchor({ top: y + h + 6, right: Math.max(12, width - (x + w)) });
     });
@@ -56,13 +53,14 @@ export function PopoverMenu({ icon, accessibilityLabel, items, style, iconSize =
       <TouchableOpacity
         ref={triggerRef}
         style={[s.trigger, style]}
+        onPressIn={iconMotion.play}
         onPress={open}
         hitSlop={6}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         accessibilityState={{ expanded: !!anchor }}
       >
-        <AnimatedIcon name={icon} size={iconSize} color={Colors.ink} motion={motion} trigger={motionTrigger ?? presses} />
+        <MotionIcon name={icon} size={iconSize} color={Colors.ink} style={iconMotion.style} />
       </TouchableOpacity>
       <Modal visible={!!anchor} transparent animationType="none" onRequestClose={close} statusBarTranslucent>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close menu" />
