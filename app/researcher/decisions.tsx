@@ -74,8 +74,8 @@ export default function ResearcherDecisionsScreen() {
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [view, setView] = useState<DecisionsView>('list');
-  const [mapMounted, setMapMounted] = useState(false);
+  const [view, setView] = useState<DecisionsView>('map');
+  const [mapMounted, setMapMounted] = useState(true);
   const [place, setPlace] = useState<Place | null>(null);
   const listRef = useRef<FlatList<ResearcherDecisionRow>>(null);
   const { confirm, notify } = useFeedback();
