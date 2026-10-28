@@ -101,6 +101,6 @@ const s = StyleSheet.create({
   },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13 },
   itemBorder: { borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  itemLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.ink },
+  itemLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.text },
   itemLabelSelected: { fontWeight: '800' },
 });

@@ -364,7 +364,7 @@ const s = StyleSheet.create({
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 42, paddingHorizontal: 14, borderRadius: 12, backgroundColor: C.accentStrong },
   addText: { fontSize: 14, fontWeight: '800', color: C.accentDeepText },
 
-  segment: { flexDirection: 'row', backgroundColor: C.fill, borderRadius: 12, padding: 4, marginBottom: 12 },
+  segment: { flexDirection: 'row', backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, borderRadius: 12, padding: 4, marginBottom: 12 },
   segmentBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 9 },
   segmentBtnActive: { backgroundColor: C.accentStrong },
   segmentText: { fontSize: 13, fontWeight: '600', color: C.textSoft },

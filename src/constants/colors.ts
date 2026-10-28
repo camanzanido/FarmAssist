@@ -54,6 +54,7 @@ export const Colors = {
   surfaceAlt: '#F3F8F5',
   chipBorder: '#B9C7BF',
   scrim: 'rgba(17,20,18,0.40)',
+  text: '#1A1A1A',
   inputText: '#1A1A1A',
   inputBorder: '#D4D7D6',
   cardBorder: '#E6E8E7',
@@ -69,6 +70,7 @@ export const ResearcherColors = {
   divider: Colors.divider,
 
   text: Colors.ink,
+  textStrong: Colors.text,
   textSoft: Colors.inkSoft,
   textFaint: Colors.inkFaint,
   textMuted: Colors.placeholder,

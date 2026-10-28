@@ -124,7 +124,7 @@ const s = StyleSheet.create({
   saveError: { marginTop: 14 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 22 },
   cancelBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  cancelText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
+  cancelText: { fontSize: 15, fontWeight: '700', color: Colors.text },
   saveBtn: { flex: 1.4, height: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
   saveText: { fontSize: 15.5, fontWeight: '800', color: Colors.onDark },
   disabled: { opacity: 0.5 },

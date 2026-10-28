@@ -8,6 +8,7 @@ import Animated, {
 const STRIP = Array.from({ length: 20 }, (_, i) => String(i % 10));
 const STAGGER_MS = 90;
 const ROLL_MS = 900;
+const MIN_SCALE = 0.5;
 
 type Props = {
   text: string;
@@ -48,7 +49,7 @@ export function OdometerText({ text, colors, style }: Props) {
   let digitOrder = 0;
   const [available, setAvailable] = useState(0);
   const [natural, setNatural] = useState(0);
-  const scale = available > 0 && natural > available ? available / natural : 1;
+  const scale = available > 0 && natural > available ? Math.max(available / natural, MIN_SCALE) : 1;
 
   return (
     <View style={s.fit} onLayout={e => setAvailable(e.nativeEvent.layout.width)}>
@@ -71,8 +72,9 @@ export function OdometerText({ text, colors, style }: Props) {
 }
 
 const s = StyleSheet.create({
-  fit: { alignSelf: 'stretch', alignItems: 'flex-start' },
-  row: { flexDirection: 'row', alignItems: 'center' },
+  // A row parent lets the digits measure at full width instead of being capped, so the scale-to-fit can see the overflow.
+  fit: { alignSelf: 'stretch', flexDirection: 'row' },
+  row: { flexDirection: 'row', alignItems: 'center', flexShrink: 0 },
   tabular: { fontVariant: ['tabular-nums'] },
   cell: { includeFontPadding: false, textAlignVertical: 'center' },
   slot: { overflow: 'hidden' },
