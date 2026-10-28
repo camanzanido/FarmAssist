@@ -1,6 +1,6 @@
 
 export const Colors = {
-  bg: '#FFFFFF',
+  bg: '#F8F8FF',
   surface: '#FFFFFF',
   border: '#E2EAE5',
   borderStrong: '#D3DDD7',
@@ -43,9 +43,17 @@ export const Colors = {
   amberBorderStrong: '#E2CFA8',
   dangerBorder: '#EFC6C0',
   dangerText: '#8A3A30',
+  toastSuccessBg: '#D5EADB',
+  toastSuccessBorder: '#B2D6BE',
+  toastErrorBg: '#F7D9D4',
+  toastErrorBorder: '#EBB5AD',
+  toastWarnBg: '#F7E6C2',
+  toastWarnBorder: '#E6CB92',
   tabInactive: '#5A625D',
   barMuted: '#C9D3CD',
   surfaceAlt: '#F3F8F5',
+  chipBorder: '#B9C7BF',
+  scrim: 'rgba(17,20,18,0.40)',
 } as const;
 
 export const ResearcherColors = {
@@ -92,13 +100,20 @@ export const ClimateColors = {
 
 // The three forecast bands (dry / average / wet years), as on the forecast input screen.
 export const ForecastColors = {
-  dry: ClimateColors.driest,
-  average: '#C9BE9E',
-  averageText: '#43391F',
-  wet: ClimateColors.above_ave,
+  dry: '#E07B39',
+  average: '#3FA36B',
+  averageText: '#FFFFFF',
+  wet: '#2F7FD1',
 } as const;
 
 // Brand gradient stops, left to right.
+// One colour per decision type, shared by the Overview donut and the PDF report.
+export const DecisionTypeColors: Record<string, string> = {
+  crop_choice: Colors.ink,
+  crop_variety: Colors.accentSoft,
+  protect: Colors.accentTintStrong,
+};
+
 export const BrandGradient = ['#006D5B', '#0F7E66', '#58D09B'] as const;
 
 export const brandGradientCss = (angle = 90) =>
@@ -108,5 +123,20 @@ export const brandGradientCss = (angle = 90) =>
 export const brandGradientSoftCss = (angle = 90) =>
   `linear-gradient(${angle}deg, rgba(0,109,91,0.14) 0%, rgba(15,126,102,0.12) 50%, rgba(88,208,155,0.18) 100%)`;
 
-// Drop shadow for white cards on the white page.
+// Overview stat cards, brand colours only, darkest to lightest so text sits on the darker side.
+export const StatGradients = {
+  ink: `linear-gradient(135deg, ${Colors.ink} 0%, ${BrandGradient[0]} 100%)`,
+  teal: `linear-gradient(135deg, ${BrandGradient[0]} 0%, ${BrandGradient[1]} 100%)`,
+  brand: `linear-gradient(135deg, ${BrandGradient[0]} 0%, ${BrandGradient[1]} 55%, ${BrandGradient[2]} 100%)`,
+  soft: brandGradientSoftCss(135),
+} as const;
+
+// Drop shadow for white cards on the off-white page.
 export const cardShadow = { shadowColor: '#0A3B28', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 } as const;
+
+// Every page card shares this surface; tinted cards keep their colour but use the same radius and padding.
+export const CARD_RADIUS = 16;
+export const CARD_PADDING = 16;
+export const cardSurface = {
+  backgroundColor: Colors.surface, borderRadius: CARD_RADIUS, borderWidth: 1, borderColor: Colors.border, ...cardShadow,
+} as const;

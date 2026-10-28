@@ -11,7 +11,7 @@ import type { IconName, Toast, ToastKind } from './types';
 const ICONS: Record<ToastKind, IconName> = {
   success: 'checkmark-circle',
   error: 'close-circle',
-  info: 'information-circle',
+  info: 'alert-circle',
 };
 
 const HAPTICS: Record<ToastKind, Haptics.NotificationFeedbackType | null> = {
@@ -62,21 +62,18 @@ function ToastItem({ toast, theme, onDismiss }: { toast: Toast; theme: FeedbackT
     >
       <Pressable
         onPress={onDismiss}
-        style={[s.toast, { backgroundColor: theme.surface, borderColor: theme.border }]}
+        style={[s.toast, { backgroundColor: palette.bg, borderColor: palette.border }]}
         accessibilityRole="alert"
         accessibilityLiveRegion="polite"
         accessibilityHint="Tap to dismiss"
       >
-        <View style={[s.accent, { backgroundColor: palette.accent }]} />
-        <View style={[s.iconWrap, { backgroundColor: palette.iconBg }]}>
-          <Ionicons name={ICONS[toast.kind]} size={20} color={palette.accent} />
-        </View>
+        <Ionicons name={ICONS[toast.kind]} size={22} color={palette.icon} style={s.icon} />
         <View style={s.textWrap}>
-          <Text style={[s.title, { color: theme.title }]} numberOfLines={2}>
+          <Text style={[s.title, { color: palette.title }]} numberOfLines={2}>
             {toast.title}
           </Text>
           {toast.message ? (
-            <Text style={[s.message, { color: theme.body }]} numberOfLines={4}>
+            <Text style={[s.message, { color: palette.body }]} numberOfLines={4}>
               {toast.message}
             </Text>
           ) : null}
@@ -101,29 +98,17 @@ const s = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     paddingVertical: 12,
-    paddingLeft: 16,
+    paddingLeft: 14,
     paddingRight: 14,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOpacity: 0.14,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 8,
   },
-  accent: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-  },
-  iconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+  icon: {
+    marginRight: 10,
   },
   textWrap: {
     flex: 1,

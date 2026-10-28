@@ -1,10 +1,11 @@
 import { OdometerText } from '@/src/components/ui/odometer-text';
 import { DECISION_IMAGES, DecisionType } from '@/src/constants';
-import { BrandGradient, brandGradientCss, Colors } from '@/src/constants/colors';
+import { BrandGradient, brandGradientCss, cardShadow, Colors, ForecastColors } from '@/src/constants/colors';
 import { resultCopy as copy, treeCopy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
-import { CLIMATE_LABELS, RcdaSummary } from '@/src/rcda/summary';
-import { Ionicons } from '@expo/vector-icons';
+import type { NormalYearComparison } from '@/src/rcda/baseline';
+import type { OutcomeFavor, RcdaSummary } from '@/src/rcda/summary';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import Animated, {
@@ -12,9 +13,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DecisionTree, formatPeso } from './decision-tree';
+import { ForecastDonut } from './forecast-donut';
 
 interface Props {
   summary: RcdaSummary;
+  baseline?: NormalYearComparison | null;
   decisionType?: string;
   /** Row at the top of the hero: back button, status pill, etc. */
   heroTop: ReactNode;
@@ -86,23 +89,129 @@ function EarningsColumn({ name, score, ratio, highlighted, recommended }: {
       <Text style={[s.columnName, highlighted && s.columnNameWinner]} numberOfLines={2}>{name}</Text>
       {recommended && (
         <View style={s.tag}>
-          <Text style={s.tagText}>{copy.recommendedTag}</Text>
+          <Text style={s.tagText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{copy.recommendedTag}</Text>
         </View>
       )}
     </View>
   );
 }
 
-export function DecisionResultView({ summary, decisionType, heroTop, banner, footer }: Props) {
+function NormalBetterNote({ name, gain }: { name: string; gain: number }) {
+  return (
+    <View style={s.normalBetter}>
+      <Ionicons name="trending-up" size={16} color={Colors.inkSoft} />
+      <Text style={s.normalBetterText}>{copy.heroNormalBetter(name, formatPeso(gain))}</Text>
+    </View>
+  );
+}
+
+function EarningsGroup({ caption, names, scores, maxScore, winner, showTag }: {
+  caption: string;
+  names: string[];
+  scores: number[];
+  maxScore: number;
+  winner: number | null;
+  showTag: boolean;
+}) {
+  return (
+    <View style={s.earningsGroup}>
+      <View style={s.groupCaption}>
+        <Text style={s.groupCaptionText}>{caption}</Text>
+      </View>
+      <View style={s.columns}>
+        {names.map((name, i) => (
+          <EarningsColumn
+            key={i}
+            name={name}
+            score={scores[i]}
+            ratio={Math.max(scores[i] / maxScore, 0)}
+            highlighted={i === winner}
+            recommended={showTag && i === winner}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const FORECAST_SEGMENTS = [
+  { key: 'dry', color: ForecastColors.dry },
+  { key: 'average', color: ForecastColors.average },
+  { key: 'wet', color: ForecastColors.wet },
+] as const;
+
+function NormalYearSection({ baseline, optionNames, bothNegative }: {
+  baseline: NormalYearComparison;
+  optionNames: string[];
+  bothNegative: boolean;
+}) {
+  const name = optionNames[baseline.focusOption];
+  const amount = formatPeso(Math.abs(baseline.delta));
+  let main: string;
+  if (baseline.forecastIsNormal) main = copy.normalYearSame;
+  else if (baseline.delta > 0) main = copy.normalYearBetter(name, amount);
+  else if (baseline.delta < 0) main = copy.normalYearWorse(name, amount);
+  else main = copy.normalYearEven(name);
+
+  let extra: string | null = null;
+  if (!baseline.forecastIsNormal) {
+    if (baseline.normalBothNegative) extra = bothNegative ? null : copy.normalYearNoProfit;
+    else if (bothNegative || baseline.normalRecommended !== baseline.focusOption) extra = copy.normalYearOtherPick(optionNames[baseline.normalRecommended]);
+  }
+
+  const tone = baseline.forecastIsNormal || baseline.delta === 0 ? null : baseline.delta > 0 ? 'up' : 'down';
+
+  return (
+    <View style={[s.section, s.sectionDivided]}>
+      <Text style={s.sectionTitle}>{copy.normalYearHeading}</Text>
+      <View style={s.donutRow}>
+        {[
+          { label: copy.normalYearYourForecast, split: baseline.forecast },
+          { label: copy.normalYearNormal, split: baseline.normal },
+        ].map(d => (
+          <View key={d.label} style={s.donutItem}>
+            <ForecastDonut driest={d.split[0]} wettest={d.split[2]} size={132} stroke={20} />
+            <Text style={s.donutLabel}>{d.label}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={s.legendRow}>
+        {FORECAST_SEGMENTS.map(seg => (
+          <View key={seg.key} style={s.legendItem}>
+            <View style={[s.legendDot, { backgroundColor: seg.color }]} />
+            <Text style={s.legendText}>{copy.normalYearLegend[seg.key]}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={[s.normalNote, tone === 'up' && s.normalNoteUp, tone === 'down' && s.normalNoteDown]}>
+        <Ionicons
+          name={tone === 'up' ? 'trending-up' : tone === 'down' ? 'trending-down' : 'remove'}
+          size={20}
+          color={tone === 'down' ? Colors.danger : Colors.accent}
+        />
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={s.normalNoteText}>{main}</Text>
+          {extra && <Text style={s.normalNoteExtra}>{extra}</Text>}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+export function DecisionResultView({ summary, baseline, decisionType, heroTop, banner, footer }: Props) {
   const [showDetail, setShowDetail] = useState(false);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
-  const { optionNames, recommendedOption, bothNegative, scores, breakdown, outcomeFavors, tree } = summary;
+  const { optionNames, recommendedOption, bothNegative, scores, outcomeFavors, tree } = summary;
   const winner = optionNames[recommendedOption];
   const loser = optionNames[1 - recommendedOption];
-  const favorCount = outcomeFavors.filter((o) => o.favorsWinner).length;
-  const maxScore = Math.max(...scores, 1);
+  const yearsWhere = (result: string) => outcomeFavors.filter((o) => o.result === result).map((o) => copy.yearNames[o.key]);
+  const allWins = outcomeFavors.every((o) => o.result === 'winner');
+  const showNormal = !!baseline && !baseline.forecastIsNormal;
+  const maxScore = Math.max(...scores, ...(showNormal ? baseline!.normalScores : []), 1);
+  const bestNormal = showNormal ? baseline!.normalScores[baseline!.normalRecommended] : 0;
+  const normalGain = showNormal && !baseline!.normalBothNegative ? bestNormal - Math.max(...scores) : 0;
 
   const heroHeight = Math.round((height - insets.top) * HERO_RATIO);
   const photo = decisionType ? DECISION_IMAGES[decisionType as DecisionType] : undefined;
@@ -128,15 +237,20 @@ export function DecisionResultView({ summary, decisionType, heroTop, banner, foo
               <>
                 <Text style={[s.verdict, s.verdictSpaced]}>{copy.bothNegativeVerdict}</Text>
                 <Text style={s.verdictDetail}>{copy.bothNegativeDetail(optionNames[0], optionNames[1])}</Text>
+                {normalGain > 0 && <NormalBetterNote name={optionNames[baseline!.normalRecommended]} gain={normalGain} />}
               </>
             ) : (
               <>
                 <Text style={s.verdict}>{copy.verdict(winner)}</Text>
                 <View style={s.deltaRow}>
-                  <OdometerText text={`+₱${summary.profitIncrease.toLocaleString()}`} colors={BrandGradient} style={s.deltaValue} />
+                  <View style={s.deltaAmount}>
+                    <MaterialCommunityIcons name="arrow-up-thick" size={38} color={Colors.accent} />
+                    <OdometerText text={`₱${summary.profitIncrease.toLocaleString()}`} colors={BrandGradient} style={s.deltaValue} />
+                  </View>
                   <Text style={s.deltaUnit}>{copy.perHectare}</Text>
                 </View>
                 <Text style={s.verdictDetail}>{copy.verdictDetail(winner, loser)}</Text>
+                {normalGain > 0 && <NormalBetterNote name={optionNames[baseline!.normalRecommended]} gain={normalGain} />}
               </>
             )}
           </View>
@@ -150,34 +264,41 @@ export function DecisionResultView({ summary, decisionType, heroTop, banner, foo
 
         <View style={s.section}>
           <Text style={s.sectionTitle}>{copy.earningsHeading}</Text>
-          <View style={s.columns}>
-            {optionNames.map((name, i) => {
-              const isWinner = !bothNegative && i === recommendedOption;
-              return (
-                <EarningsColumn
-                  key={i}
-                  name={name}
-                  score={scores[i]}
-                  ratio={Math.max(scores[i] / maxScore, 0)}
-                  highlighted={isWinner}
-                  recommended={isWinner}
-                />
-              );
-            })}
+          <View style={s.earningsRow}>
+            <EarningsGroup
+              caption={baseline?.forecastIsNormal ? copy.earningsSameAsNormal : copy.earningsForecast}
+              names={optionNames}
+              scores={scores}
+              maxScore={maxScore}
+              winner={bothNegative ? null : recommendedOption}
+              showTag
+            />
+            {showNormal && (
+              <EarningsGroup
+                caption={copy.earningsNormal}
+                names={optionNames}
+                scores={baseline!.normalScores}
+                maxScore={maxScore}
+                winner={baseline!.normalBothNegative ? null : baseline!.normalRecommended}
+                showTag={false}
+              />
+            )}
           </View>
         </View>
 
+        {baseline && <NormalYearSection baseline={baseline} optionNames={optionNames} bothNegative={bothNegative} />}
+
         {!bothNegative && (
           <View style={[s.section, s.sectionDivided]}>
-            <Text style={s.sectionTitle}>{copy.keepInMindHeading}</Text>
+            <Text style={s.sectionTitle}>{copy.keepInMindHeading(allWins)}</Text>
             <Text style={s.keepInMindBody}>
-              {copy.keepInMindBody(favorCount, outcomeFavors.length, winner, loser)}
+              {copy.keepInMindBody(yearsWhere('winner'), yearsWhere('loser'), yearsWhere('tie'), winner, loser)}
             </Text>
             <View style={s.favorRow}>
               {outcomeFavors.map((o) => (
                 <View key={o.key} style={s.favorItem}>
-                  <View style={[s.favorIconWrap, o.favorsWinner ? s.favorIconWrapYes : s.favorIconWrapNo]}>
-                    <Ionicons name={o.favorsWinner ? 'checkmark' : 'close'} size={17} color={o.favorsWinner ? Colors.accent : Colors.danger} />
+                  <View style={[s.favorIconWrap, FAVOR_STYLE[o.result].wrap]}>
+                    <Ionicons name={FAVOR_STYLE[o.result].icon} size={17} color={FAVOR_STYLE[o.result].color} />
                   </View>
                   <Text style={s.favorLabel}>{treeCopy.outcomes[o.key]}</Text>
                 </View>
@@ -202,31 +323,6 @@ export function DecisionResultView({ summary, decisionType, heroTop, banner, foo
           {showDetail && (
             <Animated.View entering={FadeIn.duration(220)}>
               <DecisionTree tree={tree} bare />
-
-              <Text style={s.tableTitle}>{copy.detailTable}</Text>
-              <View style={s.table}>
-                <View style={s.tableRow}>
-                  <Text style={[s.tableCell, s.tableHeader, { flex: 1.4 }]}>Climate</Text>
-                  {optionNames.map((n, i) => (
-                    <Text key={i} style={[s.tableCell, s.tableHeader]} numberOfLines={1}>{n}</Text>
-                  ))}
-                </View>
-                {CLIMATE_LABELS.map((cl, ci) => (
-                  <View key={cl} style={[s.tableRow, ci % 2 === 0 && s.tableRowAlt]}>
-                    <View style={[s.tableCell, s.climateLabelCell, { flex: 1.4 }]}>
-                      <Text style={s.climateCellText}>{cl}</Text>
-                    </View>
-                    {optionNames.map((_, oi) => {
-                      const val = breakdown[oi][ci];
-                      return (
-                        <Text key={oi} style={[s.tableCell, s.tableCellValue, val >= 0 ? s.positiveVal : s.negativeVal]}>
-                          {val > 0 ? '+' : ''}{formatPeso(val)}
-                        </Text>
-                      );
-                    })}
-                  </View>
-                ))}
-              </View>
             </Animated.View>
           )}
         </Animated.View>
@@ -255,13 +351,16 @@ const s = StyleSheet.create({
   heroInner: { ...contentColumn, flex: 1, paddingTop: 16, paddingHorizontal: 22, paddingBottom: 14 },
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   verdictBlock: { flex: 1, justifyContent: 'flex-end', maxWidth: '64%', paddingBottom: 28 },
-  answerEyebrow: { fontSize: 12, fontWeight: '700', letterSpacing: 1.2, color: Colors.accent, marginBottom: 10 },
+  answerEyebrow: { fontSize: 14, fontWeight: '700', color: Colors.accent, marginBottom: 10 },
   verdict: { fontSize: 32, fontWeight: '800', color: Colors.ink, lineHeight: 38, letterSpacing: -0.6 },
   deltaRow: { flexDirection: 'row', alignItems: 'flex-end', flexWrap: 'wrap', gap: 8, marginTop: 18, marginBottom: 6 },
+  deltaAmount: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   deltaValue: { fontSize: 40, fontWeight: '800', lineHeight: 44 },
   deltaUnit: { fontSize: 14, color: Colors.inkSoft, paddingBottom: 8 },
   verdictSpaced: { marginBottom: 12 },
   verdictDetail: { fontSize: 15, color: Colors.inkMuted, lineHeight: 21 },
+  normalBetter: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 10 },
+  normalBetterText: { flex: 1, fontSize: 13, lineHeight: 18, color: Colors.inkSoft },
 
   hint: { alignSelf: 'center', alignItems: 'center', gap: 2 },
   hintText: { fontSize: 12, fontWeight: '700', letterSpacing: 0.4, color: Colors.inkSoft },
@@ -274,18 +373,36 @@ const s = StyleSheet.create({
   disclaimerText: { flex: 1, fontSize: 13, lineHeight: 19, color: Colors.inkMuted },
   sectionTitle: { fontSize: 15, fontWeight: '800', color: Colors.ink, marginBottom: 16 },
 
-  columns: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 36 },
-  column: { width: 110, alignItems: 'center' },
-  columnValue: { fontSize: 15, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8 },
-  columnValueWinner: { fontSize: 17, fontWeight: '800', color: Colors.ink },
+  // Forecast and normal-year groups sit side by side on one shared scale.
+  earningsRow: { flexDirection: 'row', gap: 12 },
+  earningsGroup: { flex: 1, marginBottom: 8 },
+  groupCaption: { alignSelf: 'center', backgroundColor: Colors.surfaceAlt, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 14 },
+  groupCaptionText: { fontSize: 12, fontWeight: '700', color: Colors.inkSoft, textAlign: 'center' },
+  columns: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 10 },
+  column: { flex: 1, maxWidth: 104, alignItems: 'center' },
+  columnValue: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8, fontVariant: ['tabular-nums'] },
+  columnValueWinner: { fontSize: 15, fontWeight: '800', color: Colors.ink },
   columnTrack: { height: COLUMN_MAX, justifyContent: 'flex-end' },
-  columnBar: { width: 64, borderRadius: 12 },
+  columnBar: { width: 44, borderRadius: 10 },
   columnBarWinner: { experimental_backgroundImage: brandGradientCss(180) },
   columnBarMuted: { experimental_backgroundImage: MUTED_COLUMN },
-  columnName: { fontSize: 14, fontWeight: '600', color: Colors.inkSoft, marginTop: 10, textAlign: 'center' },
+  columnName: { fontSize: 13, fontWeight: '600', color: Colors.inkSoft, marginTop: 10, textAlign: 'center' },
   columnNameWinner: { fontWeight: '800', color: Colors.ink },
-  tag: { marginTop: 6, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  tag: { marginTop: 6, maxWidth: '100%', backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 3 },
   tagText: { fontSize: 11, fontWeight: '700', color: Colors.accent },
+
+  donutRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 16 },
+  donutItem: { alignItems: 'center', gap: 8 },
+  donutLabel: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft },
+  legendRow: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 14 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendDot: { width: 10, height: 10, borderRadius: 3 },
+  legendText: { fontSize: 12, color: Colors.inkFaint },
+  normalNote: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', backgroundColor: Colors.surfaceAlt, borderRadius: 12, padding: 14 },
+  normalNoteUp: { backgroundColor: Colors.accentTint },
+  normalNoteDown: { backgroundColor: Colors.dangerBg },
+  normalNoteText: { fontSize: 14, fontWeight: '600', color: Colors.ink, lineHeight: 20 },
+  normalNoteExtra: { fontSize: 13, color: Colors.inkMuted, lineHeight: 19 },
 
   keepInMindBody: { fontSize: 14, color: Colors.inkMuted, lineHeight: 20, marginBottom: 14 },
   favorRow: { flexDirection: 'row', gap: 6 },
@@ -293,28 +410,24 @@ const s = StyleSheet.create({
   favorIconWrap: { width: '100%', height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   favorIconWrapYes: { backgroundColor: Colors.accentTint },
   favorIconWrapNo: { backgroundColor: Colors.dangerBg },
+  favorIconWrapTie: { backgroundColor: Colors.surfaceAlt },
   favorLabel: { fontSize: 11, color: Colors.inkFaint, marginTop: 5 },
 
   disclosureRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 18 },
   disclosureText: { flex: 1, fontSize: 15, fontWeight: '700', color: Colors.ink },
 
-  tableTitle: { fontSize: 14, fontWeight: '800', color: Colors.ink, marginBottom: 10 },
-  table: { borderWidth: 1, borderColor: Colors.border, borderRadius: 14, overflow: 'hidden', marginBottom: 20 },
-  tableRow: { flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 12 },
-  tableRowAlt: { backgroundColor: Colors.surfaceAlt },
-  tableCell: { flex: 1, fontSize: 12, color: Colors.ink, textAlign: 'center' },
-  tableHeader: { fontWeight: '700', color: Colors.inkFaint, fontSize: 11, letterSpacing: 0.3 },
-  climateLabelCell: { justifyContent: 'center' },
-  climateCellText: { fontSize: 12, fontWeight: '600', color: Colors.ink, textAlign: 'left' },
-  tableCellValue: { fontWeight: '700' },
-  positiveVal: { color: Colors.accent },
-  negativeVal: { color: Colors.danger },
 });
 
 /** Hero-top styles shared by screens that render into `heroTop`. */
 export const heroTopStyles = StyleSheet.create({
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: Colors.surface, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, ...cardShadow },
   pillError: { backgroundColor: Colors.dangerBg },
-  pillText: { fontSize: 12, fontWeight: '600', color: Colors.accent },
+  pillText: { fontSize: 12, fontWeight: '600', color: Colors.ink },
 });
+
+const FAVOR_STYLE: Record<OutcomeFavor['result'], { icon: keyof typeof Ionicons.glyphMap; color: string; wrap: object }> = {
+  winner: { icon: 'checkmark', color: Colors.accent, wrap: s.favorIconWrapYes },
+  loser: { icon: 'close', color: Colors.danger, wrap: s.favorIconWrapNo },
+  tie: { icon: 'remove', color: Colors.inkSoft, wrap: s.favorIconWrapTie },
+};

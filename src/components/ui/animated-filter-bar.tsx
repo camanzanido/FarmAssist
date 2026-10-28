@@ -1,7 +1,8 @@
-import { brandGradientCss, Colors } from '@/src/constants/colors';
+import { Colors } from '@/src/constants/colors';
+import { SNAP_SPRING } from '@/src/constants/motion';
 import React, { useEffect, useRef, useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 
 export type FilterOption<T extends string> = { value: T; label: string };
 
@@ -13,8 +14,6 @@ type Props<T extends string> = {
 };
 
 type ChipLayout = { x: number; y: number; width: number; height: number };
-
-const DURATION = 260;
 
 export function AnimatedFilterBar<T extends string>({ options, selected, onSelect, style }: Props<T>) {
   const reduceMotion = useReducedMotion();
@@ -28,10 +27,13 @@ export function AnimatedFilterBar<T extends string>({ options, selected, onSelec
 
   useEffect(() => {
     if (!target) return;
-    const duration = placed.current && !reduceMotion ? DURATION : 0;
-    const config = { duration, easing: Easing.out(Easing.cubic) };
-    pillX.value = withTiming(target.x, config);
-    pillWidth.value = withTiming(target.width, config);
+    if (placed.current && !reduceMotion) {
+      pillX.value = withSpring(target.x, SNAP_SPRING);
+      pillWidth.value = withSpring(target.width, SNAP_SPRING);
+    } else {
+      pillX.value = target.x;
+      pillWidth.value = target.width;
+    }
     placed.current = true;
     scrollRef.current?.scrollTo({ x: Math.max(target.x - 24, 0), animated: !reduceMotion });
   }, [target, reduceMotion, pillX, pillWidth]);
@@ -93,8 +95,8 @@ function FilterChip({ label, isSelected, onPress, onLayout }: ChipProps) {
 
 const s = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8 },
-  pill: { position: 'absolute', top: 0, left: 0, borderRadius: 999, experimental_backgroundImage: brandGradientCss(90) },
-  chip: { borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
+  pill: { position: 'absolute', top: 0, left: 0, borderRadius: 999, backgroundColor: Colors.ink },
+  chip: { borderWidth: 1.5, borderColor: Colors.chipBorder, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   chipSelected: { borderColor: 'transparent' },
   chipText: { fontSize: 13, fontWeight: '600', color: Colors.inkMuted },
   chipTextSelected: { fontWeight: '700', color: Colors.onDark },

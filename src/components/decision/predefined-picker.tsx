@@ -118,7 +118,7 @@ export function PredefinedPicker({
 const s = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
   sheet: {
-    backgroundColor: Colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 20, paddingBottom: 30, maxHeight: '80%',
     width: '100%', maxWidth: 640, alignSelf: 'center',
   },

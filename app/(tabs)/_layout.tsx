@@ -29,6 +29,7 @@ export default function TabLayout() {
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         headerShown: false,
+        animation: 'shift',
         tabBarButton: HapticTab,
       }}
     >
@@ -37,11 +38,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'home' : 'home-outline'}
-              size={28}
-              color={color}
-            />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={28} color={color} />
           ),
         }}
       />
@@ -50,11 +47,7 @@ export default function TabLayout() {
         options={{
           title: 'History',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'time' : 'time-outline'}
-              size={28}
-              color={color}
-            />
+            <Ionicons name={focused ? 'time' : 'time-outline'} size={28} color={color} />
           ),
         }}
       />
@@ -63,11 +56,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'person' : 'person-outline'}
-              size={28}
-              color={color}
-            />
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={28} color={color} />
           ),
         }}
       />

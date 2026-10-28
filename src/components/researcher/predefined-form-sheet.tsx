@@ -142,9 +142,6 @@ export function PredefinedFormSheet({
               placeholderTextColor={C.textMuted}
             />
             <View style={[s.chipRow, { marginTop: 8 }]}>
-              <TouchableOpacity style={[s.chip, !province.trim() && s.chipActive]} onPress={() => changeProvince('')}>
-                <Text style={[s.chipText, !province.trim() && s.chipTextActive]}>All provinces</Text>
-              </TouchableOpacity>
               {knownProvinces.map((p) => {
                 const active = province.trim().toLowerCase() === p.toLowerCase();
                 return (

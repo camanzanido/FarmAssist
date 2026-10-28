@@ -5,6 +5,7 @@ import { resultCopy as copy } from '@/src/constants/copy';
 import { buildOptionClimateFields } from '@/src/database/climateFields';
 import { createDecision, OptionSnapshot } from '@/src/database/repositories/decisions';
 import { getLocationsByUser } from '@/src/database/repositories/locations';
+import { compareToNormalYear, NormalYearComparison } from '@/src/rcda/baseline';
 import { cltlgy } from '@/src/rcda/constants';
 import { computeRcda, RcdaInputs } from '@/src/rcda/decisionTree';
 import { expandScenario5to7, getcltlgyRevised } from '@/src/rcda/financials';
@@ -21,7 +22,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ResultSkeleton } from '@/src/components/skeletons/app-skeletons';
 
-function computeResult(params: RcdaInputs): RcdaSummary {
+function computeResult(params: RcdaInputs): { summary: RcdaSummary; baseline: NormalYearComparison } {
   // Shared pipeline (also used by the decision tree and History detail)
   const computation = computeRcda(params);
 
@@ -51,7 +52,10 @@ function computeResult(params: RcdaInputs): RcdaSummary {
     console.log('[RCDA] recommendedOption:', recommendedOption, averages[0] <= 0 && averages[1] <= 0 ? '(both neg, no recommendation)' : '');
   }
 
-  return summarizeRcda(computation, params.optionNames, params.climate);
+  return {
+    summary: summarizeRcda(computation, params.optionNames, params.climate),
+    baseline: compareToNormalYear(params, computation),
+  };
 }
 
 export default function ResultScreen() {
@@ -82,6 +86,7 @@ export default function ResultScreen() {
 
   const { user } = useAuth();
   const [result, setResult] = useState<RcdaSummary | null>(null);
+  const [baseline, setBaseline] = useState<NormalYearComparison | null>(null);
   const [computeError, setComputeError] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -133,20 +138,22 @@ export default function ResultScreen() {
     // Run computation (wrap in timeout to let loading state render)
     const timer = setTimeout(async () => {
       let computed: RcdaSummary;
+      let nextBaseline: NormalYearComparison;
       try {
-        computed = computeResult({
+        ({ summary: computed, baseline: nextBaseline } = computeResult({
           optionNames,
           yield: yieldData,
           cost: costData,
           addCost: addCostData,
           price: priceData,
           climate,
-        });
+        }));
       } catch (err) {
         console.error('Failed to compute decision result:', err);
         setComputeError(true);
         return;
       }
+      setBaseline(nextBaseline);
       setResult(computed);
       await saveDecision(computed);
     }, 600);
@@ -205,6 +212,7 @@ export default function ResultScreen() {
       ) : (
         <DecisionResultView
           summary={result}
+          baseline={baseline}
           decisionType={decisionType}
           heroTop={
             <>
@@ -212,7 +220,7 @@ export default function ResultScreen() {
                 <Ionicons name="arrow-back" size={22} color={Colors.ink} />
               </TouchableOpacity>
               <View style={[heroTopStyles.pill, saveError && heroTopStyles.pillError]}>
-                <Ionicons name={saveError ? 'warning-outline' : 'save-outline'} size={15} color={Colors.accent} />
+                <Ionicons name={saveError ? 'warning-outline' : 'save-outline'} size={15} color={saveError ? Colors.danger : Colors.ink} />
                 <Text style={heroTopStyles.pillText}>{savedPill}</Text>
               </View>
             </>

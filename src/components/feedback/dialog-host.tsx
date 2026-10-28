@@ -2,9 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef, useSyncExternalStore } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EASE_OUT } from '@/src/constants/motion';
+import Animated, { FadeIn, Keyframe, useReducedMotion } from 'react-native-reanimated';
 import type { DialogQueue } from './feedback-queue';
 import type { FeedbackTheme } from './feedback-theme';
+
+// Our own quick fade and scale; Android's Modal fade adds about 300ms before the card shows.
+const BACKDROP_IN = FadeIn.duration(180);
+const CARD_IN = new Keyframe({
+  0: { opacity: 0, transform: [{ scale: 0.94 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }], easing: EASE_OUT },
+}).duration(200);
 
 interface Props {
   queue: DialogQueue;
@@ -13,8 +21,8 @@ interface Props {
 
 export function DialogHost({ queue, theme: t }: Props) {
   const current = useSyncExternalStore(queue.subscribe, queue.getCurrent);
-  // Keep rendering the last dialog while the Modal fades out, otherwise the
-  // content vanishes before the backdrop. Taps on it are ignored by the queue.
+  const reduceMotion = useReducedMotion();
+  // Keep rendering the last dialog until the Modal has closed; taps on it are ignored by the queue.
   const lastShown = useRef(current);
   if (current) lastShown.current = current;
   const shown = current ?? lastShown.current;
@@ -44,19 +52,24 @@ export function DialogHost({ queue, theme: t }: Props) {
     <Modal
       visible={current !== null}
       transparent
-      animationType="fade"
+      animationType="none"
       statusBarTranslucent
       // Android back button: treat as the safe choice.
       onRequestClose={() => settle(false)}
     >
       <Pressable
-        style={[s.backdrop, { backgroundColor: t.backdrop }]}
+        style={s.backdrop}
         onPress={backdropCancels ? () => settle(false) : undefined}
         accessible={false}
       >
         <Animated.View
+          entering={reduceMotion ? undefined : BACKDROP_IN}
+          style={[StyleSheet.absoluteFill, { backgroundColor: t.backdrop }]}
+          pointerEvents="none"
+        />
+        <Animated.View
           key={shown.id}
-          entering={FadeIn.duration(150)}
+          entering={reduceMotion ? undefined : CARD_IN}
           style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}
           accessibilityViewIsModal
           accessibilityRole="alert"
@@ -64,12 +77,9 @@ export function DialogHost({ queue, theme: t }: Props) {
           onStartShouldSetResponder={() => true}
         >
           {icon ? (
-            <Animated.View
-              entering={FadeIn.delay(80)}
-              style={[s.iconWrap, { backgroundColor: destructive ? t.dangerIconBg : t.iconBg }]}
-            >
+            <View style={[s.iconWrap, { backgroundColor: destructive ? t.dangerIconBg : t.iconBg }]}>
               <Ionicons name={icon} size={28} color={destructive ? t.dangerBg : t.iconColor} />
-            </Animated.View>
+            </View>
           ) : null}
 
           <Text style={[s.title, { color: t.title }]} accessibilityRole="header">

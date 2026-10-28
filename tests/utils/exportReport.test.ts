@@ -4,6 +4,8 @@ import type { User } from '../../src/database/repositories/users';
 import {
   buildCsv,
   buildPdfHtml,
+  cityCounts,
+  monthlyCounts,
   ExportContext,
   ExportRange,
   exportFileName,
@@ -130,6 +132,15 @@ describe('buildCsv', () => {
     expect(csv).toContain(',"Corn, ""OPV""",');
   });
 
+  it('neutralises text that Excel would run as a formula but leaves negative numbers alone', () => {
+    const csv = buildCsv(
+      [decision('f', local(2026, 8, 3), { result: '=HYPERLINK("http://x",A1)', profit_increase: -500 })],
+      { includeFarmerLocation: false, includeClimate: false },
+      CTX,
+    );
+    expect(csv).toContain(`,"'=HYPERLINK(""http://x"",A1)",-500`);
+  });
+
   it('adds farmer/location and climate columns only when asked', () => {
     const csv = buildCsv(rows, { includeFarmerLocation: true, includeClimate: true }, CTX);
     const [header, first] = csv.slice(1).split('\r\n');
@@ -147,7 +158,7 @@ describe('buildPdfHtml', () => {
     expect(html).not.toContain('abc-123');
     expect(html).toContain('<td>Crop Choice</td>');
     expect(html).toContain('Period: September 2026');
-    expect(html).toContain('1 decision · 1 farmer');
+    expect(html).toContain('1 decision · 1 field user');
   });
 
   it('escapes user-entered text', () => {
@@ -162,6 +173,56 @@ describe('buildPdfHtml', () => {
   it('shows an empty-state row when the period has no decisions', () => {
     const html = buildPdfHtml([], { includeFarmerLocation: false, includeClimate: false }, CTX, meta);
     expect(html).toContain('No decisions in this period.');
-    expect(html).toContain('0 decisions · 0 farmers');
+    expect(html).toContain('0 decisions · 0 field users');
+  });
+});
+
+describe('charts', () => {
+  const meta = { rangeLabel: 'All time', generatedAt: NOW };
+  const opts = { includeFarmerLocation: false, includeClimate: false };
+
+  it('counts every month from the first to the last decision, including empty ones', () => {
+    const bars = monthlyCounts([
+      decision('a', local(2026, 5, 3)),
+      decision('b', local(2026, 7, 10)),
+      decision('c', local(2026, 7, 20)),
+    ]);
+    expect(bars.map((b) => [b.label, b.count])).toEqual([['Jun', 1], ['Jul', 0], ['Aug', 2]]);
+  });
+
+  it('keeps only the latest 12 months', () => {
+    const bars = monthlyCounts([decision('a', local(2024, 0, 1)), decision('b', local(2026, 8, 1))]);
+    expect(bars).toHaveLength(12);
+    expect(bars[11].count).toBe(1);
+  });
+
+  it('ranks municipalities and skips decisions without one', () => {
+    const ctx: ExportContext = {
+      ...CTX,
+      locationsById: new Map([
+        ['loc-1', { id: 'loc-1', city: 'Los Baños' } as Location],
+        ['loc-2', { id: 'loc-2', city: 'Calamba' } as Location],
+      ]),
+    };
+    const rows = [
+      decision('a', local(2026, 8, 1), { location_id: 'loc-2' }),
+      decision('b', local(2026, 8, 2), { location_id: 'loc-2' }),
+      decision('c', local(2026, 8, 3)),
+      decision('d', local(2026, 8, 4), { location_id: 'missing' }),
+    ];
+    expect(cityCounts(rows, ctx).map((b) => [b.label, b.count])).toEqual([['Calamba', 2], ['Los Baños', 1]]);
+  });
+
+  it('adds charts to the PDF only when asked', () => {
+    const rows = [decision('a', local(2026, 8, 2))];
+    expect(buildPdfHtml(rows, { ...opts, includeCharts: true }, CTX, meta)).toContain('Decisions per month');
+    expect(buildPdfHtml(rows, opts, CTX, meta)).not.toContain('Decisions per month');
+  });
+
+  it('escapes municipality names in the chart', () => {
+    const ctx: ExportContext = { ...CTX, locationsById: new Map([['loc-1', { id: 'loc-1', city: '<b>X</b>' } as Location]]) };
+    const html = buildPdfHtml([decision('a', local(2026, 8, 2))], { ...opts, includeCharts: true }, ctx, meta);
+    expect(html).not.toContain('<b>X</b>');
+    expect(html).toContain('&lt;b&gt;X&lt;/b&gt;');
   });
 });

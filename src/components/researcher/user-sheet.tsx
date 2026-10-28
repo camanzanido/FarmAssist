@@ -1,17 +1,21 @@
-import { UserType } from '@/src/auth/types';
+import 'react-native-get-random-values';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { ResearcherColors as C } from '@/src/constants/colors';
-import { updateUserRemote, type ResearcherUserRow } from '@/src/database/repositories/researcher';
+import { resetPasswordRemote, updateUserRemote, type ResearcherUserRow } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
+import { FunctionError } from '@/src/database/supabase/invokeFunction';
+import { displayEmail, realEmail } from '@/src/utils/accountEmail';
 import { getActionErrorMessage } from '@/src/utils/errors';
+import { validatePassword } from '@/src/utils/passwordValidation';
+import { generateTempPassword } from '@/src/utils/tempPassword';
 import { isDormant } from '@/src/utils/userActivity';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-type Pending =
-  | { kind: 'role'; role: UserType }
-  | { kind: 'status'; next: 'active' | 'inactive' };
+type Pending = { next: 'active' | 'inactive' };
+
+type PasswordReset = { step: 'form' } | { step: 'done'; password: string };
 
 type Confirmation = {
   title: string;
@@ -32,16 +36,6 @@ function formatShortDate(iso: string): string {
 }
 
 function describe(user: User, pending: Pending): Confirmation {
-  if (pending.kind === 'role') {
-    const toResearcher = pending.role === 'researcher';
-    return {
-      title: `Change role to ${toResearcher ? 'Researcher' : 'Farmer'}?`,
-      message: `${user.name} will ${toResearcher ? 'gain' : 'lose'} researcher access.`,
-      confirmText: 'Change role',
-      destructive: false,
-      icon: 'swap-horizontal-outline',
-    };
-  }
   const deactivating = pending.next === 'inactive';
   const isApproval = user.status === 'pending';
   const isResearcher = user.user_type === 'researcher';
@@ -72,32 +66,32 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
   const [pending, setPending] = useState<Pending | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reset, setReset] = useState<PasswordReset | null>(null);
+  const [tempPassword, setTempPassword] = useState('');
 
   useEffect(() => {
     if (!visible) return;
     setPending(null);
     setError(null);
+    setReset(null);
   }, [visible, user?.id]);
 
   if (!user) return <BottomSheet visible={false} onClose={onClose}>{null}</BottomSheet>;
 
-  const askRole = (role: UserType) => {
-    if (isSelf || role === user.user_type) return;
-    setError(null);
-    setPending({ kind: 'role', role });
-  };
+  // Pending researcher accounts from old APKs still need approving; every other admin account is off limits.
+  const isPeerAdmin = !isSelf && user.user_type === 'researcher' && user.status !== 'pending';
 
   const askStatus = () => {
-    if (isSelf) return;
+    if (isSelf || isPeerAdmin) return;
     setError(null);
-    setPending({ kind: 'status', next: user.status === 'active' ? 'inactive' : 'active' });
+    setPending({ next: user.status === 'active' ? 'inactive' : 'active' });
   };
 
   const apply = async () => {
     if (!pending) return;
     setIsSaving(true);
     try {
-      const fields = pending.kind === 'role' ? { user_type: pending.role } : { status: pending.next };
+      const fields = { status: pending.next };
       await updateUserRemote(user.id, fields);
       onChanged({ ...user, ...fields });
       setPending(null);
@@ -109,17 +103,43 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
     }
   };
 
+  const startReset = () => {
+    if (isSelf || user.user_type !== 'farmer') return;
+    setError(null);
+    setTempPassword(generateTempPassword());
+    setReset({ step: 'form' });
+  };
+
+  const applyReset = async () => {
+    const invalid = validatePassword(tempPassword);
+    if (invalid) {
+      setError(invalid);
+      return;
+    }
+    setIsSaving(true);
+    setError(null);
+    try {
+      await resetPasswordRemote(user.id, tempPassword);
+      setReset({ step: 'done', password: tempPassword });
+    } catch (err) {
+      console.error('Failed to reset password:', err);
+      setError(err instanceof FunctionError ? err.message : getActionErrorMessage(err, 'Please try again.'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const confirmation = pending ? describe(user, pending) : null;
 
   return (
-    <BottomSheet visible={visible} onClose={onClose}>
+    <BottomSheet visible={visible} onClose={onClose} avoidKeyboard>
       <View style={s.header}>
         <View style={s.avatar}>
           <Text style={s.avatarText}>{userInitials(user.name)}</Text>
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.name}>{user.name}</Text>
-          <Text style={s.meta}>@{user.username} · {user.email}</Text>
+          <Text style={s.meta}>@{user.username} · {displayEmail(user.email)}</Text>
           {user.user_type === 'farmer' && (
             <Text style={s.meta}>
               {user.last_decision_at ? `Last decision: ${formatShortDate(user.last_decision_at)}` : 'No decisions yet'}
@@ -128,7 +148,65 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
         </View>
       </View>
 
-      {confirmation ? (
+      {reset?.step === 'form' ? (
+        <View style={s.confirmCard}>
+          <View style={s.confirmIcon}>
+            <Ionicons name="key-outline" size={20} color={C.accent} />
+          </View>
+          <Text style={s.confirmTitle}>Set a temporary password</Text>
+          <Text style={s.confirmMessage}>
+            {user.name}&apos;s old password will stop working. Give them this one; they can change it in Profile after signing in.
+          </Text>
+          <View style={s.tempRow}>
+            <TextInput
+              style={s.tempInput}
+              value={tempPassword}
+              onChangeText={setTempPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!isSaving}
+              accessibilityLabel="Temporary password"
+            />
+            <TouchableOpacity
+              style={s.generateBtn}
+              onPress={() => setTempPassword(generateTempPassword())}
+              disabled={isSaving}
+              accessibilityRole="button"
+              accessibilityLabel="Make a new password"
+            >
+              <Ionicons name="refresh" size={18} color={C.accent} />
+            </TouchableOpacity>
+          </View>
+          {error && <Text style={s.error}>{error}</Text>}
+          <View style={s.confirmActions}>
+            <TouchableOpacity style={s.cancelBtn} onPress={() => setReset(null)} disabled={isSaving}>
+              <Text style={s.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.confirmBtn, isSaving && s.disabled]} onPress={applyReset} disabled={isSaving}>
+              {isSaving
+                ? <ActivityIndicator color={C.accentDeepText} />
+                : <Text style={s.confirmBtnText}>Reset password</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : reset?.step === 'done' ? (
+        <View style={s.confirmCard}>
+          <View style={s.confirmIcon}>
+            <Ionicons name="checkmark" size={22} color={C.accent} />
+          </View>
+          <Text style={s.confirmTitle}>Password reset</Text>
+          <Text style={s.confirmMessage}>Give {user.name} these details. This is the only time the password is shown.</Text>
+          <View style={s.doneBox}>
+            <Text style={s.doneLabel}>USERNAME</Text>
+            <Text style={s.doneValue} selectable>{user.username}</Text>
+            <Text style={[s.doneLabel, s.doneLabelGap]}>TEMPORARY PASSWORD</Text>
+            <Text style={s.doneValue} selectable>{reset.password}</Text>
+          </View>
+          <TouchableOpacity style={[s.confirmBtn, s.doneBtn]} onPress={() => setReset(null)}>
+            <Text style={s.confirmBtnText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      ) : confirmation ? (
         <View style={s.confirmCard}>
           <View style={[s.confirmIcon, confirmation.destructive && s.confirmIconDanger]}>
             <Ionicons name={confirmation.icon} size={20} color={confirmation.destructive ? C.danger : C.accent} />
@@ -151,26 +229,17 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
             </TouchableOpacity>
           </View>
         </View>
+      ) : isSelf || isPeerAdmin ? (
+        <View style={s.lockedCard}>
+          <Ionicons name="lock-closed-outline" size={18} color={C.textSoft} />
+          <Text style={s.lockedText}>
+            {isSelf
+              ? 'This is your account. Change your password or deactivate it from Profile.'
+              : 'Admin accounts are managed by the system owner. You can manage field user accounts.'}
+          </Text>
+        </View>
       ) : (
         <>
-          <Text style={s.sectionLabel}>ROLE</Text>
-          <View style={s.roleBtnRow}>
-            {(['farmer', 'researcher'] as const).map(role => {
-              const active = user.user_type === role;
-              return (
-                <TouchableOpacity
-                  key={role}
-                  style={[s.roleBtn, active && s.roleBtnActive, isSelf && !active && s.disabled]}
-                  onPress={() => askRole(role)}
-                  disabled={isSelf}
-                  accessibilityState={{ selected: active, disabled: isSelf }}
-                >
-                  <Text style={[s.roleBtnText, active && s.roleBtnTextActive]}>{role === 'farmer' ? 'Farmer' : 'Researcher'}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
           <Text style={s.sectionLabel}>ACCOUNT</Text>
           {isDormant(user) && (
             <View style={s.dormantHint}>
@@ -179,21 +248,28 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
             </View>
           )}
           <TouchableOpacity
-            style={[s.statusBtn, user.status !== 'active' && s.statusBtnApprove, isSelf && s.statusBtnDisabled]}
+            style={[s.statusBtn, user.status !== 'active' && s.statusBtnApprove]}
             onPress={askStatus}
-            disabled={isSelf}
           >
             <Ionicons
               name={user.status === 'active' ? 'person-remove-outline' : 'person-add-outline'}
               size={17}
-              color={isSelf ? C.textFaint : user.status === 'active' ? C.danger : C.accent}
+              color={user.status === 'active' ? C.danger : C.accent}
             />
-            <Text style={[s.statusText, user.status !== 'active' && s.approveText, isSelf && s.statusTextDisabled]}>
+            <Text style={[s.statusText, user.status !== 'active' && s.approveText]}>
               {user.status === 'active' ? 'Deactivate account' : user.status === 'pending' ? 'Approve account' : 'Reactivate account'}
             </Text>
           </TouchableOpacity>
 
-          {isSelf && <Text style={s.selfHint}>You can&apos;t change your own role or account status.</Text>}
+          {user.user_type === 'farmer' && (
+            <TouchableOpacity style={s.resetBtn} onPress={startReset}>
+              <Ionicons name="key-outline" size={17} color={C.text} />
+              <Text style={s.resetText}>Reset password</Text>
+            </TouchableOpacity>
+          )}
+          {user.user_type === 'farmer' && !realEmail(user.email) && (
+            <Text style={s.selfHint}>This account has no email, so only an admin can reset its password.</Text>
+          )}
         </>
       )}
     </BottomSheet>
@@ -202,27 +278,32 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
 
 const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 13, marginBottom: 20 },
-  avatar: { width: 52, height: 52, borderRadius: 16, backgroundColor: C.avatar, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: C.avatar, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 18, fontWeight: '800', color: C.text },
   name: { fontSize: 19, fontWeight: '800', color: C.text },
   meta: { fontSize: 13, color: C.textSoft, marginTop: 2 },
 
   sectionLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint, marginBottom: 10 },
-  roleBtnRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  roleBtn: { flex: 1, height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
-  roleBtnActive: { backgroundColor: C.accentStrong, borderColor: C.accentStrong },
-  roleBtnText: { fontSize: 14.5, fontWeight: '700', color: C.textSoft },
-  roleBtnTextActive: { color: C.accentDeepText },
 
   statusBtn: { flexDirection: 'row', gap: 8, height: 50, borderRadius: 12, borderWidth: 1, borderColor: C.dangerBorder, backgroundColor: C.dangerBg, alignItems: 'center', justifyContent: 'center' },
   statusBtnApprove: { borderColor: C.cardBorderStrong, backgroundColor: C.accentTint },
-  statusBtnDisabled: { borderColor: C.cardBorder, backgroundColor: C.fill },
   statusText: { fontSize: 14.5, fontWeight: '700', color: C.danger },
   approveText: { color: C.accent },
-  statusTextDisabled: { color: C.textFaint },
+  lockedCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.fill, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 14 },
+  lockedText: { flex: 1, fontSize: 13.5, color: C.textSoft, lineHeight: 19 },
   dormantHint: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amberBorder, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 12, marginBottom: 10 },
   dormantHintText: { flex: 1, fontSize: 13, color: C.amber, fontWeight: '600' },
   selfHint: { fontSize: 12.5, color: C.textFaint, textAlign: 'center', marginTop: 12 },
+  resetBtn: { flexDirection: 'row', gap: 8, height: 50, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  resetText: { fontSize: 14.5, fontWeight: '700', color: C.text },
+  tempRow: { flexDirection: 'row', gap: 8, alignSelf: 'stretch', marginTop: 14 },
+  tempInput: { flex: 1, height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, paddingHorizontal: 14, fontSize: 17, fontWeight: '700', letterSpacing: 1, color: C.text },
+  generateBtn: { width: 48, height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
+  doneBox: { alignSelf: 'stretch', backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorder, padding: 14, marginTop: 14 },
+  doneLabel: { fontSize: 11.5, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint },
+  doneLabelGap: { marginTop: 10 },
+  doneValue: { fontSize: 18, fontWeight: '800', color: C.text, marginTop: 3, letterSpacing: 0.5 },
+  doneBtn: { alignSelf: 'stretch', flex: 0, marginTop: 16 },
 
   confirmCard: { backgroundColor: C.fill, borderRadius: 16, padding: 18, alignItems: 'center' },
   confirmIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.accentTint, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },

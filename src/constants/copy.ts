@@ -8,8 +8,8 @@ export const decisionTypeCopy = {
 export const namingCopy = {
   titleFor: (decisionLabel: string) => `Which two options\nare you comparing?`,
   subtitle: (decisionLabel: string) => `For ${decisionLabel}, give each option a short name.`,
-  firstOption: 'FIRST OPTION',
-  secondOption: 'SECOND OPTION',
+  firstOption: 'First Option',
+  secondOption: 'Second Option',
   helper: 'Followed by questions about yield, cost, and price for each option.',
   continue: 'Continue to Data Entry',
   continueDisabledHint: 'Fill in both names first',
@@ -46,6 +46,13 @@ export const dataEntryCopy = {
   price: 'Selling price',
   priceUnit: 'per kilogram',
   scenariosHeading: 'FOR EACH CLIMATE SCENARIO',
+  scenarioMeaning: [
+    'The driest 1 in 5 seasons',
+    'Somewhat drier than usual',
+    'A typical season',
+    'Somewhat wetter than usual',
+    'The wettest 1 in 5 seasons',
+  ],
   yield: 'Yield',
   yieldUnit: 'kg/ha',
   cost: 'Cost',
@@ -66,6 +73,7 @@ export const climateCopy = {
   dryYearsSub: 'Below-normal rainfall (El Niño)',
   averageYears: 'Average',
   averageYearsSub: 'Calculated automatically',
+  donutHint: 'Drag the white handles, or use the buttons below.',
   wetYears: 'Wettest',
   wetYearsSub: 'Above-normal rainfall (La Niña)',
   offlineNote: 'Calculated right here on your phone. No internet needed.',
@@ -77,30 +85,53 @@ export const climateCopy = {
 // A saved decision with no recommended option (both options lose money) stores result = ''.
 export const decisionResultLabel = (result: string) => result || 'Both options lose money';
 
+// Joins words as "a", "a and b" or "a, b and c".
+function joinList(items: string[]): string {
+  return items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
 export const resultCopy = {
   savingPill: 'Saving…',
   savedPill: 'Saved',
   notSavedPill: 'Not saved',
-  answerEyebrow: 'THE RESULT',
+  answerEyebrow: 'Forecast result',
   verdict: (winner: string) => `${winner} is the\nbetter choice.`,
   perHectare: 'per hectare',
+  heroNormalBetter: (name: string, amount: string) =>
+    `In a normal year (no forecast), ${name} would earn ${amount} more per hectare than with your forecast.`,
   verdictDetail: (winner: string, loser: string) =>
     `Expected to earn more than ${loser} across this year's likely climate.`,
   earningsHeading: 'Expected earnings per hectare',
-  keepInMindHeading: 'But keep in mind',
-  keepInMindBody: (favorCount: number, total: number, winner: string, loser: string) =>
-    favorCount === total
-      ? `${winner} earns more in every kind of year this forecast allows.`
-      : `${winner} earns more in ${favorCount} of ${total} kinds of year. In the rest, ${loser} does better.`,
+  earningsForecast: 'With your forecast',
+  earningsNormal: 'Normal year (no forecast)',
+  earningsSameAsNormal: 'Your forecast is a normal year',
+  keepInMindHeading: (allWins: boolean) => (allWins ? 'Year by year' : 'Keep in mind'),
+  // Each argument lists year names such as ['dry', 'average']; empty lists are left out.
+  keepInMindBody: (wins: string[], losses: string[], ties: string[], winner: string, loser: string) =>
+    [
+      wins.length > 0 && `${winner} earns more in ${joinList(wins)} years.`,
+      losses.length > 0 && `In ${joinList(losses)} years, ${loser} does better.`,
+      ties.length > 0 && `In ${joinList(ties)} years, both earn about the same.`,
+    ].filter(Boolean).join(' '),
+  yearNames: { dry: 'dry', average: 'average', wet: 'wet' },
   bothNegativeVerdict: 'Both options are\nexpected to lose money.',
   bothNegativeDetail: (a: string, b: string) =>
     `Neither ${a} nor ${b} is expected to make a profit across this year's likely climate.`,
-  detailTable: 'Detailed table',
   seeDetails: 'See details',
   fullBreakdown: 'See full breakdown',
   hideBreakdown: 'Hide full breakdown',
   recommendedTag: 'Recommended',
-  disclaimer: 'FarmAssist is a decision-support tool. The final decision is always yours, and how accurate this result is depends on the data you entered.',
+  normalYearHeading: 'Compared with a normal year',
+  normalYearYourForecast: 'Your forecast',
+  normalYearNormal: 'Normal year',
+  normalYearLegend: { dry: 'Dry', average: 'Average', wet: 'Wet' },
+  normalYearSame: 'Your forecast is the same as a normal year, so these results are what you would expect in any typical season.',
+  normalYearBetter: (name: string, amount: string) => `This season looks better than a normal year for ${name}: about ${amount} more per hectare.`,
+  normalYearWorse: (name: string, amount: string) => `This season looks worse than a normal year for ${name}: about ${amount} less per hectare.`,
+  normalYearEven: (name: string) => `This season looks about the same as a normal year for ${name}.`,
+  normalYearOtherPick: (name: string) => `In a normal year, ${name} would be the better choice.`,
+  normalYearNoProfit: 'In a normal year, neither option would be expected to make a profit.',
+  disclaimer: 'FarmAssist is a decision-support tool. The final decision is always yours.',
   newComparison: 'Go home',
   loading: 'Computing decision…',
   paramsError: "We couldn't load this decision. Please start a new analysis.",
@@ -114,10 +145,12 @@ export const treeCopy = {
   heading: 'Decision tree',
   subtitle: 'Chance of each kind of year × what the option earns in it, added up.',
   rootLabel: 'Your choice',
-  best: 'BEST',
   expected: 'Expected',
   outcomes: { dry: 'Dry years', average: 'Average years', wet: 'Wet years' },
   notForecast: 'not forecast',
+  conclusionBest: (name: string) => `Best choice: ${name}`,
+  conclusionNone: 'Both options lose money',
+  formulaHeading: 'How "Expected" is worked out',
 };
 
 export const decisionDetailCopy = {
@@ -137,16 +170,22 @@ export const homeCopy = {
   headingAccent: 'decision',
   headingAfter: ' do\nyou need today?',
   subtitle: "Pick a decision problem. We'll answer it using your climate data.",
-  lastDecisionHeading: 'LAST DECISION',
+  lastDecisionHeading: 'Last Decision',
   weatherPlaceholder: 'Weather data unavailable',
   loadErrorTitle: "Couldn't load your recent decision.",
   retry: 'Retry',
+  updateTitle: (v: string) => `FarmAssist ${v} is available`,
+  updateDownload: 'Download',
+  updateDismiss: 'Dismiss update notice',
 };
 
 export const historyCopy = {
   title: 'History',
   subtitle: (n: number) => `${n} decision${n === 1 ? '' : 's'} · all on your device`,
   filterAll: 'All',
+  sortLabel: 'Sort decisions',
+  sortNewest: 'Newest',
+  sortOldest: 'Oldest',
   emptyTitle: 'No decisions yet',
   emptySubtitle: 'Decisions you generate will show up here.',
   emptyCta: 'Make a Decision',
@@ -155,6 +194,7 @@ export const historyCopy = {
   notSent: 'Not yet synced',
   sent: 'Synced',
   deleteTitle: 'Delete this decision?',
+  deleteLabel: 'Delete decision',
   deleteBody: (result: string) => `This removes "${result}" from your history. This can't be undone.`,
   deleteCancel: "No, keep it",
   deleteConfirm: 'Delete',
@@ -170,9 +210,10 @@ export const profileCopy = {
   loadErrorBody: 'Some information on this screen may be out of date.',
   retry: 'Retry',
   offlineTitle: 'No internet right now',
-  offlineBody: (pending: number, lastSync: string) =>
-    `${pending} decision${pending === 1 ? '' : 's'} will send once you're back online. Last sync: ${lastSync}.`,
-  syncNow: 'Try to sync now',
+  lastSync: (lastSync: string) => `Last sync: ${lastSync}`,
+  syncNow: 'Sync now',
+  settingsLabel: 'Account settings',
+  location: 'Location',
   syncErrorsTitle: "Couldn't finish syncing",
   syncErrorsBody: (count: number) =>
     `${count} change${count === 1 ? '' : 's'} failed to save to the cloud and won't be retried automatically. This usually means the same account or record already exists there.`,
@@ -190,19 +231,34 @@ export const profileCopy = {
   viewIntro: 'View introduction',
   editProfile: 'Edit profile',
   editTitle: 'Edit profile',
-  editSubtitle: 'Update the name and email on your account.',
+  editSubtitle: 'Update the name, username and email on your account.',
   nameLabel: 'NAME',
   namePlaceholder: 'Your full name',
   emailLabel: 'EMAIL',
-  emailOfflineHint: 'Connect to the internet to change your email.',
-  emailConfirmHint: "We'll email a confirmation link. Your current email keeps working until you confirm.",
+  usernameLabel: 'USERNAME',
+  usernameHint: 'You sign in with this. Use letters, numbers, dots or underscores.',
+  emailOfflineHint: 'Connect to the internet to change your username or email.',
+  emailConfirmHint: "We'll email a 6-digit code to confirm it. Your current email keeps working until then.",
+  codeTitle: 'Enter the code',
+  codeBody: (email: string) => `We sent a 6-digit code to ${email}. Check your spam folder if it isn't there.`,
+  codeLabel: 'CODE',
+  codeInvalid: 'Enter the 6-digit code from the email.',
+  codeVerify: 'Confirm email',
+  codeLater: 'Later',
+  codeResend: 'Send a new code',
+  codeResendIn: (s: number) => `Send a new code in ${s}s`,
+  codeResent: 'New code sent',
+  codeEditDetails: 'Change details instead',
+  codeFailed: "That code didn't work. Check it, or send a new one.",
+  emailVerified: 'Email updated',
   editCancel: 'Cancel',
   editSave: 'Save',
   editSaveFailed: "Couldn't save your profile. Please try again.",
   profileUpdated: 'Profile updated',
   emailConfirmTitle: 'Confirm your new email',
-  emailConfirmBody: (email: string) => `Open the link we sent to ${email}. If a link also went to your current email, open that one too.`,
+  emailConfirmBody: (email: string) => `Enter the code we sent to ${email} from Edit profile when you have it.`,
   pendingEmail: (email: string) => `Waiting for you to confirm ${email}`,
+  noEmailHint: 'Add an email in Edit profile so you can reset a forgotten password yourself.',
 };
 
 export const onboardingCopy = {
@@ -218,12 +274,12 @@ export const onboardingCopy = {
     {
       key: 'welcome',
       title: 'Welcome to FarmAssist',
-      body: 'Mobile-based Decision Support System for crop selection, crop protection, and harvest decisions.',
+      body: 'Mobile-based Decision Support System for choosing crops, crop varieties, and rain protection.',
     },
     {
       key: 'compare',
       title: 'Compare two options',
-      body: 'Which crop to plant, whether to protect a crop, or whether to harvest now or wait. Enter the yield, cost, and price for each option, and FarmAssist recommends the one likely to earn more.',
+      body: 'Which crop to plant, which variety to grow, or whether to protect your crop from rain. Enter the yield, cost, and price for each option, and FarmAssist recommends the one likely to earn more.',
     },
     {
       key: 'offline',
@@ -244,18 +300,18 @@ export const aboutCopy = {
   appName: 'FarmAssist',
   tagline: 'Climate-smart decisions for Filipino farmers',
   version: (v: string) => `Version ${v}`,
-  whatHeading: 'WHAT IT DOES',
-  whatBody: 'FarmAssist helps farmers and extension workers choose between two farming options, such as which crop to plant, whether to protect a crop, or whether to harvest now or wait. You enter the expected yields, prices, and costs, and the app recommends the option likely to earn more under the coming season\'s climate. It works fully offline, and your decisions sync to the cloud once you sign in.',
-  rcdaHeading: 'THE RCDA MODEL',
+  whatHeading: 'What it does',
+  whatBody: 'FarmAssist helps farmers and extension workers choose between two farming options, such as which crop to plant, which variety to grow, or whether to protect a crop from rain. You enter the expected yields, prices, and costs, and the app recommends the option likely to earn more under the coming season\'s climate. It works fully offline, and your decisions sync to the cloud once you sign in. Researchers at UPLB use the admin side of the app to manage accounts, prepare recommended values for each area, and review, map, and export the decisions farmers share, to study how climate information is used.',
+  rcdaHeading: 'The RCDA model',
   rcdaBody: 'Recommendations come from Rapid Climate Decision Analysis (RCDA). It combines the seasonal rainfall forecast (the chance of a below-normal, near-normal, or above-normal season) with the profit of each option under dry, average, and wet conditions. It then compares the expected returns and shows the recommended option, the estimated profit difference, and a decision tree of possible outcomes. It is created from the prototype Rapid Climate Decision Analysis version 3.2. FarmAssist supports decisions but does not make them: the final decision stays with the farmer, and every result is only as accurate as the data entered.',
-  originHeading: 'ORIGIN',
+  originHeading: 'Origin',
   originBody: 'This mobile application is developed through the collaborative project between the UPLB Interdisciplinary Studies Center for Integrated Natural Resources and Environment Management (UPLB-INREM) and the Institute of Computer Science (ICS) of the University of the Philippines Los Baños (UPLB).',
-  creditsHeading: 'PROJECT',
+  creditsHeading: 'Project',
   credits: [
     { icon: 'school-outline', label: 'Institution', value: 'UPLB-INREM & UPLB-ICS' },
     { icon: 'person-outline', label: 'Developer', value: 'Clarence Manzanido\nUPLB BSCS Student' },
   ],
-  contactHeading: 'CONTACT',
+  contactHeading: 'Contact',
   contactLabel: 'Send feedback',
   contactEmail: 'camanzanido@up.edu.ph',
   footer: 'Made for farmers, extension workers, and researchers.',
@@ -265,6 +321,9 @@ export const authCopy = {
   brand: 'FarmAssist',
   loginSubtitle: 'Sign in to save your decisions to the cloud. You can also keep using the app without an account.',
   email: 'Email',
+  loginLabel: 'Username or email',
+  loginPlaceholder: 'juan.dc or you@email.com',
+  loginRequired: 'Enter your username or email',
   password: 'Password',
   signIn: 'Sign in',
   signingIn: 'Signing in…',
@@ -275,9 +334,20 @@ export const authCopy = {
   createOne: 'Create one',
   continueOffline: 'Continue without an account',
   registerTitle: 'Create your account',
-  iAm: 'I am a…',
+  registerSubtitle: 'For field users: farmers and extension workers. Admin accounts are made by an existing FarmAssist admin.',
+  registerAccountTitle: 'Set up your sign-in',
+  registerAccountSubtitle: 'You will use your username and password to sign in.',
+  sectionPersonal: 'Personal information',
+  sectionAccount: 'Account information',
+  next: 'Next',
+  back: 'Back',
+  close: 'Close',
+  researcherNote: 'Admin (researcher)? Ask an existing FarmAssist admin to create your account.',
   fullName: 'Full name',
   username: 'Username',
+  usernamePlaceholder: 'e.g. juan.dc (you sign in with this)',
+  emailOptional: 'Email (optional)',
+  noEmailNote: "Without an email you can't reset a forgotten password yourself. Ask your researcher or extension worker to reset it.",
   cityLabel: 'City / Municipality',
   provinceLabel: 'Province',
   confirmPassword: 'Confirm password',
@@ -285,6 +355,48 @@ export const authCopy = {
   creatingAccount: 'Creating account…',
   haveAccount: 'Already have an account?',
   signInInstead: 'Sign in',
+};
+
+export const forgotPasswordCopy = {
+  link: 'Forgot password?',
+  title: 'Reset your password',
+  emailSubtitle: "Enter the email on your account. We'll send you a code to set a new password.",
+  emailLabel: 'Email',
+  noEmailNote: "No email on your account? Ask your researcher or extension worker to reset your password.",
+  noEmailAccount: 'Enter the email you added to your account.',
+  sendCode: 'Send code',
+  sendFailed: "Couldn't send the code. Please try again.",
+  sentBody: (email: string) => `If ${email} has an account, we sent it a code. Check your inbox and spam folder.`,
+  resentTitle: 'Code sent again',
+  codeLabel: 'Code from the email',
+  codeInvalid: 'Enter the code from the email.',
+  newPasswordLabel: 'New password',
+  confirmLabel: 'Confirm new password',
+  resend: 'Send a new code',
+  resendIn: (s: number) => `Send a new code in ${s}s`,
+  savePassword: 'Save new password',
+  resetFailed: "Couldn't reset your password. Please try again.",
+  changeEmail: 'Use a different email',
+  doneTitle: 'Password updated',
+  doneBody: 'Sign in with your new password.',
+};
+
+export const changePasswordCopy = {
+  row: 'Change password',
+  title: 'Change password',
+  subtitle: 'You need an internet connection to change your password.',
+  currentLabel: 'CURRENT PASSWORD',
+  newLabel: 'NEW PASSWORD',
+  confirmLabel: 'CONFIRM NEW PASSWORD',
+  currentRequired: 'Enter your current password.',
+  currentWrong: 'Your current password is incorrect.',
+  sameAsCurrent: 'Choose a password that is different from your current one.',
+  signedOut: 'Please sign in again, then change your password.',
+  failed: "Couldn't change your password. Please try again.",
+  cancel: 'Cancel',
+  save: 'Change password',
+  doneTitle: 'Password changed',
+  doneBody: 'Use your new password the next time you sign in.',
 };
 
 export const startupCopy = {
@@ -311,3 +423,148 @@ export const claimCopy = {
   errorTitle: "Couldn't add decisions",
   errorBody: "They are still safe on this phone. We'll ask again next time you open FarmAssist.",
 };
+
+export type GlossaryKey =
+  | 'scenarios' | 'price' | 'yield' | 'cost' | 'addCost'
+  | 'forecast' | 'normalYear'
+  | 'expectedEarnings' | 'recommended' | 'bothLose' | 'decisionTree'
+  | 'offline' | 'sync';
+
+export const GLOSSARY: Record<GlossaryKey, { term: string; definition: string }> = {
+  scenarios: {
+    term: 'Climate scenarios',
+    definition: 'The five kinds of season FarmAssist plans for: Driest, Below Average, Average, Above Average, and Wettest. They describe how much rain a season gets compared with what is usual for your area. Driest seasons often come with El Niño; Wettest with La Niña.\n\n'
+      + 'Driest: the driest 1 in 5 seasons.\n'
+      + 'Below Average: drier than usual, but not the driest.\n'
+      + 'Average: a typical season for your area.\n'
+      + 'Above Average: wetter than usual, but not the wettest.\n'
+      + 'Wettest: the wettest 1 in 5 seasons.',
+  },
+  price: {
+    term: 'Selling price',
+    definition: 'How much you expect to sell one kilogram of the harvest for, in pesos.',
+  },
+  yield: {
+    term: 'Yield (kg/ha)',
+    definition: 'How many kilograms you expect to harvest from one hectare in that kind of season.',
+  },
+  cost: {
+    term: 'Cost (₱/ha)',
+    definition: 'Your usual cost to produce one hectare in that kind of season: seeds, fertilizer, labor, land preparation, and so on.',
+  },
+  addCost: {
+    term: 'Additional cost (₱/ha)',
+    definition: 'Extra cost that only comes with that kind of season, such as covering the crop from rain, replanting after a flood, or extra irrigation in a drought. Enter 0 if there is none.',
+  },
+  forecast: {
+    term: 'Climate forecast (%)',
+    definition: 'The chance that the coming season will be dry, average, or wet, for example from the PAGASA seasonal outlook or your extension worker. You set dry and wet; average is whatever is left so the three add up to 100%.',
+  },
+  normalYear: {
+    term: 'Normal year (33 / 34 / 33)',
+    definition: 'With no forecast, a dry, average, or wet season are about equally likely: 33%, 34%, and 33%. FarmAssist compares your forecast with this, so you can see if this season looks better or worse than usual.',
+  },
+  expectedEarnings: {
+    term: 'Expected earnings',
+    definition: 'The average profit per hectare, after costs, that an option is expected to make. Each kind of season counts according to how likely the forecast says it is.',
+  },
+  recommended: {
+    term: 'Recommended option',
+    definition: 'The option with the higher expected earnings. The amount shown under it is how much more per hectare it is expected to earn than the other option.',
+  },
+  bothLose: {
+    term: 'Both options lose money',
+    definition: 'Both options are expected to earn less than they cost under this forecast, so FarmAssist does not recommend either. Try checking your prices, costs, or other options.',
+  },
+  decisionTree: {
+    term: 'Decision tree',
+    definition: 'A picture of how the result is worked out. For each option it shows the chance of a dry, average, or wet season and what the option earns in it, then adds them up into the expected earnings.',
+  },
+  offline: {
+    term: 'Offline',
+    definition: 'FarmAssist works without internet. Every decision is calculated and saved on your phone.',
+  },
+  sync: {
+    term: 'Sync',
+    definition: 'When you are signed in and online, your saved decisions are uploaded to the cloud so they are kept safe and can help researchers. This happens automatically.',
+  },
+};
+
+export const helpCopy = {
+  title: 'How to use',
+  back: 'Back',
+  intro: 'FarmAssist compares two farming options and tells you which one is likely to earn more this season, based on the climate forecast.',
+  stepsHeading: 'Step by step',
+  steps: [
+    { icon: 'apps-outline', title: 'Choose a decision', body: 'On Home, pick Crop Choice, Crop Variety, or Protect from Rain.' },
+    { icon: 'create-outline', title: 'Name your two options', body: 'For example, two crops or two varieties. When signed in and online, you can load saved values for your area.' },
+    { icon: 'calculator-outline', title: 'Enter the numbers', body: 'For each option, enter the selling price, then the yield, cost, and additional cost for each of the five climate scenarios.' },
+    { icon: 'partly-sunny-outline', title: 'Set the forecast', body: 'Enter the chance of a dry and a wet season. If you have no forecast, leave it at 33 / 34 / 33.' },
+    { icon: 'ribbon-outline', title: 'Read the result', body: 'See the better option, how much more it may earn per hectare, and how this season compares with a normal year. Tap "See full breakdown" for the decision tree. Every result is saved to History.' },
+  ] as const,
+  termsHeading: 'Terms used in the app',
+  termsHint: 'Tap a term to see what it means.',
+  openHelp: 'How to use FarmAssist',
+  helpLabel: 'Help: how to use FarmAssist',
+  termHelpLabel: (term: string) => `What does ${term} mean?`,
+  sheetClose: 'Got it',
+  learnHow: 'Learn how it works',
+};
+
+// Draft text for adviser and ethics review; bump TERMS_VERSION in src/utils/terms.ts when it changes.
+export const termsCopy = {
+  title: 'Terms & Privacy',
+  back: 'Back',
+  updated: (version: string) => `Last updated ${version}`,
+  intro: 'Please read this before creating an account. In short: you can use FarmAssist offline without an account, and nothing leaves your phone until you sign in.',
+  sections: [
+    {
+      heading: 'What FarmAssist is',
+      body: 'FarmAssist is a research tool from UPLB-INREM and UPLB-ICS that helps you compare two farming options using the Rapid Climate Decision Analysis (RCDA) model. Its recommendations are estimates based on the numbers you enter and the seasonal forecast. They are not guarantees, and the final decision is always yours.',
+    },
+    {
+      heading: 'Using the app without an account',
+      body: 'Without an account, your decisions are saved only on this phone. They are not sent to anyone. If you later create an account, you can choose to back up those decisions.',
+    },
+    {
+      heading: 'What we collect when you have an account',
+      body: 'Your name, username, province and city or municipality, your email if you add one, and the decisions you make in the app (the options you compare, the yields, costs and prices you enter, the forecast you use, and the result).',
+    },
+    {
+      heading: 'Why we collect it',
+      body: 'To back up your decisions and keep them on all your devices, to let you load values prepared by researchers, and for research that studies how farmers use climate information. Research results are reported in summary form, never with your name.',
+    },
+    {
+      heading: 'Who can see it',
+      body: 'Only you and the FarmAssist research team (admin accounts) can see your account and decisions. We do not sell your data or share it with advertisers.',
+    },
+    {
+      heading: 'How it is stored',
+      body: 'Data is kept on your phone and on secure cloud servers (Supabase) used by the research project. Your password is never stored in readable form.',
+    },
+    {
+      heading: 'Your rights',
+      body: 'Under the Data Privacy Act of 2012 (Republic Act No. 10173), you can ask to see, correct, or delete your data, or withdraw your consent, at any time. Email us at the address below. Withdrawing consent closes your account, but the app keeps working offline.',
+    },
+    {
+      heading: 'Your responsibilities',
+      body: 'Keep your password private, enter information that is true to the best of your knowledge, and do not use the app to harm others.',
+    },
+    {
+      heading: 'Changes',
+      body: 'If these terms change, the app will show them again and ask you to agree before you continue.',
+    },
+  ],
+  contactHeading: 'Contact',
+  contactEmail: 'camanzanido@up.edu.ph',
+  agreeLabel: 'I agree to the',
+  agreeLink: 'Terms & Privacy',
+  agreeRequired: 'Please agree to the Terms & Privacy to create an account.',
+  gateTitle: 'Terms & Privacy',
+  gateBody: 'Before you continue, please read and agree to how FarmAssist uses your account information.',
+  gateRead: 'Read Terms & Privacy',
+  gateAccept: 'I agree',
+  gateLogOut: 'Log out',
+  gateFailed: "Couldn't save your answer. Please try again.",
+  profileRow: 'Terms & Privacy',
+} as const;

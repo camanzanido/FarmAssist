@@ -1,6 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
-import { cardShadow, Colors } from '@/src/constants/colors';
+import { CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
+import { displayEmail } from '@/src/utils/accountEmail';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -71,7 +72,7 @@ export default function PendingScreen() {
           <View style={s.card}>
             <Text style={s.cardLabel}>Signed in as</Text>
             <Text style={s.cardValue}>{user.name || user.username}</Text>
-            <Text style={s.cardEmail}>{user.email}</Text>
+            <Text style={s.cardEmail}>{displayEmail(user.email)}</Text>
           </View>
         )}
 
@@ -102,8 +103,7 @@ const s = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: Colors.ink, textAlign: 'center', marginBottom: 10 },
   body: { fontSize: 14.5, lineHeight: 21, color: Colors.inkSoft, textAlign: 'center', marginBottom: 26 },
   card: {
-    backgroundColor: Colors.surface, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: Colors.border, marginBottom: 26, ...cardShadow,
+    ...cardSurface, padding: CARD_PADDING, marginBottom: 26,
   },
   cardLabel: { fontSize: 11, fontWeight: '700', color: Colors.inkFaint, letterSpacing: 0.6, marginBottom: 5 },
   cardValue: { fontSize: 16, fontWeight: '700', color: Colors.ink },

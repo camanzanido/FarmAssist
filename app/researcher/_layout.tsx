@@ -19,6 +19,7 @@ export default function ResearcherLayout() {
         screenOptions={{
           headerShown: false,
           freezeOnBlur: true,
+          animation: 'shift',
           tabBarButton: HapticTab,
           tabBarActiveTintColor: Colors.ink,
           tabBarInactiveTintColor: Colors.tabInactive,
@@ -41,13 +42,13 @@ export default function ResearcherLayout() {
           name="decisions"
           options={{
             title: 'Decisions',
-            tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'list' : 'list-outline'} size={23} color={color} />,
+            tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'document-text' : 'document-text-outline'} size={23} color={color} />,
           }}
         />
         <Tabs.Screen
           name="users"
           options={{
-            title: 'Users',
+            title: 'Field Users',
             tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'people' : 'people-outline'} size={23} color={color} />,
           }}
         />
@@ -56,13 +57,6 @@ export default function ResearcherLayout() {
           options={{
             title: 'Inputs',
             tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'options' : 'options-outline'} size={23} color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="map"
-          options={{
-            title: 'Map',
-            tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'map' : 'map-outline'} size={23} color={color} />,
           }}
         />
         <Tabs.Screen

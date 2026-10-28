@@ -5,7 +5,11 @@ import { claimLocalDecisions, countAnonymousStagedDecisions, type ClaimScope } f
 import { createLocation, getAllLocations, getLocationsByUser } from '../database/repositories/locations';
 import { createLocationRemote, fetchUserRemote, upsertUserRemote } from '../database/repositories/researcher';
 import { upsertUser } from '../database/repositories/users';
+import { FunctionError, invokeFunction } from '../database/supabase/invokeFunction';
 import { supabase } from '../database/supabase/supabase';
+import { isEmailLogin, normalizeUsername } from '../utils/accountEmail';
+import { TERMS_VERSION, termsAcceptance } from '../utils/terms';
+import { withTimeout } from '../utils/withTimeout';
 import { UserType } from './types';
 
 
@@ -114,7 +118,7 @@ export async function disconnectSync() {
   await db.disconnect();
 }
 
-export async function signUp(params: {
+export type SignUpParams = {
   email: string;
   password: string;
   name: string;
@@ -122,7 +126,36 @@ export async function signUp(params: {
   user_type: UserType;
   city: string;
   province: string;
-}) {
+};
+
+// Without an email the server creates the account under a hidden address, then the farmer signs in by username.
+async function signUpWithoutEmail(params: SignUpParams) {
+  await invokeFunction<{ id: string }>('register', {
+    name: params.name,
+    username: params.username,
+    password: params.password,
+    city: params.city,
+    province: params.province,
+    accepted_terms_version: TERMS_VERSION,
+  });
+  return signIn(params.username, params.password);
+}
+
+async function assertUsernameAvailable(username: string): Promise<void> {
+  const { data, error } = await withTimeout((signal) =>
+    supabase.rpc('username_available', { p_username: username }).abortSignal(signal)
+  );
+  if (error) throw error;
+  if (data !== true) throw new FunctionError('That username is already taken.', 'username_taken');
+}
+
+export async function signUp(input: SignUpParams) {
+  const params = { ...input, username: normalizeUsername(input.username), email: input.email.trim() };
+  if (!params.email) return signUpWithoutEmail(params);
+
+  // A taken username would otherwise only fail later, when PowerSync uploads the profile.
+  await assertUsernameAvailable(params.username);
+
   // Create auth account in Supabase
   const { data, error } = await supabase.auth.signUp({
     email: params.email,
@@ -149,6 +182,8 @@ export async function signUp(params: {
     email: params.email,
     status: 'active',
     user_type: params.user_type,
+    // Registration can't be submitted without ticking the Terms box.
+    ...termsAcceptance(),
   };
 
   if (params.user_type === 'researcher') {
@@ -168,17 +203,26 @@ export async function signUp(params: {
   // Start syncing if session was returned (email confirmation off) — skip for
   // researchers, who work online-only and don't use the local PowerSync mirror
   if (data.session && params.user_type !== 'researcher') {
-    await connectSync();
+    void connectSync().catch((e) => console.warn('Sync connect after sign-up failed:', e));
   }
 
   return data;
 }
 
-export async function signIn(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+// The sign-in function looks the email up server-side, so the app never learns another person's email.
+async function signInWithUsername(username: string, password: string) {
+  const tokens = await invokeFunction<{ access_token: string; refresh_token: string }>('sign-in', {
+    username: normalizeUsername(username),
     password,
   });
+  return supabase.auth.setSession(tokens);
+}
+
+export async function signIn(login: string, password: string) {
+  const trimmed = login.trim();
+  const { data, error } = isEmailLogin(trimmed)
+    ? await supabase.auth.signInWithPassword({ email: trimmed, password })
+    : await signInWithUsername(trimmed, password);
 
   if (error) throw error;
   if (!data.user || !data.session) throw new Error('Sign in failed');
@@ -229,10 +273,12 @@ export async function signIn(email: string, password: string) {
   // Claim any decisions made locally before this sign-in
   await claimIfEligible(data.user.id, userType);
 
-  // Start syncing — PowerSync will pull all rows the user has RLS access to.
+  // Sync connects in the background so the person isn't kept on the sign-in screen while it starts.
   if (userType !== 'researcher') {
-    await connectSync();
-    claimAfterFirstSync(data.user.id, userType);
+    const userId = data.user.id;
+    void connectSync()
+      .then(() => claimAfterFirstSync(userId, userType))
+      .catch((e) => console.warn('Sync connect after sign-in failed:', e));
   }
 
   return data;
@@ -241,8 +287,13 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
 
   await db.disconnectAndClear({ clearLocal: false });
+  // Global revoke needs the network; offline it fails before clearing the stored session, so always fall back to local.
   const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  if (error) {
+    console.warn('Server sign-out failed, clearing this device only:', error);
+    const { error: localError } = await supabase.auth.signOut({ scope: 'local' });
+    if (localError) throw localError;
+  }
 }
 
 export async function restoreSession(): Promise<boolean> {

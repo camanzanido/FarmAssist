@@ -63,12 +63,21 @@ describe('getDecisionsByUser', () => {
 
   it('filters by decision_type when one is given', async () => {
     await createFor({ user_id: 'alice', decision_type: 'crop_choice' });
-    await createFor({ user_id: 'alice', decision_type: 'harvest' });
+    await createFor({ user_id: 'alice', decision_type: 'protect' });
 
     const cropChoiceOnly = await getDecisionsByUser('alice', 'crop_choice');
 
     expect(cropChoiceOnly).toHaveLength(1);
     expect(cropChoiceOnly[0].decision_type).toBe('crop_choice');
+  });
+
+  it('skips the retired harvest type', async () => {
+    await createFor({ user_id: 'alice', decision_type: 'crop_choice' });
+    await createFor({ user_id: 'alice', decision_type: 'harvest' });
+
+    const result = await getDecisionsByUser('alice');
+
+    expect(result.map(d => d.decision_type)).toEqual(['crop_choice']);
   });
 
   it('orders results by datetime, most recent first', async () => {

@@ -8,5 +8,5 @@ export default function AuthLayout() {
   if (isLoading) return <AuthFormSkeleton />;
   if (user) return <Redirect href={user.user_type === 'researcher' ? '/researcher/dashboard' : '/(tabs)'} />;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return <Stack screenOptions={{ headerShown: false, animation: 'ios_from_right' }} />;
 }

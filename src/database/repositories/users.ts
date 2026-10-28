@@ -10,6 +10,8 @@ export interface User {
   status: string;
   created_at: string;
   user_type: string;
+  terms_accepted_at?: string | null;
+  terms_version?: string | null;
 }
 
 export async function getUser(userId: string): Promise<User | null> {
@@ -44,8 +46,8 @@ export async function upsertUser(user: Omit<User, 'created_at'>): Promise<void> 
       );
     } else {
       await tx.execute(
-        `INSERT INTO users (id, name, username, email, status, created_at, user_type)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO users (id, name, username, email, status, created_at, user_type, terms_accepted_at, terms_version)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           user.id,
           user.name,
@@ -54,6 +56,8 @@ export async function upsertUser(user: Omit<User, 'created_at'>): Promise<void> 
           user.status,
           new Date().toISOString(),
           user.user_type,
+          user.terms_accepted_at ?? null,
+          user.terms_version ?? null,
         ]
       );
     }
@@ -62,7 +66,7 @@ export async function upsertUser(user: Omit<User, 'created_at'>): Promise<void> 
 
 export async function updateUser(
   userId: string,
-  fields: Partial<Pick<User, 'name' | 'username' | 'email' | 'status' | 'user_type'>>
+  fields: Partial<Pick<User, 'name' | 'username' | 'email' | 'status' | 'user_type' | 'terms_accepted_at' | 'terms_version'>>
 ): Promise<void> {
   const entries = Object.entries(fields);
   if (entries.length === 0) return;

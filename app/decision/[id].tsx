@@ -3,6 +3,7 @@ import { DECISION_LABELS, DecisionType } from '@/src/constants';
 import { Colors } from '@/src/constants/colors';
 import { decisionDetailCopy as copy } from '@/src/constants/copy';
 import { getDecision } from '@/src/database/repositories/decisions';
+import { compareToNormalYear, NormalYearComparison } from '@/src/rcda/baseline';
 import { computeRcda, decisionToRcdaInputs, RcdaComputeError } from '@/src/rcda/decisionTree';
 import { RcdaSummary, summarizeRcda } from '@/src/rcda/summary';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string; canRetry: boolean }
-  | { status: 'ready'; summary: RcdaSummary; decisionType: string; datetime: string };
+  | { status: 'ready'; summary: RcdaSummary; baseline: NormalYearComparison; decisionType: string; datetime: string };
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
@@ -41,14 +42,16 @@ export default function DecisionDetailScreen() {
         setState({ status: 'error', message: copy.incomplete, canRetry: false });
         return;
       }
-      const summary = summarizeRcda(computeRcda(inputs), inputs.optionNames, inputs.climate);
+      const computation = computeRcda(inputs);
+      const summary = summarizeRcda(computation, inputs.optionNames, inputs.climate);
+      const baseline = compareToNormalYear(inputs, computation);
       const recomputed = summary.bothNegative ? '' : inputs.optionNames[summary.recommendedOption];
       if (recomputed !== decision.result) {
         console.warn('[decision detail] recomputed result differs from saved result', {
           id, saved: decision.result, recomputed,
         });
       }
-      setState({ status: 'ready', summary, decisionType: decision.decision_type, datetime: decision.datetime });
+      setState({ status: 'ready', summary, baseline, decisionType: decision.decision_type, datetime: decision.datetime });
     } catch (err) {
       if (err instanceof RcdaComputeError) {
         console.warn('[decision detail] saved inputs cannot be recomputed:', err.message);
@@ -102,6 +105,7 @@ export default function DecisionDetailScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
       <DecisionResultView
         summary={state.summary}
+        baseline={state.baseline}
         decisionType={state.decisionType}
         heroTop={
           <>
@@ -109,7 +113,7 @@ export default function DecisionDetailScreen() {
               <Ionicons name="arrow-back" size={22} color={Colors.ink} />
             </TouchableOpacity>
             <View style={heroTopStyles.pill}>
-              <Ionicons name="time-outline" size={15} color={Colors.accent} />
+              <Ionicons name="time-outline" size={15} color={Colors.ink} />
               <Text style={heroTopStyles.pillText} numberOfLines={1}>
                 {date ? `${typeLabel} · ${date}` : typeLabel}
               </Text>

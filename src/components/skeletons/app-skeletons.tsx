@@ -1,5 +1,5 @@
 import { Skeleton, SkeletonGroup } from '@/src/components/ui/skeleton';
-import { cardShadow, Colors } from '@/src/constants/colors';
+import { CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import React from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -164,8 +164,7 @@ const s = StyleSheet.create({
 
   card: {
     flexDirection: 'row', alignItems: 'center', gap: 13,
-    backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1, borderColor: Colors.border,
-    padding: 16, marginBottom: 11, ...cardShadow,
+    ...cardSurface, padding: CARD_PADDING, marginBottom: 11,
   },
   cardBody: { flex: 1, gap: 8 },
 

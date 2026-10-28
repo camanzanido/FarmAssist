@@ -1,6 +1,8 @@
 import { fetchAllRows, pageRange } from '../../utils/pagination';
+import { placesOrFilter } from '../../utils/placeFilter';
 import { ilikeAny, sanitizeSearchTerm } from '../../utils/search';
 import { withTimeout } from '../../utils/withTimeout';
+import { invokeFunction } from '../supabase/invokeFunction';
 import { supabase } from '../supabase/supabase';
 import type { Decision } from './decisions';
 import type { Location } from './locations';
@@ -36,6 +38,9 @@ export async function fetchAllLocations(): Promise<Location[]> {
     .abortSignal(signal));
 }
 
+// A municipality, identified by name pair because several location rows can share one.
+export type Place = { city: string; province: string };
+
 export interface PagedRows<T> {
   rows: T[];
   total: number;
@@ -62,11 +67,13 @@ export async function fetchDecisionsPage(params: {
   pageSize: number;
   type: string | null;
   query: string;
+  place?: Place | null;
 }): Promise<PagedRows<ResearcherDecisionRow>> {
   const term = sanitizeSearchTerm(params.query);
   const build = (head: boolean) => {
     let q = supabase.from('researcher_decisions').select('*', { count: 'exact', head });
     if (params.type) q = q.eq('decision_type', params.type);
+    if (params.place) q = q.eq('city', params.place.city).eq('province', params.place.province);
     if (term) q = q.or(ilikeAny(['result', 'farmer_name', 'farmer_username', 'city', 'province'], term));
     return q;
   };
@@ -81,16 +88,15 @@ export async function fetchDecisionsPage(params: {
   return { rows: (data ?? []) as ResearcherDecisionRow[], total: count ?? 0 };
 }
 
+// Field users only: admin accounts are managed by the system owner in Supabase, not in the app.
 export async function fetchUsersPage(params: {
   page: number;
   pageSize: number;
-  role: string | null;
   query: string;
 }): Promise<PagedRows<ResearcherUserRow>> {
   const term = sanitizeSearchTerm(params.query);
   const build = (head: boolean) => {
-    let q = supabase.from('researcher_users').select('*', { count: 'exact', head });
-    if (params.role) q = q.eq('user_type', params.role);
+    let q = supabase.from('researcher_users').select('*', { count: 'exact', head }).eq('user_type', 'farmer');
     if (term) q = q.or(ilikeAny(['name', 'username'], term));
     return q;
   };
@@ -112,24 +118,6 @@ async function countOnly(build: (head: boolean) => { abortSignal: (s: AbortSigna
   return count ?? 0;
 }
 
-export interface UserCounts {
-  all: number;
-  farmer: number;
-  researcher: number;
-}
-
-export async function fetchUserCounts(): Promise<UserCounts> {
-  const count = (role?: string) => withTimeout(async (signal) => {
-    let q = supabase.from('users').select('id', { count: 'exact', head: true });
-    if (role) q = q.eq('user_type', role);
-    const { count: n, error } = await q.abortSignal(signal);
-    if (error) throw error;
-    return n ?? 0;
-  });
-  const [all, farmer, researcher] = await Promise.all([count(), count('farmer'), count('researcher')]);
-  return { all, farmer, researcher };
-}
-
 export interface Overview {
   total: number;
   this_month: number;
@@ -137,6 +125,7 @@ export interface Overview {
   new_farmers_this_month: number;
   researchers: number;
   median_gain: number;
+  average_gain: number;
   range_total: number;
   per_month: { month: string; count: number }[];
   by_type: { decision_type: string; count: number }[];
@@ -145,12 +134,36 @@ export interface Overview {
 
 export const deviceTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
-export async function fetchOverview(since: Date | null): Promise<Overview> {
+export interface MonthlyCounts {
+  firstMonth: string | null;
+  months: { month: string; count: number }[];
+}
+
+// Returns null when the backend predates researcher_monthly_counts, so callers can fall back to the overview's 6 months.
+export async function fetchMonthlyCounts(from: { year: number; month: number }, months: number, places: Place[] = []): Promise<MonthlyCounts | null> {
+  const pFrom = `${from.year}-${String(from.month + 1).padStart(2, '0')}-01`;
+  const args = { p_from: pFrom, p_months: months, p_tz: deviceTimeZone() };
   const { data, error } = await withTimeout((signal) => supabase
-    .rpc('researcher_overview', { p_since: since?.toISOString() ?? null, p_tz: deviceTimeZone() })
+    .rpc('researcher_monthly_counts', places.length > 0 ? { ...args, p_places: places } : args)
+    .abortSignal(signal));
+  if (error) {
+    if ((error as { code?: string }).code === 'PGRST202') return null;
+    throw error;
+  }
+  const result = data as { first_month: string | null; months: { month: string; count: number }[] | null };
+  return { firstMonth: result.first_month, months: result.months ?? [] };
+}
+
+// p_places is only sent when filtering, so the unfiltered call still works before the location filter migration.
+export async function fetchOverview(since: Date | null, places: Place[] = []): Promise<Overview> {
+  const args = { p_since: since?.toISOString() ?? null, p_tz: deviceTimeZone() };
+  const { data, error } = await withTimeout((signal) => supabase
+    .rpc('researcher_overview', places.length > 0 ? { ...args, p_places: places } : args)
     .abortSignal(signal));
   if (error) throw error;
-  return data as Overview;
+  // Before the average_gain migration the server only sends the median.
+  const overview = data as Overview;
+  return { ...overview, average_gain: overview.average_gain ?? overview.median_gain };
 }
 
 export interface CityStats {
@@ -159,12 +172,13 @@ export interface CityStats {
   decisions: number;
   farmers: number;
   median_gain: number;
+  average_gain: number;
 }
 
 export async function fetchCityStats(): Promise<CityStats[]> {
   const { data, error } = await withTimeout((signal) => supabase.rpc('researcher_city_stats').abortSignal(signal));
   if (error) throw error;
-  return (data ?? []) as CityStats[];
+  return ((data ?? []) as CityStats[]).map((c) => ({ ...c, average_gain: c.average_gain ?? c.median_gain }));
 }
 
 function applyRange<Q extends { gte: (c: string, v: string) => Q; lt: (c: string, v: string) => Q }>(
@@ -177,20 +191,30 @@ function applyRange<Q extends { gte: (c: string, v: string) => Q; lt: (c: string
   return q;
 }
 
-export async function countDecisionsInRange(bounds: { start: Date | null; end: Date | null }): Promise<number> {
+// With places, read the researcher_decisions view, which carries each decision's city and province.
+function decisionsSource(columns: string, places: Place[], head = false) {
+  const opts = head ? { count: 'exact' as const, head: true } : undefined;
+  if (places.length === 0) return supabase.from('decisions').select(columns, opts);
+  return supabase.from('researcher_decisions').select(columns, opts).or(placesOrFilter(places));
+}
+
+export async function countDecisionsInRange(bounds: { start: Date | null; end: Date | null }, places: Place[] = []): Promise<number> {
   const { count, error } = await withTimeout((signal) =>
-    applyRange(supabase.from('decisions').select('id', { count: 'exact', head: true }), bounds).abortSignal(signal));
+    applyRange(decisionsSource('id', places, true), bounds).abortSignal(signal));
   if (error) throw error;
   return count ?? 0;
 }
 
-export async function fetchDecisionsInRange(bounds: { start: Date | null; end: Date | null }): Promise<Decision[]> {
-  return fetchAllRows<Decision>((from, to, signal) =>
-    applyRange(supabase.from('decisions').select('*'), bounds)
+export async function fetchDecisionsInRange(bounds: { start: Date | null; end: Date | null }, places: Place[] = []): Promise<Decision[]> {
+  const rows = await fetchAllRows<Record<string, unknown>>((from, to, signal) =>
+    applyRange(decisionsSource('*', places), bounds)
       .order('datetime', { ascending: false })
       .order('id', { ascending: true })
       .range(from, to)
-      .abortSignal(signal));
+      .abortSignal(signal) as unknown as PromiseLike<{ data: Record<string, unknown>[] | null; error: unknown }>);
+  if (places.length === 0) return rows as unknown as Decision[];
+  // Strip the view's joined columns so exports see plain decisions.
+  return rows.map(({ farmer_name: _n, farmer_username: _u, city: _c, province: _p, ...decision }) => decision as unknown as Decision);
 }
 
 // Null only when the row is missing; throws on network/RLS errors so "missing" and "unknown" differ.
@@ -206,7 +230,7 @@ export async function fetchUserRemote(userId: string): Promise<User | null> {
 
 export async function updateUserRemote(
   userId: string,
-  fields: Partial<Pick<User, 'name' | 'username' | 'email' | 'status' | 'user_type'>>
+  fields: Partial<Pick<User, 'name' | 'username' | 'email' | 'status' | 'user_type' | 'terms_accepted_at' | 'terms_version'>>
 ): Promise<void> {
   const { error } = await withTimeout((signal) =>
     supabase.from('users').update(fields).eq('id', userId).abortSignal(signal)
@@ -234,4 +258,24 @@ export async function deleteDecisionRemote(decisionId: string): Promise<void> {
     supabase.from('decisions').delete().eq('id', decisionId).abortSignal(signal)
   );
   if (error) throw error;
+}
+
+export interface NewUserInput {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+  user_type: 'farmer' | 'researcher';
+  city: string;
+  province: string;
+}
+
+export async function createUserRemote(input: NewUserInput): Promise<string> {
+  const data = await invokeFunction<{ id: string }>('create-user', input);
+  if (!data.id) throw new Error('create-user returned no id');
+  return data.id;
+}
+
+export async function resetPasswordRemote(userId: string, password: string): Promise<void> {
+  await invokeFunction<{ ok: boolean }>('reset-password', { user_id: userId, password });
 }

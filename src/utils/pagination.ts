@@ -21,7 +21,7 @@ export async function fetchAllRows<T>(
   }
 }
 
-export const PAGE_SIZES = [15, 25, 50] as const;
+export const PAGE_SIZES = [5, 10, 20] as const;
 export type PageSize = (typeof PAGE_SIZES)[number];
 
 export interface PageWindow {
@@ -48,4 +48,12 @@ export function pageWindow(page: number, pageSize: number, total: number, shown:
     end: offset + shown,
     total,
   };
+}
+
+// Client-side paging for lists already loaded in full; the page is clamped so a shrinking list never shows an empty page.
+export function slicePage<T>(items: T[], page: number, pageSize: number): { rows: T[]; info: PageWindow } {
+  const current = pageWindow(page, pageSize, items.length, 0).page;
+  const offset = (current - 1) * pageSize;
+  const rows = items.slice(offset, offset + pageSize);
+  return { rows, info: pageWindow(current, pageSize, items.length, rows.length) };
 }

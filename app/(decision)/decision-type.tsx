@@ -1,9 +1,10 @@
 import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { DECISIONS, DecisionType } from '@/src/constants';
-import { cardShadow, Colors } from '@/src/constants/colors';
+import { CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
 import { decisionTypeCopy as copy } from '@/src/constants/copy';
+import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -18,9 +19,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DecisionTypeScreen() {
   const router = useRouter();
+  const nav = useNavLock();
 
   const handleNext = (decisionType: DecisionType) => {
-    router.push({
+    nav.push({
       pathname: '/input-flow',
       params: { decisionType },
     });
@@ -78,10 +80,8 @@ const s = StyleSheet.create({
   cards: { gap: 12 },
   card: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.surface, borderRadius: 18,
-    borderWidth: 1, borderColor: Colors.border,
-    padding: 18, gap: 14,
-    ...cardShadow,
+    ...cardSurface,
+    padding: CARD_PADDING, gap: 14,
   },
   iconWrap: {
     width: 48, height: 48,
