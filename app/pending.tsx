@@ -1,6 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
 import { displayEmail } from '@/src/utils/accountEmail';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect } from 'expo-router';
@@ -109,7 +109,7 @@ const s = StyleSheet.create({
   cardValue: { fontSize: 16, fontWeight: '700', color: Colors.ink },
   cardEmail: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
   primaryBtn: {
-    backgroundColor: Colors.accent, borderRadius: 14, height: 52,
+    backgroundColor: Colors.accent, borderRadius: 12, height: BUTTON_HEIGHT,
     alignItems: 'center', justifyContent: 'center',
   },
   primaryBtnText: { color: Colors.onDark, fontSize: 15.5, fontWeight: '700' },

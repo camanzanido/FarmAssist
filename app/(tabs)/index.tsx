@@ -4,7 +4,7 @@ import { AnimatedIcon, MotionIcon, useIconMotion, type IconMotion } from '@/src/
 import { usePressScale } from '@/src/components/ui/pressable-scale';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import { BrandGradient, brandGradientCss, CARD_PADDING, CARD_RADIUS, cardShadow, Colors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { contentColumn, TAB_SCREEN_EDGES } from '@/src/constants/layout';
 import { decisionResultLabel, helpCopy, homeCopy as copy } from '@/src/constants/copy';
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
@@ -103,7 +103,7 @@ export default function HomeScreen() {
   const isOffline = !!user && !connected;
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
 
@@ -195,7 +195,7 @@ export default function HomeScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
-  content: { ...contentColumn, flexGrow: 1, padding: 22, paddingTop: 32, paddingBottom: 40 },
+  content: { ...contentColumn, flexGrow: 1, padding: 22, paddingTop: 32, paddingBottom: 16 },
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   logo: { width: 34, height: 34 },

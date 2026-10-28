@@ -1,5 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { brandGradientCss, Colors } from '@/src/constants/colors';
+import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import { termsCopy as copy } from '@/src/constants/copy';
 import { updateUserRemote } from '@/src/database/repositories/researcher';
 import { getUser, updateUser } from '@/src/database/repositories/users';
@@ -75,7 +76,7 @@ const s = StyleSheet.create({
   readBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, marginTop: 8 },
   readText: { fontSize: 14.5, fontWeight: '700', color: Colors.ink, textDecorationLine: 'underline' },
   error: { fontSize: 13, color: Colors.danger, textAlign: 'center', marginTop: 6 },
-  acceptBtn: { alignSelf: 'stretch', height: 52, borderRadius: 14, experimental_backgroundImage: brandGradientCss(90), alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  acceptBtn: { alignSelf: 'stretch', height: BUTTON_HEIGHT, borderRadius: 12, experimental_backgroundImage: brandGradientCss(90), alignItems: 'center', justifyContent: 'center', marginTop: 12 },
   acceptText: { fontSize: 15.5, fontWeight: '800', color: Colors.onDark },
   disabled: { opacity: 0.6 },
   logoutBtn: { minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: 4 },

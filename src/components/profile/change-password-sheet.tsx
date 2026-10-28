@@ -1,6 +1,7 @@
 import { changePassword } from '@/src/auth/passwordService';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
-import { Colors } from '@/src/constants/colors';
+import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
+import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import { changePasswordCopy as copy } from '@/src/constants/copy';
 import { supabase } from '@/src/database/supabase/supabase';
 import { getAuthErrorMessage, isInvalidCredentialsError } from '@/src/utils/errors';
@@ -114,17 +115,17 @@ const s = StyleSheet.create({
   subtitle: { fontSize: 13.5, color: Colors.inkSoft, marginBottom: 8, lineHeight: 19 },
   label: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: Colors.inkFaint, marginTop: 14, marginBottom: 8 },
   input: {
-    height: 50, borderRadius: 12, borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface,
+    height: 50, borderRadius: 12, borderWidth: 1, ...inputSurface,
     paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 8,
   },
-  inputText: { flex: 1, fontSize: 15.5, color: Colors.ink, height: '100%' },
+  inputText: { flex: 1, fontSize: 15.5, ...inputTextStyle, height: '100%' },
   inputError: { borderColor: Colors.danger, borderWidth: 1.5 },
   error: { fontSize: 12.5, color: Colors.danger, marginTop: 6 },
   saveError: { marginTop: 14 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 22 },
-  cancelBtn: { flex: 1, height: 52, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  cancelBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   cancelText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
-  saveBtn: { flex: 1.4, height: 52, borderRadius: 14, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
+  saveBtn: { flex: 1.4, height: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
   saveText: { fontSize: 15.5, fontWeight: '800', color: Colors.onDark },
   disabled: { opacity: 0.5 },
 });

@@ -10,7 +10,7 @@ import { GradientBar } from '@/src/components/ui/gradient-bar';
 import { Skeleton } from '@/src/components/ui/skeleton';
 import { DECISIONS, DecisionType } from '@/src/constants';
 import { CARD_PADDING, cardSurface, Colors, DecisionTypeColors } from '@/src/constants/colors';
-import { useIsWide, wideColumn } from '@/src/constants/layout';
+import { TAB_SCREEN_EDGES, useIsWide, wideColumn } from '@/src/constants/layout';
 import { fetchMonthlyCounts, fetchOverview, type MonthlyCounts, type Overview, type Place } from '@/src/database/repositories/researcher';
 import { useResearcherFetch } from '@/src/hooks/use-researcher-fetch';
 import { formatCurrency } from '@/src/utils/formatters';
@@ -134,7 +134,7 @@ export default function ResearcherDashboardScreen() {
   }, [overview.top_cities]);
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <ResearcherAsyncState
         isLoading={isLoading}
@@ -294,7 +294,7 @@ export default function ResearcherDashboardScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 16 },
 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },

@@ -6,9 +6,9 @@ import { Pager } from '@/src/components/researcher/pager';
 import { ListRowsSkeleton, ListScreenSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
-import { CARD_PADDING, cardShadow, cardSurface, Colors } from '@/src/constants/colors';
+import { CARD_PADDING, cardShadow, cardSurface, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { decisionResultLabel } from '@/src/constants/copy';
-import { wideColumn } from '@/src/constants/layout';
+import { TAB_SCREEN_EDGES, wideColumn } from '@/src/constants/layout';
 import { deleteDecisionRemote, fetchDecisionsPage, type ResearcherDecisionRow } from '@/src/database/repositories/researcher';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
 import { useResearcherPage } from '@/src/hooks/use-researcher-page';
@@ -183,7 +183,7 @@ export default function ResearcherDecisionsScreen() {
   );
 
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <View style={[s.topBar, view === 'map' && [s.topBarFloating, { top: insets.top }]]} pointerEvents="box-none">
         {view === 'list' && <Text style={s.title}>Decisions</Text>}
@@ -248,8 +248,8 @@ export default function ResearcherDecisionsScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
-  footer: { paddingBottom: 20 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 0 },
+  footer: { paddingBottom: 16 },
 
   fill: { flex: 1 },
   hidden: { display: 'none' },
@@ -271,10 +271,10 @@ const s = StyleSheet.create({
 
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderStrong,
+    ...inputSurface, borderWidth: 1,
     borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14,
   },
-  searchInput: { flex: 1, fontSize: 15, color: Colors.ink, padding: 0 },
+  searchInput: { flex: 1, fontSize: 15, ...inputTextStyle, padding: 0 },
 
   filterRow: { marginBottom: 18 },
 

@@ -1,6 +1,7 @@
 import 'react-native-get-random-values';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
-import { ResearcherColors as C } from '@/src/constants/colors';
+import { inputSurface, inputTextStyle, ResearcherColors as C } from '@/src/constants/colors';
+import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import { resetPasswordRemote, updateUserRemote, type ResearcherUserRow } from '@/src/database/repositories/researcher';
 import { type User } from '@/src/database/repositories/users';
 import { FunctionError } from '@/src/database/supabase/invokeFunction';
@@ -285,7 +286,7 @@ const s = StyleSheet.create({
 
   sectionLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint, marginBottom: 10 },
 
-  statusBtn: { flexDirection: 'row', gap: 8, height: 50, borderRadius: 12, borderWidth: 1, borderColor: C.dangerBorder, backgroundColor: C.dangerBg, alignItems: 'center', justifyContent: 'center' },
+  statusBtn: { flexDirection: 'row', gap: 8, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1, borderColor: C.dangerBorder, backgroundColor: C.dangerBg, alignItems: 'center', justifyContent: 'center' },
   statusBtnApprove: { borderColor: C.cardBorderStrong, backgroundColor: C.accentTint },
   statusText: { fontSize: 14.5, fontWeight: '700', color: C.danger },
   approveText: { color: C.accent },
@@ -294,10 +295,10 @@ const s = StyleSheet.create({
   dormantHint: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amberBorder, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 12, marginBottom: 10 },
   dormantHintText: { flex: 1, fontSize: 13, color: C.amber, fontWeight: '600' },
   selfHint: { fontSize: 12.5, color: C.textFaint, textAlign: 'center', marginTop: 12 },
-  resetBtn: { flexDirection: 'row', gap: 8, height: 50, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  resetBtn: { flexDirection: 'row', gap: 8, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
   resetText: { fontSize: 14.5, fontWeight: '700', color: C.text },
   tempRow: { flexDirection: 'row', gap: 8, alignSelf: 'stretch', marginTop: 14 },
-  tempInput: { flex: 1, height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, paddingHorizontal: 14, fontSize: 17, fontWeight: '700', letterSpacing: 1, color: C.text },
+  tempInput: { flex: 1, height: 48, borderRadius: 12, borderWidth: 1, ...inputSurface, paddingHorizontal: 14, fontSize: 17, fontWeight: '700', letterSpacing: 1, ...inputTextStyle },
   generateBtn: { width: 48, height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' },
   doneBox: { alignSelf: 'stretch', backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorder, padding: 14, marginTop: 14 },
   doneLabel: { fontSize: 11.5, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint },

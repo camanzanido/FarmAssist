@@ -3,7 +3,7 @@ import { EmptyState } from '@/src/components/researcher/empty-state';
 import { LeafletMap, type LeafletMapHandle, type MapPin } from '@/src/components/researcher/leaflet-map';
 import { MapSkeleton } from '@/src/components/researcher/skeletons';
 import { GradientBorder } from '@/src/components/ui/gradient-border';
-import { CARD_RADIUS, cardShadow, cardSurface, Colors } from '@/src/constants/colors';
+import { CARD_RADIUS, cardShadow, cardSurface, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { cityCoordinateKey, ensureCoordinates, type CityCoordinate } from '@/src/database/repositories/cityCoordinates';
 import { fetchCityStats, type CityStats, type Place } from '@/src/database/repositories/researcher';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
@@ -337,10 +337,10 @@ const s = StyleSheet.create({
 
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 10,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderStrong,
+    ...inputSurface, borderWidth: 1,
     borderRadius: 13, height: 46, paddingHorizontal: 14,
   },
-  searchInput: { flex: 1, fontSize: 15, color: Colors.ink, padding: 0 },
+  searchInput: { flex: 1, fontSize: 15, ...inputTextStyle, padding: 0 },
 
   list: { paddingHorizontal: 16, paddingTop: 4 },
   row: { height: ROW_HEIGHT, marginBottom: ROW_GAP },

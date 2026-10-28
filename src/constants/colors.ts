@@ -54,6 +54,9 @@ export const Colors = {
   surfaceAlt: '#F3F8F5',
   chipBorder: '#B9C7BF',
   scrim: 'rgba(17,20,18,0.40)',
+  inputText: '#1A1A1A',
+  inputBorder: '#D4D7D6',
+  cardBorder: '#E6E8E7',
 } as const;
 
 export const ResearcherColors = {
@@ -61,7 +64,7 @@ export const ResearcherColors = {
   tabBg: Colors.surface,
   card: Colors.surface,
   fill: Colors.surfaceAlt,
-  cardBorder: Colors.border,
+  cardBorder: Colors.cardBorder,
   cardBorderStrong: Colors.borderStrong,
   divider: Colors.divider,
 
@@ -132,11 +135,15 @@ export const StatGradients = {
 } as const;
 
 // Drop shadow for white cards on the off-white page.
-export const cardShadow = { shadowColor: '#0A3B28', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 } as const;
+export const cardShadow = { shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 } as const;
 
 // Every page card shares this surface; tinted cards keep their colour but use the same radius and padding.
 export const CARD_RADIUS = 16;
 export const CARD_PADDING = 16;
 export const cardSurface = {
-  backgroundColor: Colors.surface, borderRadius: CARD_RADIUS, borderWidth: 1, borderColor: Colors.border, ...cardShadow,
+  backgroundColor: Colors.surface, borderRadius: CARD_RADIUS, borderWidth: 1, borderColor: Colors.cardBorder, ...cardShadow,
 } as const;
+
+// Every text field shares a plain white box and neutral near-black text; error and disabled styles layer on top.
+export const inputSurface = { backgroundColor: Colors.surface, borderColor: Colors.inputBorder } as const;
+export const inputTextStyle = { color: Colors.inputText } as const;

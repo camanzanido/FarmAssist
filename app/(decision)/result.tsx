@@ -1,6 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { DecisionResultView, heroTopStyles } from '@/src/components/decision/decision-result-view';
 import { Colors } from '@/src/constants/colors';
+import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import { resultCopy as copy } from '@/src/constants/copy';
 import { buildOptionClimateFields } from '@/src/database/climateFields';
 import { createDecision, OptionSnapshot } from '@/src/database/repositories/decisions';
@@ -283,14 +284,14 @@ const s = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 10 },
   newComparisonBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, backgroundColor: Colors.surface, borderRadius: 16,
-    height: 56, borderWidth: 1.5, borderColor: Colors.borderStrong,
+    gap: 8, backgroundColor: Colors.surface, borderRadius: 12,
+    height: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
   newComparisonText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
   startOverBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, backgroundColor: Colors.surface, borderRadius: 14,
-    paddingVertical: 14, borderWidth: 1.5, borderColor: Colors.borderStrong,
+    gap: 8, backgroundColor: Colors.surface, borderRadius: 12,
+    height: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
   startOverText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
 });

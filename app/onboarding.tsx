@@ -1,7 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { brandGradientCss, Colors } from '@/src/constants/colors';
 import { helpCopy, onboardingCopy as copy } from '@/src/constants/copy';
-import { CONTENT_MAX_WIDTH } from '@/src/constants/layout';
+import { BUTTON_HEIGHT, CONTENT_MAX_WIDTH } from '@/src/constants/layout';
 import { useOnboarding } from '@/src/onboarding/OnboardingContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -203,7 +203,7 @@ const s = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.barMuted },
   dotActive: { width: 24, backgroundColor: Colors.accent },
 
-  primaryBtn: { backgroundColor: Colors.ink, borderRadius: 14, minHeight: 54, alignItems: 'center', justifyContent: 'center' },
+  primaryBtn: { backgroundColor: Colors.ink, borderRadius: 12, minHeight: BUTTON_HEIGHT, alignItems: 'center', justifyContent: 'center' },
   primaryBtnGradient: { experimental_backgroundImage: brandGradientCss(90) },
   primaryBtnText: { color: Colors.onDark, fontSize: 16, fontWeight: '800' },
 

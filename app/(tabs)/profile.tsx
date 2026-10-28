@@ -3,7 +3,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
 import { brandGradientCss, CARD_PADDING, CARD_RADIUS, cardSurface, Colors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { BUTTON_HEIGHT, contentColumn, TAB_SCREEN_EDGES } from '@/src/constants/layout';
 import { changePasswordCopy, helpCopy, profileCopy as copy, termsCopy } from '@/src/constants/copy';
 import { ROLE_SHORT } from '@/src/constants/labels';
 import { db } from '@/src/database/powersync/powersync';
@@ -109,7 +109,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       {!isAuthenticated ? (
         <View style={s.signedOutScreen}>
@@ -298,12 +298,12 @@ const s = StyleSheet.create({
   signedOutTitle: { fontSize: 24, fontWeight: '800', color: Colors.ink, marginBottom: 10, textAlign: 'center' },
   signedOutSubtitle: { fontSize: 14, color: Colors.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
   signedOutLogo: { width: 84, height: 84, alignSelf: 'center', marginBottom: 16 },
-  primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 14, paddingVertical: 16, width: '100%', maxWidth: 420, alignItems: 'center', marginBottom: 12 },
+  primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   primaryBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
-  secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 14, paddingVertical: 16, width: '100%', maxWidth: 420, alignItems: 'center' },
+  secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center' },
   secondaryBtnText: { color: Colors.ink, fontWeight: '700', fontSize: 15 },
 
-  content: { ...contentColumn, padding: 22, paddingTop: 12, paddingBottom: 40 },
+  content: { ...contentColumn, padding: 22, paddingTop: 12, paddingBottom: 16 },
   profileHeader: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },
   avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 23, fontWeight: '800', color: Colors.accentTintStrong },
