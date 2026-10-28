@@ -137,7 +137,6 @@ export default function LoginScreen() {
             {copy.noAccount} <Text style={s.noAccountLink}>{copy.createOne}</Text>
           </Text>
         </TouchableOpacity>
-        <Text style={s.researcherNote}>{copy.researcherNote}</Text>
 
         <View style={s.bottomBlock}>
           <View style={s.orRow}>
@@ -161,11 +160,11 @@ const s = StyleSheet.create({
   closeBtn: {
     alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 12,
   },
-  logo: { width: 64, height: 64, marginBottom: 20 },
+  logo: { width: 48, height: 48, marginBottom: 14 },
   brand: { fontSize: 32, fontWeight: '800', color: Colors.ink, letterSpacing: -0.6, marginBottom: 6 },
-  subtitle: { fontSize: 15, color: Colors.inkSoft, lineHeight: 21, marginBottom: 30 },
+  subtitle: { fontSize: 15, color: Colors.inkSoft, lineHeight: 21, marginBottom: 24 },
 
   field: { marginBottom: 18 },
   label: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8 },
@@ -190,7 +189,6 @@ const s = StyleSheet.create({
   throttleText: { fontSize: 13, color: Colors.amberText, textAlign: 'center', marginTop: -4, marginBottom: 14 },
 
   noAccountRow: { alignItems: 'center' },
-  researcherNote: { fontSize: 12.5, color: Colors.inkFaint, textAlign: 'center', marginTop: 10, lineHeight: 18 },
   noAccountText: { fontSize: 15, color: Colors.inkSoft },
   noAccountLink: { color: Colors.accent, fontWeight: '700' },
 

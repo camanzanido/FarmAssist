@@ -1,4 +1,5 @@
 import { useAuth } from '@/src/auth/AuthContext';
+import { isValidOtp, OTP_LENGTH } from '@/src/auth/otp';
 import { changeUsername, requestEmailChange, saveName, verifyEmailChange } from '@/src/auth/profileService';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { brandGradientCss, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
@@ -24,7 +25,6 @@ type Props = {
   onSaved: (result: ProfileSaveResult) => void;
 };
 
-const CODE_PATTERN = /^\d{6,10}$/;
 const RESEND_COOLDOWN_S = 60;
 
 export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSaved }: Props) {
@@ -70,7 +70,7 @@ export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSav
     : null;
   const nameChanged = cleanName(name) !== user.name;
   const nothingToSave = !nameChanged && !usernameChanged && !wantsEmailChange;
-  const codeError = CODE_PATTERN.test(code.trim()) ? null : copy.codeInvalid;
+  const codeError = isValidOtp(code) ? null : copy.codeInvalid;
 
   const save = async () => {
     setSubmitted(true);
@@ -142,12 +142,12 @@ export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSav
           value={code}
           onChangeText={setCode}
           editable={!saving}
-          placeholder="123456"
+          placeholder="12345678"
           placeholderTextColor={Colors.placeholder}
           keyboardType="number-pad"
           textContentType="oneTimeCode"
           autoComplete="one-time-code"
-          maxLength={10}
+          maxLength={OTP_LENGTH}
           accessibilityLabel={copy.codeLabel}
         />
         {submitted && codeError && <Text style={s.error}>{codeError}</Text>}

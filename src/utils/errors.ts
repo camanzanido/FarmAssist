@@ -38,6 +38,17 @@ export function isSessionMissingError(err: unknown): boolean {
   return errCode(err) === 'session_not_found' || (err instanceof Error && err.name === 'AuthSessionMissingError');
 }
 
+// A wrong or expired email code, as opposed to a network or rate-limit failure.
+export function isInvalidOtpError(err: unknown): boolean {
+  return errCode(err) === 'otp_expired' || errMessage(err).includes('Token has expired or is invalid');
+}
+
+// The verified reset session is no longer usable, so a new code is needed.
+export function isExpiredSessionError(err: unknown): boolean {
+  const code = errCode(err);
+  return isSessionMissingError(err) || code === 'session_expired' || code === 'bad_jwt';
+}
+
 function isRateLimitError(err: unknown): boolean {
   const status = err && typeof err === 'object' && 'status' in err ? (err as any).status : undefined;
   return status === 429 || errCode(err) === 'over_request_rate_limit';

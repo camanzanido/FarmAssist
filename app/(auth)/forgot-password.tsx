@@ -1,24 +1,24 @@
-import { resetPasswordWithCode, sendPasswordResetCode } from '@/src/auth/passwordService';
+import { isValidOtp, OTP_LENGTH } from '@/src/auth/otp';
+import { sendPasswordResetCode, setPasswordAfterReset, verifyResetCode, type ResetSession } from '@/src/auth/passwordService';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
 import { forgotPasswordCopy as copy } from '@/src/constants/copy';
 import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { isInternalEmail } from '@/src/utils/accountEmail';
-import { getAuthErrorMessage } from '@/src/utils/errors';
+import { getAuthErrorMessage, isExpiredSessionError, isInvalidOtpError } from '@/src/utils/errors';
 import { validatePassword, validatePasswordConfirm } from '@/src/utils/passwordValidation';
 import { validateEmail } from '@/src/utils/profileValidation';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Supabase allows one reset email per address every 60 seconds.
 const RESEND_COOLDOWN_S = 60;
-const CODE_PATTERN = /^\d{6,10}$/;
 
-type Step = 'email' | 'code';
+type Step = 'email' | 'code' | 'password';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -33,6 +33,9 @@ export default function ForgotPasswordScreen() {
   const { isSubmitting: busy, run } = useSubmitOnce();
   const [serverError, setServerError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [codeFailed, setCodeFailed] = useState(false);
+  // Holds the session from the verified code; the new password can only be saved through it.
+  const session = useRef<ResetSession | null>(null);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -41,7 +44,6 @@ export default function ForgotPasswordScreen() {
   }, [cooldown]);
 
   const emailError = validateEmail(email) ?? (isInternalEmail(email) ? copy.noEmailAccount : null);
-  const codeError = CODE_PATTERN.test(code.trim()) ? null : copy.codeInvalid;
   const passwordError = validatePassword(password);
   const confirmError = validatePasswordConfirm(password, confirm);
 
@@ -68,6 +70,8 @@ export default function ForgotPasswordScreen() {
       try {
         await sendPasswordResetCode(email);
         setCooldown(RESEND_COOLDOWN_S);
+        setCode('');
+        setCodeFailed(false);
         notify.info(copy.resentTitle, copy.sentBody(email.trim()));
       } catch (err) {
         setServerError(getAuthErrorMessage(err, copy.sendFailed));
@@ -75,17 +79,60 @@ export default function ForgotPasswordScreen() {
     });
   };
 
+  // Checks the code as soon as it is complete, typed or pasted; a wrong code stays in the box so one digit can be fixed.
+  const changeCode = async (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    setCode(digits);
+    setCodeFailed(false);
+    setServerError(null);
+    if (!isValidOtp(digits)) return;
+    await run(async () => {
+      try {
+        session.current = await verifyResetCode(email, digits);
+        setTouched(false);
+        setStep('password');
+      } catch (err) {
+        if (isInvalidOtpError(err)) setCodeFailed(true);
+        else setServerError(getAuthErrorMessage(err, copy.resetFailed));
+      }
+    });
+  };
+
+  const startOver = () => {
+    session.current = null;
+    setStep('email');
+    setCode('');
+    setPassword('');
+    setConfirm('');
+    setCodeFailed(false);
+    setTouched(false);
+    setServerError(null);
+  };
+
   const reset = async () => {
     setTouched(true);
     setServerError(null);
-    if (codeError || passwordError || confirmError) return;
+    if (passwordError || confirmError) return;
+    const verified = session.current;
+    if (!verified) {
+      setStep('code');
+      return;
+    }
     await run(async () => {
       try {
-        await resetPasswordWithCode(email, code, password);
+        await setPasswordAfterReset(verified, password);
+        session.current = null;
         notify.success(copy.doneTitle, copy.doneBody);
         router.back();
       } catch (err) {
-        setServerError(getAuthErrorMessage(err, copy.resetFailed));
+        if (isExpiredSessionError(err)) {
+          session.current = null;
+          setCode('');
+          setStep('code');
+          setServerError(copy.codeExpired);
+        } else {
+          setServerError(getAuthErrorMessage(err, copy.resetFailed));
+        }
       }
     });
   };
@@ -123,24 +170,43 @@ export default function ForgotPasswordScreen() {
                 <Text style={s.noteText}>{copy.noEmailNote}</Text>
               </View>
             </>
-          ) : (
+          ) : step === 'code' ? (
             <>
               <Text style={s.subtitle}>{copy.sentBody(email.trim())}</Text>
               <Text style={s.label}>{copy.codeLabel}</Text>
               <TextInput
-                style={[s.input, s.codeInput, touched && codeError && s.inputError]}
+                style={[s.input, s.codeInput, codeFailed && s.inputError]}
                 value={code}
-                onChangeText={v => setCode(v.replace(/\D/g, ''))}
-                placeholder="123456"
+                onChangeText={changeCode}
+                placeholder="12345678"
                 placeholderTextColor={Colors.placeholder}
                 keyboardType="number-pad"
                 textContentType="oneTimeCode"
                 autoComplete="sms-otp"
-                maxLength={10}
+                maxLength={OTP_LENGTH}
                 editable={!busy}
+                autoFocus
               />
-              {touched && codeError && <Text style={s.errorText}>{codeError}</Text>}
+              {codeFailed
+                ? <Text style={s.errorText}>{copy.codeWrong}</Text>
+                : <Text style={s.hintText}>{copy.codeInvalid}</Text>}
 
+              {busy && (
+                <View style={s.checkingRow}>
+                  <ActivityIndicator color={Colors.accent} />
+                  <Text style={s.checkingText}>{copy.checkingCode}</Text>
+                </View>
+              )}
+
+              <TouchableOpacity onPress={resend} disabled={cooldown > 0 || busy} style={s.resendRow} accessibilityRole="button">
+                <Text style={[s.resendText, (cooldown > 0 || busy) && s.resendDisabled]}>
+                  {cooldown > 0 ? copy.resendIn(cooldown) : copy.resend}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={s.subtitle}>{copy.passwordSubtitle}</Text>
               <Text style={s.label}>{copy.newPasswordLabel}</Text>
               <View style={[s.input, s.passwordRow, touched && passwordError && s.inputError]}>
                 <TextInput
@@ -174,12 +240,6 @@ export default function ForgotPasswordScreen() {
                 editable={!busy}
               />
               {touched && confirmError && <Text style={s.errorText}>{confirmError}</Text>}
-
-              <TouchableOpacity onPress={resend} disabled={cooldown > 0 || busy} style={s.resendRow} accessibilityRole="button">
-                <Text style={[s.resendText, (cooldown > 0 || busy) && s.resendDisabled]}>
-                  {cooldown > 0 ? copy.resendIn(cooldown) : copy.resend}
-                </Text>
-              </TouchableOpacity>
             </>
           )}
 
@@ -190,19 +250,22 @@ export default function ForgotPasswordScreen() {
             </View>
           )}
 
-          <TouchableOpacity
-            onPress={step === 'email' ? sendCode : reset}
-            disabled={busy}
-            style={[s.submitBtn, busy && s.submitBtnDisabled]}
-            activeOpacity={0.85}
-          >
-            {busy
-              ? <ActivityIndicator color={Colors.onDark} />
-              : <Text style={s.submitBtnText}>{step === 'email' ? copy.sendCode : copy.savePassword}</Text>}
-          </TouchableOpacity>
+          {/* The code step has no button: a complete code is checked as soon as it is entered. */}
+          {step !== 'code' && (
+            <TouchableOpacity
+              onPress={step === 'email' ? sendCode : reset}
+              disabled={busy}
+              style={[s.submitBtn, busy && s.submitBtnDisabled]}
+              activeOpacity={0.85}
+            >
+              {busy
+                ? <ActivityIndicator color={Colors.onDark} />
+                : <Text style={s.submitBtnText}>{step === 'email' ? copy.sendCode : copy.savePassword}</Text>}
+            </TouchableOpacity>
+          )}
 
-          {step === 'code' && (
-            <TouchableOpacity onPress={() => { setStep('email'); setCode(''); setServerError(null); }} style={s.footerRow}>
+          {step !== 'email' && (
+            <TouchableOpacity onPress={startOver} disabled={busy} style={[s.footerRow, step === 'code' && s.footerRowSpaced]}>
               <Text style={s.footerLink}>{copy.changeEmail}</Text>
             </TouchableOpacity>
           )}
@@ -229,6 +292,9 @@ const s = StyleSheet.create({
   passwordInput: { flex: 1, fontSize: 15, ...inputTextStyle },
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 5 },
+  hintText: { color: Colors.inkFaint, fontSize: 12, marginTop: 5 },
+  checkingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
+  checkingText: { fontSize: 14, fontWeight: '600', color: Colors.inkSoft },
 
   noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 12 },
   noteText: { flex: 1, fontSize: 12.5, color: Colors.inkFaint, lineHeight: 17 },
@@ -245,5 +311,6 @@ const s = StyleSheet.create({
   submitBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
 
   footerRow: { alignItems: 'center' },
+  footerRowSpaced: { marginTop: 22 },
   footerLink: { color: Colors.accent, fontWeight: '700', fontSize: 14 },
 });
