@@ -54,11 +54,9 @@ export const dataEntryCopy = {
     'The wettest 1 in 5 seasons',
   ],
   yield: 'Yield',
-  yieldUnit: 'kg/ha',
   cost: 'Cost',
-  costUnit: '₱/ha',
   addCost: 'Additional cost',
-  addCostUnit: '₱/ha',
+  unitsNote: 'Yield in kg/ha · Costs in ₱/ha',
   filledCount: (n: number) => `${n} of 5 climate scenarios filled`,
   continueToOption: (nextName: string) => `Continue to ${nextName}`,
   continueToClimate: 'Continue to climate',
@@ -67,7 +65,7 @@ export const dataEntryCopy = {
 };
 
 export const climateCopy = {
-  title: 'How likely is each\nscenario this season?',
+  title: 'What kind of season\ndo you expect this year?',
   subtitle: 'Use the seasonal outlook (e.g. El Niño or La Niña) if you have one. If unsure, leave it at 33 / 34 / 33.',
   dryYears: 'Driest',
   dryYearsSub: 'Below-normal rainfall (El Niño)',

@@ -1,6 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
-import { DECISIONS, type DecisionType } from '@/src/constants';
-import { AnimatedIcon, MotionIcon, useIconMotion, type IconMotion } from '@/src/components/ui/animated-icon';
+import { DECISIONS } from '@/src/constants';
+import { AnimatedIcon, MotionIcon, useIconMotion } from '@/src/components/ui/animated-icon';
 import { usePressScale } from '@/src/components/ui/pressable-scale';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import { BrandGradient, brandGradientCss, CARD_PADDING, CARD_RADIUS, cardShadow, Colors } from '@/src/constants/colors';
@@ -24,26 +24,14 @@ function formatDate(iso: string): string {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-// Each decision icon reacts in a way that suits its glyph.
-const DECISION_MOTION: Record<DecisionType, IconMotion> = {
-  crop_choice: 'wiggle',
-  crop_variety: 'flip',
-  protect: 'pop',
-};
-
 function DecisionCard({ decision: d, onPress }: { decision: (typeof DECISIONS)[number]; onPress: (id: string) => void }) {
   const press = usePressScale();
-  const iconMotion = useIconMotion(DECISION_MOTION[d.id]);
-  const handlePressIn = () => {
-    iconMotion.play();
-    press.onPressIn();
-  };
   return (
     <Animated.View style={press.scaleStyle}>
       <Pressable
         style={({ pressed }) => [s.decisionRow, pressed && s.decisionRowPressed]}
         onPress={() => onPress(d.id)}
-        onPressIn={handlePressIn}
+        onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
         accessibilityRole="button"
         accessibilityLabel={d.label}
@@ -52,7 +40,7 @@ function DecisionCard({ decision: d, onPress }: { decision: (typeof DECISIONS)[n
         {({ pressed }) => (
           <>
             <View style={s.decisionIconWrap}>
-              <MotionIcon name={d.icon} size={25} color={pressed ? Colors.onDark : Colors.ink} style={iconMotion.style} />
+              <Ionicons name={d.icon} size={25} color={pressed ? Colors.onDark : Colors.ink} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[s.decisionLabel, pressed && s.textOnGradient]}>{d.label}</Text>

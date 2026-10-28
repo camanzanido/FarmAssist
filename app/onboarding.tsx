@@ -65,11 +65,8 @@ export default function OnboardingScreen() {
     router.replace('/(tabs)');
   }
 
-  function finishAndOpenHelp() {
-    if (!isReplay) {
-      complete();
-      router.replace('/(tabs)');
-    }
+  // Onboarding stays underneath, so closing help comes back to this page.
+  function openHelp() {
     router.push('/help');
   }
 
@@ -165,7 +162,7 @@ export default function OnboardingScreen() {
         {/* Keeps the button row a fixed height so the primary button doesn't jump on the last page. */}
         <View style={s.secondaryRow}>
           {isLast && (
-            <TouchableOpacity onPress={finishAndOpenHelp} style={s.secondaryBtn} accessibilityRole="link">
+            <TouchableOpacity onPress={openHelp} style={s.secondaryBtn} accessibilityRole="link">
               <Text style={s.secondaryLink}>{helpCopy.learnHow}</Text>
             </TouchableOpacity>
           )}

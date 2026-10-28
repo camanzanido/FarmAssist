@@ -187,7 +187,7 @@ export default function ResearcherDecisionsScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <View style={[s.topBar, view === 'map' && [s.topBarFloating, { top: insets.top }]]} pointerEvents="box-none">
         {view === 'list' && <Text style={s.title}>Decisions</Text>}
-        <View style={[s.segment, view === 'map' && s.segmentFloating]} accessibilityRole="tablist">
+        <View style={s.segment} accessibilityRole="tablist">
           {(['map', 'list'] as const).map(v => (
             <TouchableOpacity
               key={v}
@@ -256,8 +256,8 @@ const s = StyleSheet.create({
   topBar: { ...wideColumn, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
   topBarFloating: { position: 'absolute', left: 0, right: 0, justifyContent: 'flex-end', zIndex: 10, elevation: 10 },
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
-  segment: { flexDirection: 'row', backgroundColor: Colors.surfaceAlt, borderRadius: 999, padding: 3, borderWidth: 1, borderColor: Colors.border },
-  segmentFloating: { backgroundColor: Colors.surface, ...cardShadow },
+  // One container style in both views so the selected pill looks the same over the map and the list.
+  segment: { flexDirection: 'row', backgroundColor: Colors.surface, borderRadius: 999, padding: 3, borderWidth: 1, borderColor: Colors.border, ...cardShadow },
   segmentBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 13, height: 34 },
   segmentBtnActive: { backgroundColor: Colors.ink },
   segmentText: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft },
