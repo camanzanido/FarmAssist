@@ -25,6 +25,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -55,6 +56,9 @@ function monthKey(iso: string): string {
   return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
+// Narrow phones get smaller text so every card stays one line per row.
+const COMPACT_WIDTH = 380;
+
 type RowProps = {
   item: Decision;
   isPending: boolean;
@@ -67,6 +71,7 @@ type RowProps = {
 const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen, onDelete }: RowProps) {
   const [lidOpen, setLidOpen] = useState(false);
   const press = usePressScale();
+  const compact = useWindowDimensions().width < COMPACT_WIDTH;
 
   const handleDelete = async () => {
     setLidOpen(true);
@@ -89,18 +94,18 @@ const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen,
       >
         <View style={s.cardMain}>
           <View style={s.cardIconWrap}>
-            <Ionicons name={decisionTypeIcon(item.decision_type)} size={21} color={Colors.ink} />
+            <Ionicons name={decisionTypeIcon(item.decision_type)} size={compact ? 19 : 21} color={Colors.ink} />
           </View>
           <View style={s.cardBody}>
-            <Text style={s.cardResult} numberOfLines={1}>{decisionResultLabel(item.result)}</Text>
-            <Text style={s.cardType}>{decisionTypeLabel(item.decision_type)}</Text>
+            <Text style={[s.cardResult, compact && s.cardResultCompact]} numberOfLines={1}>{decisionResultLabel(item.result)}</Text>
+            <Text style={[s.cardType, compact && s.cardTypeCompact]} numberOfLines={1}>{decisionTypeLabel(item.decision_type)}</Text>
             <View style={s.cardMetaRow}>
-              {item.result !== '' && <ProfitAmount value={item.profit_increase} />}
-              <Text style={s.cardDate}>{formatDate(item.datetime)}</Text>
+              {item.result !== '' && <ProfitAmount value={item.profit_increase} size={compact ? 12 : 14} />}
+              <Text style={[s.cardDate, compact && s.cardDateCompact]} numberOfLines={1}>{formatDate(item.datetime)}</Text>
               <View style={[s.syncChip, isPending ? s.syncChipPending : s.syncChipSent]}>
                 <Ionicons
                   name={isPending ? 'cloud-offline-outline' : 'checkmark'}
-                  size={11}
+                  size={10}
                   color={isPending ? Colors.amber : Colors.inkSoft}
                 />
                 <Text style={[s.syncChipText, isPending ? s.syncChipTextPending : s.syncChipTextSent]}>
@@ -345,24 +350,27 @@ const s = StyleSheet.create({
   card: {
     flexDirection: 'row', alignItems: 'center',
     ...cardSurface,
-    padding: CARD_PADDING, gap: 13,
+    padding: CARD_PADDING, gap: 8,
     marginBottom: 11,
   },
   cardPressed: { experimental_backgroundImage: brandGradientSoftCss(135), borderColor: Colors.accentTintStrong },
-  cardMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 13 },
+  cardMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   cardIconWrap: {
-    width: 44, height: 44,
+    width: 34, height: 34,
     alignItems: 'center', justifyContent: 'center',
   },
   cardBody: { flex: 1 },
   cardResult: { fontSize: 17, fontWeight: '800', color: Colors.ink },
+  cardResultCompact: { fontSize: 15 },
   cardType: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
-  cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 9, flexWrap: 'wrap' },
-  cardDate: { fontSize: 12, color: Colors.inkDim },
-  syncChip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  cardTypeCompact: { fontSize: 12 },
+  cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 9 },
+  cardDate: { flexShrink: 1, fontSize: 12, color: Colors.inkDim },
+  cardDateCompact: { fontSize: 11 },
+  syncChip: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 },
   syncChipPending: { backgroundColor: Colors.amberBg },
   syncChipSent: { backgroundColor: Colors.divider },
-  syncChipText: { fontSize: 11, fontWeight: '600' },
+  syncChipText: { fontSize: 10, fontWeight: '600' },
   syncChipTextPending: { color: Colors.amber },
   syncChipTextSent: { color: Colors.inkSoft },
 

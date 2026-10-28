@@ -98,6 +98,7 @@ const s = StyleSheet.create({
   pill: { position: 'absolute', top: 0, left: 0, borderRadius: 999, backgroundColor: Colors.ink },
   chip: { borderWidth: 1.5, borderColor: Colors.chipBorder, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   chipSelected: { borderColor: 'transparent' },
-  chipText: { fontSize: 13, fontWeight: '600', color: Colors.inkMuted },
-  chipTextSelected: { fontWeight: '700', color: Colors.onDark },
+  // One weight for both states, so selecting a chip never changes its width under the sliding pill.
+  chipText: { fontSize: 13, fontWeight: '700', color: Colors.inkMuted },
+  chipTextSelected: { color: Colors.onDark },
 });

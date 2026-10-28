@@ -271,6 +271,8 @@ export default function DecisionInputFlow() {
               <StepIndicator current={current} total={total} context={decisionLabel} />
             </View>
 
+            {/* Scrolls so the second option stays reachable above the keyboard and the inline Continue button. */}
+            <ScrollView style={s.fill} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <View style={s.titleBlock}>
               <Text style={s.title}>{namingCopy.titleFor(decisionLabel)}</Text>
               <Text style={s.subtitle}>{namingCopy.subtitle(decisionLabel)}</Text>
@@ -351,8 +353,9 @@ export default function DecisionInputFlow() {
               <Ionicons name="information-circle-outline" size={19} color={Colors.inkFaint} />
               <Text style={s.helperText}>{namingCopy.helper}</Text>
             </View>
+            </ScrollView>
 
-            <View style={s.footer}>
+            <View style={s.footerInline}>
               <TouchableOpacity
                 style={[s.nextBtn, !namesValid && s.nextBtnDisabled]}
                 onPress={handleNext}
