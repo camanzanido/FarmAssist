@@ -1,10 +1,10 @@
 import { useAuth } from '@/src/auth/AuthContext';
-import { DECISIONS, type DecisionType } from '@/src/constants';
-import { AnimatedIcon, MotionIcon, useIconMotion, type IconMotion } from '@/src/components/ui/animated-icon';
+import { DECISIONS } from '@/src/constants';
+import { AnimatedIcon, MotionIcon, useIconMotion } from '@/src/components/ui/animated-icon';
 import { usePressScale } from '@/src/components/ui/pressable-scale';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import { BrandGradient, brandGradientCss, CARD_PADDING, CARD_RADIUS, cardShadow, Colors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { contentColumn, TAB_SCREEN_EDGES } from '@/src/constants/layout';
 import { decisionResultLabel, helpCopy, homeCopy as copy } from '@/src/constants/copy';
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
@@ -24,26 +24,14 @@ function formatDate(iso: string): string {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-// Each decision icon reacts in a way that suits its glyph.
-const DECISION_MOTION: Record<DecisionType, IconMotion> = {
-  crop_choice: 'wiggle',
-  crop_variety: 'flip',
-  protect: 'pop',
-};
-
 function DecisionCard({ decision: d, onPress }: { decision: (typeof DECISIONS)[number]; onPress: (id: string) => void }) {
   const press = usePressScale();
-  const iconMotion = useIconMotion(DECISION_MOTION[d.id]);
-  const handlePressIn = () => {
-    iconMotion.play();
-    press.onPressIn();
-  };
   return (
     <Animated.View style={press.scaleStyle}>
       <Pressable
         style={({ pressed }) => [s.decisionRow, pressed && s.decisionRowPressed]}
         onPress={() => onPress(d.id)}
-        onPressIn={handlePressIn}
+        onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
         accessibilityRole="button"
         accessibilityLabel={d.label}
@@ -52,7 +40,7 @@ function DecisionCard({ decision: d, onPress }: { decision: (typeof DECISIONS)[n
         {({ pressed }) => (
           <>
             <View style={s.decisionIconWrap}>
-              <MotionIcon name={d.icon} size={25} color={pressed ? Colors.onDark : Colors.ink} style={iconMotion.style} />
+              <Ionicons name={d.icon} size={25} color={pressed ? Colors.onDark : Colors.ink} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[s.decisionLabel, pressed && s.textOnGradient]}>{d.label}</Text>
@@ -103,7 +91,7 @@ export default function HomeScreen() {
   const isOffline = !!user && !connected;
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
 
@@ -195,7 +183,7 @@ export default function HomeScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
-  content: { ...contentColumn, flexGrow: 1, padding: 22, paddingTop: 32, paddingBottom: 40 },
+  content: { ...contentColumn, flexGrow: 1, padding: 22, paddingTop: 32, paddingBottom: 16 },
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   logo: { width: 34, height: 34 },

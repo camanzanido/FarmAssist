@@ -1,6 +1,6 @@
 import { Skeleton, SkeletonGroup } from '@/src/components/ui/skeleton';
 import { CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
 import React from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -126,7 +126,7 @@ export function AuthFormSkeleton() {
         <Skeleton width="75%" height={13} style={[s.center, s.gapSm]} />
         <Skeleton height={54} radius={14} style={s.gapXl} />
         <Skeleton height={54} radius={14} style={s.gapMd} />
-        <Skeleton height={60} radius={16} style={s.gapXl} />
+        <Skeleton height={BUTTON_HEIGHT} radius={12} style={s.gapXl} />
       </Loading>
     </SafeAreaView>
   );

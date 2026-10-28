@@ -15,6 +15,12 @@ export function useIsWide(): boolean {
   return useWindowDimensions().width >= WIDE_BREAKPOINT;
 }
 
+// Full-width action buttons: short enough for phones, still a 48dp touch target.
+export const BUTTON_HEIGHT = 48;
+
+// Screens inside a tab navigator skip the bottom edge; the tab bar already pads for that inset.
+export const TAB_SCREEN_EDGES = ['top', 'left', 'right'] as const;
+
 const TAB_BAR_PADDING_TOP = 9;
 const TAB_BAR_CONTENT_HEIGHT = 52;
 

@@ -1,5 +1,6 @@
 import { CLIMATES, DECISIONS, DecisionType } from '@/src/constants';
-import { ResearcherColors as C } from '@/src/constants/colors';
+import { inputSurface, inputTextStyle, ResearcherColors as C } from '@/src/constants/colors';
+import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import type { PredefinedInput } from '@/src/database/repositories/predefined';
 import { formatNumberDisplay, normalizeNumberInput } from '@/src/utils/numberInput';
 import { emptyFormValues, OptionFormValues, predefinedKey, validateOptionForm } from '@/src/utils/predefinedOptions';
@@ -267,27 +268,27 @@ const s = StyleSheet.create({
   chipText: { fontSize: 13, fontWeight: '600', color: C.textSoft },
   chipTextActive: { color: C.accentDeepText, fontWeight: '800' },
 
-  input: { backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, borderRadius: 12, paddingHorizontal: 14, height: 48, fontSize: 15, color: C.text },
+  input: { ...inputSurface, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, height: 48, fontSize: 15, ...inputTextStyle },
   inputError: { borderColor: C.danger },
   error: { fontSize: 12.5, color: C.danger, marginTop: 6 },
   moneyRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   peso: { fontSize: 15, color: C.textSoft },
-  moneyInput: { flex: 1, fontSize: 15, color: C.text, height: '100%' },
+  moneyInput: { flex: 1, fontSize: 15, ...inputTextStyle, height: '100%' },
 
   gridHead: { flexDirection: 'row', gap: 6, marginBottom: 6 },
   gridHeadText: { flex: 1, fontSize: 11, fontWeight: '700', color: C.textFaint, textAlign: 'center' },
   gridRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   gridName: { flex: 0.9 },
   gridNameText: { fontSize: 12.5, fontWeight: '600', color: C.textSoft },
-  cell: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, borderRadius: 10, height: 42, paddingHorizontal: 4 },
+  cell: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', ...inputSurface, borderWidth: 1, borderRadius: 10, height: 42, paddingHorizontal: 4 },
   cellPeso: { fontSize: 12, color: C.textFaint, marginRight: 1 },
-  cellInput: { flexShrink: 1, fontSize: 14, fontWeight: '700', color: C.text, textAlign: 'center', height: '100%' },
+  cellInput: { flexShrink: 1, fontSize: 14, fontWeight: '700', ...inputTextStyle, textAlign: 'center', height: '100%' },
 
   actions: { flexDirection: 'row', gap: 10, marginTop: 22 },
-  deleteBtn: { width: 52, height: 52, borderRadius: 14, borderWidth: 1, borderColor: C.dangerBorder, alignItems: 'center', justifyContent: 'center' },
-  cancelBtn: { flex: 1, height: 52, borderRadius: 14, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
+  deleteBtn: { width: BUTTON_HEIGHT, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1, borderColor: C.dangerBorder, alignItems: 'center', justifyContent: 'center' },
+  cancelBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
   cancelText: { fontSize: 15, fontWeight: '700', color: C.text },
-  saveBtn: { flex: 1.4, height: 52, borderRadius: 14, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
+  saveBtn: { flex: 1.4, height: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
   saveText: { fontSize: 15.5, fontWeight: '800', color: C.accentDeepText },
   disabled: { opacity: 0.5 },
 });

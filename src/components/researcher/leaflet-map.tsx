@@ -36,6 +36,7 @@ function buildHtml(topInset: number): string {
   .leaflet-top { top: ${topInset}px; }
   .leaflet-popup-content { font-family: -apple-system, Roboto, sans-serif; font-size: 13px; line-height: 1.45; color: ${Colors.ink}; margin: 10px 14px; }
   .leaflet-popup-content b { font-size: 14px; }
+  .fa-details { color: ${Colors.inputText}; }
   .fa-pin { background: transparent; border: none; }
   .fa-inner { position: relative; width: 44px; height: 44px; }
   .fa-dot, .fa-ripple { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; box-sizing: border-box; }
@@ -86,6 +87,7 @@ function buildHtml(topInset: number): string {
       var title = document.createElement('b');
       title.textContent = p.city;
       var body = document.createElement('div');
+      body.className = 'fa-details';
       body.textContent = p.details;
       el.appendChild(title);
       el.appendChild(body);

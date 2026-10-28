@@ -4,6 +4,7 @@ import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Skeleton } from '@/src/components/ui/skeleton';
 import { DECISION_LABELS } from '@/src/constants';
 import { ResearcherColors as C } from '@/src/constants/colors';
+import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import type { Location } from '@/src/database/repositories/locations';
 import {
   countDecisionsInRange, fetchAllLocations, fetchAllUsers, fetchDecisionsInRange, type Place,
@@ -352,8 +353,8 @@ const s = StyleSheet.create({
   emptyHint: { fontSize: 13, color: C.amberText, marginBottom: 12, textAlign: 'center' },
 
   actionRow: { flexDirection: 'row', gap: 10 },
-  exportBtn: { flex: 1, height: 58, borderRadius: 15, backgroundColor: C.accentStrong, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9 },
+  exportBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: C.accentStrong, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9 },
   exportBtnDisabled: { opacity: 0.4 },
   exportBtnText: { fontSize: 16, fontWeight: '800', color: C.accentDeepText },
-  shareBtn: { width: 58, height: 58, borderRadius: 15, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
+  shareBtn: { width: BUTTON_HEIGHT, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
 });

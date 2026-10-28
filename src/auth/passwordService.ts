@@ -8,14 +8,20 @@ export async function sendPasswordResetCode(email: string): Promise<void> {
   if (error) throw error;
 }
 
+export type ResetSession = ReturnType<typeof createScratchClient>;
+
 // Runs on a scratch client, so the recovery session never reaches the app and the person signs in normally afterwards.
-export async function resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<void> {
+// The code is single-use, so the returned client carries the verified session to setPasswordAfterReset.
+export async function verifyResetCode(email: string, code: string): Promise<ResetSession> {
   const scratch = createScratchClient();
-  const { error: verifyError } = await withTimeout(() =>
+  const { error } = await withTimeout(() =>
     scratch.auth.verifyOtp({ email: cleanEmail(email), token: code.trim(), type: 'recovery' })
   );
-  if (verifyError) throw verifyError;
+  if (error) throw error;
+  return scratch;
+}
 
+export async function setPasswordAfterReset(scratch: ResetSession, newPassword: string): Promise<void> {
   const { error: updateError } = await withTimeout(() => scratch.auth.updateUser({ password: newPassword }));
   if (updateError) throw updateError;
 

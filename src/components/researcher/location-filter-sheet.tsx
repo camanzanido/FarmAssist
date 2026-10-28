@@ -1,6 +1,7 @@
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Skeleton } from '@/src/components/ui/skeleton';
-import { ResearcherColors as C } from '@/src/constants/colors';
+import { inputSurface, inputTextStyle, ResearcherColors as C } from '@/src/constants/colors';
+import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import { fetchCityStats, type CityStats, type Place } from '@/src/database/repositories/researcher';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -144,9 +145,9 @@ const s = StyleSheet.create({
 
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12,
-    borderWidth: 1, borderColor: C.cardBorderStrong, borderRadius: 13, height: 46, paddingHorizontal: 14,
+    borderWidth: 1, ...inputSurface, borderRadius: 13, height: 46, paddingHorizontal: 14,
   },
-  searchInput: { flex: 1, fontSize: 15, color: C.text, padding: 0 },
+  searchInput: { flex: 1, fontSize: 15, ...inputTextStyle, padding: 0 },
 
   listCard: { backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, borderRadius: 14, overflow: 'hidden', marginBottom: 18 },
   skeletons: { gap: 14, padding: 15 },
@@ -161,9 +162,9 @@ const s = StyleSheet.create({
   rowCount: { fontSize: 13, fontWeight: '700', color: C.textSoft },
 
   actionRow: { flexDirection: 'row', gap: 10 },
-  clearBtn: { height: 54, paddingHorizontal: 18, borderRadius: 15, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
+  clearBtn: { height: BUTTON_HEIGHT, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
   clearBtnText: { fontSize: 15, fontWeight: '700', color: C.text },
-  applyBtn: { flex: 1, height: 54, borderRadius: 15, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
+  applyBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
   applyBtnDisabled: { opacity: 0.4 },
   applyBtnText: { fontSize: 16, fontWeight: '800', color: C.accentDeepText },
 });

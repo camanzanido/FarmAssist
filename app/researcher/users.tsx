@@ -5,9 +5,9 @@ import { Pager } from '@/src/components/researcher/pager';
 import { ListRowsSkeleton, ListScreenSkeleton } from '@/src/components/researcher/skeletons';
 import { CreateUserSheet } from '@/src/components/researcher/create-user-sheet';
 import { UserSheet, userInitials } from '@/src/components/researcher/user-sheet';
-import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
+import { cardShadow, inputSurface, inputTextStyle, ResearcherColors as C } from '@/src/constants/colors';
 import { ROLE_TAG } from '@/src/constants/labels';
-import { wideColumn } from '@/src/constants/layout';
+import { TAB_SCREEN_EDGES, wideColumn } from '@/src/constants/layout';
 import { fetchUsersPage, type ResearcherUserRow } from '@/src/database/repositories/researcher';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
 import { useResearcherPage } from '@/src/hooks/use-researcher-page';
@@ -133,7 +133,7 @@ export default function ResearcherUsersScreen() {
   );
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
       <ResearcherAsyncState
         isLoading={isLoading}
@@ -178,16 +178,16 @@ export default function ResearcherUsersScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
-  footer: { paddingBottom: 20 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 0 },
+  footer: { paddingBottom: 16 },
 
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 },
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.accentStrong, borderRadius: 12, paddingHorizontal: 14, height: 40 },
   addBtnText: { fontSize: 14, fontWeight: '800', color: C.accentDeepText },
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
 
-  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorderStrong, borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14 },
-  searchInput: { flex: 1, fontSize: 15, color: C.text, padding: 0 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, ...inputSurface, borderWidth: 1, borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14 },
+  searchInput: { flex: 1, fontSize: 15, ...inputTextStyle, padding: 0 },
 
   scopeNote: { fontSize: 12.5, color: C.textSoft, marginTop: -4, marginBottom: 18 },
 

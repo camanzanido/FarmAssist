@@ -7,8 +7,8 @@ import { GradientText } from '@/src/components/ui/gradient-text';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
-import { BrandGradient, brandGradientCss, CARD_PADDING, cardShadow, cardSurface, Colors, ForecastColors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { BrandGradient, brandGradientCss, CARD_PADDING, cardShadow, cardSurface, Colors, ForecastColors, inputSurface, inputTextStyle } from '@/src/constants/colors';
+import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
 import { climateCopy, dataEntryCopy, namingCopy, predefinedCopy } from '@/src/constants/copy';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { isForecastComputable } from '@/src/rcda/decisionTree';
@@ -395,6 +395,7 @@ export default function DecisionInputFlow() {
               </View>
             </View>
 
+            <ScrollView style={s.fill} showsVerticalScrollIndicator={false}>
             <View style={s.climateCard}>
               <View style={s.donutWrap}>
                 <ForecastDonut
@@ -416,8 +417,8 @@ export default function DecisionInputFlow() {
                   </View>
                 </View>
                 <View style={s.stepperRow}>
-                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustDriest(-1)}>
-                    <Ionicons name="remove" size={19} color={Colors.ink} />
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustDriest(-1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Decrease driest">
+                    <Ionicons name="remove" size={22} color={Colors.ink} />
                   </TouchableOpacity>
                   <TextInput
                     style={s.stepperInput}
@@ -428,8 +429,8 @@ export default function DecisionInputFlow() {
                     onBlur={handleDriestBlur}
                     selectTextOnFocus
                   />
-                  <TouchableOpacity style={[s.stepperBtn, s.stepperBtnAdd]} onPress={() => adjustDriest(1)}>
-                    <Ionicons name="add" size={19} color={Colors.ink} />
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustDriest(1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Increase driest">
+                    <Ionicons name="add" size={22} color={Colors.ink} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -458,8 +459,8 @@ export default function DecisionInputFlow() {
                   </View>
                 </View>
                 <View style={s.stepperRow}>
-                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustWettest(-1)}>
-                    <Ionicons name="remove" size={19} color={Colors.ink} />
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustWettest(-1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Decrease wettest">
+                    <Ionicons name="remove" size={22} color={Colors.ink} />
                   </TouchableOpacity>
                   <TextInput
                     style={s.stepperInput}
@@ -470,8 +471,8 @@ export default function DecisionInputFlow() {
                     onBlur={handleWettestBlur}
                     selectTextOnFocus
                   />
-                  <TouchableOpacity style={[s.stepperBtn, s.stepperBtnAdd]} onPress={() => adjustWettest(1)}>
-                    <Ionicons name="add" size={19} color={Colors.ink} />
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustWettest(1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Increase wettest">
+                    <Ionicons name="add" size={22} color={Colors.ink} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -481,15 +482,12 @@ export default function DecisionInputFlow() {
               <Ionicons name="cloud-offline-outline" size={19} color={Colors.inkFaint} />
               <Text style={s.offlineNoteText}>{climateCopy.offlineNote}</Text>
             </View>
+            </ScrollView>
 
-            {isOver100 && (
-              <Text style={s.errorText}>{climateCopy.errorOver100}</Text>
-            )}
-            {hasNoAverage && (
-              <Text style={s.errorText}>{climateCopy.errorNoAverage}</Text>
-            )}
-
-            <View style={s.footer}>
+            {/* In the layout flow, not floating, so the card always ends above the button. */}
+            <View style={s.footerInline}>
+              {isOver100 && <Text style={s.footerError}>{climateCopy.errorOver100}</Text>}
+              {hasNoAverage && <Text style={s.footerError}>{climateCopy.errorNoAverage}</Text>}
               <TouchableOpacity
                 style={[s.nextBtn, isWeatherValid ? s.calcBtn : s.nextBtnDisabled]}
                 onPress={handleNext}
@@ -555,6 +553,7 @@ export default function DecisionInputFlow() {
               <Text style={[s.scenariosHeading, { marginBottom: 0 }]}>{dataEntryCopy.scenariosHeading}</Text>
               <TermHelpButton terms={['scenarios', 'price', 'yield', 'cost', 'addCost']} />
             </View>
+            <Text style={s.unitsNote}>{dataEntryCopy.unitsNote}</Text>
 
             {CLIMATES.map((climateName, i) => (
               <View key={climateName} style={s.scenarioCard}>
@@ -564,7 +563,7 @@ export default function DecisionInputFlow() {
                 </View>
                 <View style={s.scenarioFields}>
                   <View style={s.scenarioField}>
-                    <Text style={s.scenarioFieldLabel}>{dataEntryCopy.yield} <Text style={s.scenarioFieldUnit}>{dataEntryCopy.yieldUnit}</Text></Text>
+                    <Text style={s.scenarioFieldLabel}>{dataEntryCopy.yield}</Text>
                     <TextInput
                       style={[s.scenarioInput, isFieldInvalid(currentOptionData.yield[i]) && s.fieldInvalidBorder]}
                       keyboardType="numeric"
@@ -575,7 +574,7 @@ export default function DecisionInputFlow() {
                     />
                   </View>
                   <View style={s.scenarioField}>
-                    <Text style={s.scenarioFieldLabel}>{dataEntryCopy.cost} <Text style={s.scenarioFieldUnit}>{dataEntryCopy.costUnit}</Text></Text>
+                    <Text style={s.scenarioFieldLabel}>{dataEntryCopy.cost}</Text>
                     <View style={[s.scenarioInput, s.moneyInputWrap, isFieldInvalid(currentOptionData.cost[i]) && s.fieldInvalidBorder]}>
                       <Text style={s.moneySymbol}>₱</Text>
                       <TextInput
@@ -589,7 +588,7 @@ export default function DecisionInputFlow() {
                     </View>
                   </View>
                   <View style={s.scenarioField}>
-                    <Text style={s.scenarioFieldLabel}>{dataEntryCopy.addCost} <Text style={s.scenarioFieldUnit}>{dataEntryCopy.addCostUnit}</Text></Text>
+                    <Text style={s.scenarioFieldLabel}>{dataEntryCopy.addCost}</Text>
                     <View style={[s.scenarioInput, s.moneyInputWrap, isFieldInvalid(currentOptionData.addCost[i]) && s.fieldInvalidBorder]}>
                       <Text style={s.moneySymbol}>₱</Text>
                       <TextInput
@@ -643,7 +642,7 @@ const s = StyleSheet.create({
   namingCardInvalid: { borderColor: Colors.danger },
   badge: { alignSelf: 'flex-start', marginBottom: 10 },
   badgeText: { fontSize: 14, fontWeight: '700', color: Colors.inkSoft },
-  namingInput: { fontSize: 19, fontWeight: '700', color: Colors.ink, paddingVertical: 8, borderBottomWidth: 2, borderBottomColor: Colors.ink },
+  namingInput: { fontSize: 19, fontWeight: '700', ...inputTextStyle, paddingVertical: 8, borderBottomWidth: 2, borderBottomColor: Colors.ink },
   useSavedRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   useSavedBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.accentTintStrong, backgroundColor: Colors.accentTint, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   useSavedBtnDisabled: { borderColor: Colors.border, backgroundColor: Colors.surfaceAlt },
@@ -660,15 +659,16 @@ const s = StyleSheet.create({
   scroll: { paddingBottom: 16 },
   priceBlock: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: Colors.surface, borderRadius: 16, padding: 15,
+    backgroundColor: Colors.surface, borderRadius: 16, padding: 12,
     borderWidth: 1, borderColor: Colors.border,
     marginBottom: 14, ...cardShadow,
   },
   priceLabel: { fontSize: 15, fontWeight: '700', color: Colors.ink },
   priceUnit: { fontSize: 12, color: Colors.inkFaint },
-  priceInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 },
+  priceInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, ...inputSurface, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
   priceSymbol: { fontSize: 15, color: Colors.inkFaint },
-  priceInput: { fontSize: 18, fontWeight: '800', color: Colors.ink, minWidth: 64 },
+  // Android pads TextInput vertically by default, which made the card tall on small screens.
+  priceInput: { fontSize: 16, fontWeight: '800', ...inputTextStyle, minWidth: 64, paddingVertical: 0 },
   priceErrorText: { fontSize: 12, color: Colors.danger, fontWeight: '600', marginTop: -8, marginBottom: 12, marginLeft: 4 },
 
   scenariosHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
@@ -681,23 +681,27 @@ const s = StyleSheet.create({
   scenarioName: { fontSize: 16, fontWeight: '800', color: Colors.ink },
   scenarioMeaning: { fontSize: 12, color: Colors.inkFaint, marginTop: 2 },
   scenarioFields: { flexDirection: 'row', gap: 8 },
-  scenarioField: { flex: 1 },
+  // Bottom-aligned so the three inputs stay level even if a label wraps at a large font size.
+  scenarioField: { flex: 1, justifyContent: 'flex-end' },
   scenarioFieldLabel: { fontSize: 11, fontWeight: '600', color: Colors.inkSoft, marginBottom: 5 },
-  scenarioFieldUnit: { color: Colors.inkDim },
+  unitsNote: { fontSize: 12, color: Colors.inkFaint, marginBottom: 10, marginLeft: 2 },
   scenarioInput: {
-    backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 9,
-    paddingVertical: 11, textAlign: 'center', fontSize: 15, fontWeight: '700', color: Colors.ink,
+    ...inputSurface, borderWidth: 1, borderRadius: 9,
+    paddingVertical: 11, textAlign: 'center', fontSize: 15, fontWeight: '700', ...inputTextStyle,
   },
   moneyInputWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 0, paddingHorizontal: 6 },
   moneySymbol: { fontSize: 13, color: Colors.inkFaint, marginRight: 2 },
-  moneyInput: { flexShrink: 1, paddingVertical: 11, fontSize: 15, fontWeight: '700', color: Colors.ink, textAlign: 'center' },
+  moneyInput: { flexShrink: 1, paddingVertical: 11, fontSize: 15, fontWeight: '700', ...inputTextStyle, textAlign: 'center' },
   fieldInvalidBorder: { borderColor: Colors.danger, borderWidth: 1.5 },
 
+  fill: { flex: 1 },
   footer: { position: 'absolute', bottom: 28, left: 24, right: 24 },
+  footerInline: { paddingTop: 12, paddingBottom: 28 },
+  footerError: { color: Colors.danger, fontSize: 12, textAlign: 'center', marginBottom: 9, fontWeight: '600' },
   footerMeta: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 9 },
   footerMetaText: { fontSize: 12, color: Colors.inkFaint },
   errorTextInline: { fontSize: 12, color: Colors.danger, fontWeight: '600' },
-  nextBtn: { backgroundColor: Colors.ink, borderRadius: 14, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  nextBtn: { backgroundColor: Colors.ink, borderRadius: 12, height: BUTTON_HEIGHT, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   nextBtnDisabled: { backgroundColor: Colors.disabled },
   calcBtn: { experimental_backgroundImage: brandGradientCss(90) },
   nextBtnText: { fontSize: 15, fontWeight: '700', color: Colors.onDark },
@@ -717,14 +721,13 @@ const s = StyleSheet.create({
   climateRowSub: { fontSize: 12, color: Colors.inkFaint },
   divider: { height: 1, backgroundColor: Colors.divider },
 
-  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  stepperBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.divider, alignItems: 'center', justifyContent: 'center' },
-  stepperBtnAdd: { backgroundColor: Colors.accentTint },
+  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  stepperBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   stepperValue: { fontSize: 20, fontWeight: '800', color: Colors.ink, minWidth: 40, textAlign: 'center' },
   stepperInput: {
-    fontSize: 20, fontWeight: '800', color: Colors.ink, minWidth: 48, textAlign: 'center',
-    paddingVertical: 6, paddingHorizontal: 4, backgroundColor: Colors.surfaceAlt,
-    borderWidth: 1, borderColor: Colors.borderStrong, borderRadius: 8,
+    fontSize: 20, fontWeight: '800', ...inputTextStyle, minWidth: 48, textAlign: 'center',
+    paddingVertical: 6, paddingHorizontal: 4, ...inputSurface,
+    borderWidth: 1, borderRadius: 8,
   },
   autoValue: { fontSize: 20, fontWeight: '800', color: Colors.ink, backgroundColor: Colors.divider, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 16 },
 

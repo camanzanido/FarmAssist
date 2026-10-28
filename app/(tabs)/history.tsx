@@ -7,7 +7,7 @@ import { PopoverMenu } from '@/src/components/ui/popover-menu';
 import { usePressScale } from '@/src/components/ui/pressable-scale';
 import { TrashIcon } from '@/src/components/ui/trash-icon';
 import { brandGradientSoftCss, CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { contentColumn, TAB_SCREEN_EDGES } from '@/src/constants/layout';
 import { decisionResultLabel, historyCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { deleteDecision, getDecisionsByUser, getStagedDecisionIds, type Decision } from '@/src/database/repositories/decisions';
@@ -235,7 +235,7 @@ export default function HistoryScreen() {
   }, [confirm, notify]);
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <View style={s.header}>
         <View style={{ flex: 1 }}>
@@ -339,7 +339,7 @@ const s = StyleSheet.create({
   ctaBtn: { marginTop: 8, backgroundColor: Colors.ink, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24 },
   ctaBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 14 },
 
-  list: { ...contentColumn, padding: 22, paddingTop: 8 },
+  list: { ...contentColumn, padding: 22, paddingTop: 8, paddingBottom: 16 },
   sectionHeader: { fontSize: 14, fontWeight: '700', color: Colors.inkFaint, marginTop: 18, marginBottom: 10 },
 
   card: {

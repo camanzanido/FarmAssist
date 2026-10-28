@@ -1,4 +1,5 @@
 import { Colors } from '@/src/constants/colors';
+import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import { predefinedCopy as copy } from '@/src/constants/copy';
 import { getLocationsByUser } from '@/src/database/repositories/locations';
 import { fetchPredefinedOptions } from '@/src/database/repositories/predefined';
@@ -145,6 +146,6 @@ const s = StyleSheet.create({
   tagTextLocal: { color: Colors.accent, fontWeight: '700' },
   rowPrice: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft },
 
-  closeBtn: { marginTop: 10, height: 50, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  closeBtn: { marginTop: 10, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   closeText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
 });

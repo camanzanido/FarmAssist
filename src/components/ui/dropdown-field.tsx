@@ -1,4 +1,4 @@
-import { Colors } from '@/src/constants/colors';
+import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import {
@@ -122,8 +122,7 @@ const s = StyleSheet.create({
   label: { fontSize: 13, fontWeight: '600', color: Colors.inkSoft, marginBottom: 6 },
   input: {
     borderWidth: 1,
-    borderColor: Colors.borderStrong,
-    backgroundColor: Colors.surface,
+    ...inputSurface,
     borderRadius: 12,
     padding: 14,
     flexDirection: 'row',
@@ -132,7 +131,7 @@ const s = StyleSheet.create({
   },
   inputError: { borderColor: Colors.danger },
   inputDisabled: { backgroundColor: Colors.border, opacity: 0.7 },
-  valueText: { fontSize: 15, color: Colors.ink, flexShrink: 1 },
+  valueText: { fontSize: 15, ...inputTextStyle, flexShrink: 1 },
   placeholderText: { color: Colors.placeholder },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 5 },
   hintText: { color: Colors.inkFaint, fontSize: 12, marginTop: 5 },
@@ -166,12 +165,11 @@ const s = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: Colors.borderStrong,
-    backgroundColor: Colors.surface,
+    ...inputSurface,
     borderRadius: 12,
     padding: 12,
     fontSize: 15,
-    color: Colors.ink,
+    ...inputTextStyle,
   },
   option: {
     flexDirection: 'row',

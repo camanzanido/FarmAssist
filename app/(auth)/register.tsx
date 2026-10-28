@@ -1,8 +1,8 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { DropdownField } from '@/src/components/ui/dropdown-field';
-import { Colors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
+import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
 import { authCopy as copy, termsCopy } from '@/src/constants/copy';
 import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locations';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
@@ -240,7 +240,7 @@ const s = StyleSheet.create({
 
   field: { marginBottom: 14 },
   label: { fontSize: 13, fontWeight: '600', color: Colors.inkSoft, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface, borderRadius: 12, padding: 14, fontSize: 15, color: Colors.ink },
+  input: { borderWidth: 1, ...inputSurface, borderRadius: 12, padding: 14, fontSize: 15, ...inputTextStyle },
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 5 },
   noteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: -6, marginBottom: 14 },
@@ -253,7 +253,7 @@ const s = StyleSheet.create({
   termsLink: { color: Colors.ink, fontWeight: '700', textDecorationLine: 'underline' },
   termsError: { marginTop: 4, marginBottom: 4 },
 
-  submitBtn: { backgroundColor: Colors.ink, borderRadius: 14, paddingVertical: 16, flexDirection: 'row', gap: 10, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginBottom: 16 },
+  submitBtn: { backgroundColor: Colors.ink, borderRadius: 12, height: BUTTON_HEIGHT, flexDirection: 'row', gap: 10, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginBottom: 16 },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
 

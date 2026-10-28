@@ -1,6 +1,6 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
-import { brandGradientCss, Colors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { brandGradientCss, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
+import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
 import { authCopy as copy, forgotPasswordCopy } from '@/src/constants/copy';
 import { formatLockTime } from '@/src/auth/signInThrottle';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
@@ -137,7 +137,6 @@ export default function LoginScreen() {
             {copy.noAccount} <Text style={s.noAccountLink}>{copy.createOne}</Text>
           </Text>
         </TouchableOpacity>
-        <Text style={s.researcherNote}>{copy.researcherNote}</Text>
 
         <View style={s.bottomBlock}>
           <View style={s.orRow}>
@@ -161,36 +160,35 @@ const s = StyleSheet.create({
   closeBtn: {
     alignSelf: 'flex-end', width: 40, height: 40, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 12,
   },
-  logo: { width: 64, height: 64, marginBottom: 20 },
+  logo: { width: 48, height: 48, marginBottom: 14 },
   brand: { fontSize: 32, fontWeight: '800', color: Colors.ink, letterSpacing: -0.6, marginBottom: 6 },
-  subtitle: { fontSize: 15, color: Colors.inkSoft, lineHeight: 21, marginBottom: 30 },
+  subtitle: { fontSize: 15, color: Colors.inkSoft, lineHeight: 21, marginBottom: 24 },
 
   field: { marginBottom: 18 },
   label: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8 },
   input: {
-    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.borderStrong,
-    borderRadius: 14, height: 56, paddingHorizontal: 16, fontSize: 16, color: Colors.ink,
+    ...inputSurface, borderWidth: 1.5,
+    borderRadius: 14, height: 56, paddingHorizontal: 16, fontSize: 16, ...inputTextStyle,
   },
   passwordRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.borderStrong,
+    ...inputSurface, borderWidth: 1.5,
     borderRadius: 14, height: 56, paddingHorizontal: 16,
   },
-  passwordInput: { flex: 1, fontSize: 16, color: Colors.ink },
+  passwordInput: { flex: 1, fontSize: 16, ...inputTextStyle },
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 6 },
   forgotRow: { alignSelf: 'flex-end', marginTop: 10 },
   forgotText: { fontSize: 13.5, fontWeight: '700', color: Colors.ink },
 
-  signInBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 16, height: 60, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
+  signInBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 12, height: BUTTON_HEIGHT, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
   signInBtnDisabled: { opacity: 0.6 },
   signInBtnText: { fontSize: 17, fontWeight: '800', color: Colors.onDark },
   throttleText: { fontSize: 13, color: Colors.amberText, textAlign: 'center', marginTop: -4, marginBottom: 14 },
 
   noAccountRow: { alignItems: 'center' },
-  researcherNote: { fontSize: 12.5, color: Colors.inkFaint, textAlign: 'center', marginTop: 10, lineHeight: 18 },
   noAccountText: { fontSize: 15, color: Colors.inkSoft },
   noAccountLink: { color: Colors.accent, fontWeight: '700' },
 
@@ -199,7 +197,7 @@ const s = StyleSheet.create({
   orLine: { flex: 1, height: 1, backgroundColor: Colors.divider },
   orText: { fontSize: 12, color: Colors.inkFaint },
   offlineBtn: {
-    borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 16, height: 56,
+    borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 12, height: BUTTON_HEIGHT,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9,
   },
   offlineBtnText: { fontSize: 15, fontWeight: '700', color: Colors.ink },

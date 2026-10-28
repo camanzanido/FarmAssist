@@ -3,7 +3,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
 import { brandGradientCss, CARD_PADDING, CARD_RADIUS, cardSurface, Colors } from '@/src/constants/colors';
-import { contentColumn } from '@/src/constants/layout';
+import { BUTTON_HEIGHT, contentColumn, TAB_SCREEN_EDGES } from '@/src/constants/layout';
 import { changePasswordCopy, helpCopy, profileCopy as copy, termsCopy } from '@/src/constants/copy';
 import { ROLE_SHORT } from '@/src/constants/labels';
 import { db } from '@/src/database/powersync/powersync';
@@ -109,16 +109,16 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       {!isAuthenticated ? (
         <View style={s.signedOutScreen}>
           <View style={s.signedOutTop}>
             <TouchableOpacity onPress={() => nav.push('/about')} hitSlop={8} style={s.topIcon} accessibilityRole="button" accessibilityLabel={copy.about}>
-              <Ionicons name="information-circle-outline" size={24} color={Colors.ink} />
+              <Ionicons name="information-circle-outline" size={24} color={Colors.text} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => nav.push('/onboarding?replay=1')} hitSlop={8} style={s.topIcon} accessibilityRole="button" accessibilityLabel={copy.viewIntro}>
-              <Ionicons name="book-outline" size={23} color={Colors.ink} />
+              <Ionicons name="book-outline" size={23} color={Colors.text} />
             </TouchableOpacity>
           </View>
           <View style={s.signedOutWrap}>
@@ -215,7 +215,7 @@ export default function ProfileScreen() {
 
           <View style={s.listCard}>
             <View style={[s.listRow, s.listRowBorder, s.listRowTop]}>
-              <Ionicons name="mail-outline" size={20} color={Colors.ink} />
+              <Ionicons name="mail-outline" size={20} color={Colors.text} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={s.emailRow}>
                   <Text style={s.listRowLabel}>Email</Text>
@@ -231,33 +231,33 @@ export default function ProfileScreen() {
             </View>
             {locations.length > 0 && (
               <View style={[s.listRow, s.listRowBorder]}>
-                <Ionicons name="location-outline" size={20} color={Colors.ink} />
+                <Ionicons name="location-outline" size={20} color={Colors.text} />
                 <Text style={[s.listRowLabel, { marginLeft: 12 }]}>{copy.location}</Text>
                 <Text style={[s.listRowValue, s.emailValue]} numberOfLines={1}>{locations[0].city}, {locations[0].province}</Text>
               </View>
             )}
             <View style={[s.listRow, s.listRowBorder]}>
-              <Ionicons name="shield-checkmark-outline" size={20} color={Colors.ink} />
+              <Ionicons name="shield-checkmark-outline" size={20} color={Colors.text} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.accountType}</Text>
               <Text style={s.listRowValue}>{ROLE_SHORT.farmer}</Text>
             </View>
             <PressableScale style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/about')} accessibilityRole="button">
-              <Ionicons name="information-circle-outline" size={20} color={Colors.ink} />
+              <Ionicons name="information-circle-outline" size={20} color={Colors.text} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.about}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </PressableScale>
             <PressableScale style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/help')} accessibilityRole="button">
-              <Ionicons name="help-circle-outline" size={20} color={Colors.ink} />
+              <Ionicons name="help-circle-outline" size={20} color={Colors.text} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{helpCopy.openHelp}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </PressableScale>
             <PressableScale style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/onboarding?replay=1')} accessibilityRole="button">
-              <Ionicons name="book-outline" size={20} color={Colors.ink} />
+              <Ionicons name="book-outline" size={20} color={Colors.text} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.viewIntro}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </PressableScale>
             <PressableScale style={s.listRow} onPress={() => nav.push('/terms')} accessibilityRole="button">
-              <Ionicons name="document-text-outline" size={20} color={Colors.ink} />
+              <Ionicons name="document-text-outline" size={20} color={Colors.text} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{termsCopy.profileRow}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.inkFaint} />
             </PressableScale>
@@ -298,21 +298,21 @@ const s = StyleSheet.create({
   signedOutTitle: { fontSize: 24, fontWeight: '800', color: Colors.ink, marginBottom: 10, textAlign: 'center' },
   signedOutSubtitle: { fontSize: 14, color: Colors.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
   signedOutLogo: { width: 84, height: 84, alignSelf: 'center', marginBottom: 16 },
-  primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 14, paddingVertical: 16, width: '100%', maxWidth: 420, alignItems: 'center', marginBottom: 12 },
+  primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   primaryBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
-  secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 14, paddingVertical: 16, width: '100%', maxWidth: 420, alignItems: 'center' },
-  secondaryBtnText: { color: Colors.ink, fontWeight: '700', fontSize: 15 },
+  secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center' },
+  secondaryBtnText: { color: Colors.text, fontWeight: '700', fontSize: 15 },
 
-  content: { ...contentColumn, padding: 22, paddingTop: 12, paddingBottom: 40 },
+  content: { ...contentColumn, padding: 22, paddingTop: 12, paddingBottom: 16 },
   profileHeader: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },
   avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 23, fontWeight: '800', color: Colors.accentTintStrong },
-  name: { fontSize: 22, fontWeight: '800', color: Colors.ink, letterSpacing: -0.3 },
+  name: { fontSize: 22, fontWeight: '800', color: Colors.text, letterSpacing: -0.3 },
   username: { fontSize: 14, color: Colors.inkSoft, marginTop: 2 },
 
   statsRow: { flexDirection: 'row', gap: 9, marginBottom: 20 },
   statCard: { flex: 1, ...cardSurface, padding: CARD_PADDING },
-  statValue: { fontSize: 22, fontWeight: '800', color: Colors.ink },
+  statValue: { fontSize: 22, fontWeight: '800', color: Colors.text },
   statLabel: { fontSize: 12, color: Colors.inkFaint, marginTop: 2 },
 
   offlineCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.amberBg, borderRadius: CARD_RADIUS, padding: CARD_PADDING, marginBottom: 20 },
@@ -337,7 +337,7 @@ const s = StyleSheet.create({
   listCard: { ...cardSurface, marginBottom: 20 },
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 15 },
   listRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  listRowLabel: { fontSize: 15, fontWeight: '600', color: Colors.ink },
+  listRowLabel: { fontSize: 15, fontWeight: '600', color: Colors.text },
   listRowValue: { fontSize: 14, color: Colors.inkFaint },
   listRowTop: { alignItems: 'flex-start' },
   emailRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

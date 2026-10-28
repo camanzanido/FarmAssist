@@ -1,7 +1,9 @@
 import { useAuth } from '@/src/auth/AuthContext';
+import { isValidOtp, OTP_LENGTH } from '@/src/auth/otp';
 import { changeUsername, requestEmailChange, saveName, verifyEmailChange } from '@/src/auth/profileService';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
-import { brandGradientCss, Colors } from '@/src/constants/colors';
+import { brandGradientCss, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
+import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import { profileCopy as copy } from '@/src/constants/copy';
 import { FunctionError } from '@/src/database/supabase/invokeFunction';
 import { useSubmitOnce } from '@/src/hooks/use-submit-once';
@@ -23,7 +25,6 @@ type Props = {
   onSaved: (result: ProfileSaveResult) => void;
 };
 
-const CODE_PATTERN = /^\d{6,10}$/;
 const RESEND_COOLDOWN_S = 60;
 
 export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSaved }: Props) {
@@ -69,7 +70,7 @@ export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSav
     : null;
   const nameChanged = cleanName(name) !== user.name;
   const nothingToSave = !nameChanged && !usernameChanged && !wantsEmailChange;
-  const codeError = CODE_PATTERN.test(code.trim()) ? null : copy.codeInvalid;
+  const codeError = isValidOtp(code) ? null : copy.codeInvalid;
 
   const save = async () => {
     setSubmitted(true);
@@ -141,12 +142,12 @@ export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSav
           value={code}
           onChangeText={setCode}
           editable={!saving}
-          placeholder="123456"
+          placeholder="12345678"
           placeholderTextColor={Colors.placeholder}
           keyboardType="number-pad"
           textContentType="oneTimeCode"
           autoComplete="one-time-code"
-          maxLength={10}
+          maxLength={OTP_LENGTH}
           accessibilityLabel={copy.codeLabel}
         />
         {submitted && codeError && <Text style={s.error}>{codeError}</Text>}
@@ -254,8 +255,8 @@ const s = StyleSheet.create({
   subtitle: { fontSize: 13.5, color: Colors.inkSoft, marginBottom: 8, lineHeight: 19 },
   label: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: Colors.inkFaint, marginTop: 14, marginBottom: 8 },
   input: {
-    height: 50, borderRadius: 12, borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface,
-    paddingHorizontal: 14, fontSize: 15.5, color: Colors.ink,
+    height: 50, borderRadius: 12, borderWidth: 1, ...inputSurface,
+    paddingHorizontal: 14, fontSize: 15.5, ...inputTextStyle,
   },
   codeInput: { fontSize: 20, fontWeight: '800', letterSpacing: 4 },
   inputDisabled: { backgroundColor: Colors.surfaceAlt, color: Colors.inkFaint },
@@ -266,12 +267,12 @@ const s = StyleSheet.create({
   hint: { flex: 1, fontSize: 12.5, color: Colors.inkFaint, lineHeight: 17 },
   hintAlone: { marginTop: 6 },
   linkRow: { alignSelf: 'flex-start', minHeight: 40, justifyContent: 'center', marginTop: 6 },
-  link: { fontSize: 13.5, fontWeight: '700', color: Colors.ink },
+  link: { fontSize: 13.5, fontWeight: '700', color: Colors.text },
   linkDisabled: { color: Colors.inkFaint },
   actions: { flexDirection: 'row', gap: 10, marginTop: 24 },
-  cancelBtn: { flex: 1, height: 52, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  cancelText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
-  saveBtn: { flex: 1.4, height: 52, borderRadius: 14, experimental_backgroundImage: brandGradientCss(90), alignItems: 'center', justifyContent: 'center' },
+  cancelBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  cancelText: { fontSize: 15, fontWeight: '700', color: Colors.text },
+  saveBtn: { flex: 1.4, height: BUTTON_HEIGHT, borderRadius: 12, experimental_backgroundImage: brandGradientCss(90), alignItems: 'center', justifyContent: 'center' },
   saveText: { fontSize: 15.5, fontWeight: '800', color: Colors.onDark },
   disabled: { opacity: 0.6 },
 });

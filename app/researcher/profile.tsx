@@ -6,7 +6,7 @@ import { PopoverMenu } from '@/src/components/ui/popover-menu';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { changePasswordCopy, profileCopy, termsCopy } from '@/src/constants/copy';
 import { ROLE_SHORT } from '@/src/constants/labels';
-import { wideColumn } from '@/src/constants/layout';
+import { TAB_SCREEN_EDGES, wideColumn } from '@/src/constants/layout';
 import { updateUserRemote } from '@/src/database/repositories/researcher';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
@@ -64,7 +64,7 @@ export default function ResearcherProfileScreen() {
   if (!user) return null;
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
@@ -145,7 +145,7 @@ export default function ResearcherProfileScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 40 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 16 },
 
   header: { marginBottom: 22 },
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
@@ -153,13 +153,13 @@ const s = StyleSheet.create({
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 15, marginBottom: 22 },
   avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 21, fontWeight: '800', color: C.accentDeepText },
-  name: { fontSize: 20, fontWeight: '800', color: C.text, letterSpacing: -0.3 },
+  name: { fontSize: 20, fontWeight: '800', color: C.textStrong, letterSpacing: -0.3 },
   username: { fontSize: 13.5, color: C.textSoft, marginTop: 2 },
 
   list: { borderTopWidth: 1, borderTopColor: C.divider, marginBottom: 24 },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4, paddingVertical: 15 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: C.divider },
-  rowLabel: { fontSize: 14.5, fontWeight: '600', color: C.text },
+  rowLabel: { fontSize: 14.5, fontWeight: '600', color: C.textStrong },
   rowValue: { fontSize: 13.5, color: C.textSoft, maxWidth: '45%', textAlign: 'right' },
   rowTop: { alignItems: 'flex-start' },
   emailRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

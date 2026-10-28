@@ -1,4 +1,6 @@
 
+import { OTP_LENGTH } from '../auth/otp';
+
 export const decisionTypeCopy = {
   title: 'What decision do\nyou want to make?',
   subtitle: 'Choose one. You can always come back.',
@@ -54,11 +56,9 @@ export const dataEntryCopy = {
     'The wettest 1 in 5 seasons',
   ],
   yield: 'Yield',
-  yieldUnit: 'kg/ha',
   cost: 'Cost',
-  costUnit: '₱/ha',
   addCost: 'Additional cost',
-  addCostUnit: '₱/ha',
+  unitsNote: 'Yield in kg/ha · Costs in ₱/ha',
   filledCount: (n: number) => `${n} of 5 climate scenarios filled`,
   continueToOption: (nextName: string) => `Continue to ${nextName}`,
   continueToClimate: 'Continue to climate',
@@ -67,7 +67,7 @@ export const dataEntryCopy = {
 };
 
 export const climateCopy = {
-  title: 'How likely is each\nscenario this season?',
+  title: 'What kind of season\ndo you expect this year?',
   subtitle: 'Use the seasonal outlook (e.g. El Niño or La Niña) if you have one. If unsure, leave it at 33 / 34 / 33.',
   dryYears: 'Driest',
   dryYearsSub: 'Below-normal rainfall (El Niño)',
@@ -238,11 +238,11 @@ export const profileCopy = {
   usernameLabel: 'USERNAME',
   usernameHint: 'You sign in with this. Use letters, numbers, dots or underscores.',
   emailOfflineHint: 'Connect to the internet to change your username or email.',
-  emailConfirmHint: "We'll email a 6-digit code to confirm it. Your current email keeps working until then.",
+  emailConfirmHint: `We'll email a ${OTP_LENGTH}-digit code to confirm it. Your current email keeps working until then.`,
   codeTitle: 'Enter the code',
-  codeBody: (email: string) => `We sent a 6-digit code to ${email}. Check your spam folder if it isn't there.`,
+  codeBody: (email: string) => `We sent a ${OTP_LENGTH}-digit code to ${email}. Check your spam folder if it isn't there.`,
   codeLabel: 'CODE',
-  codeInvalid: 'Enter the 6-digit code from the email.',
+  codeInvalid: `Enter the ${OTP_LENGTH}-digit code from the email.`,
   codeVerify: 'Confirm email',
   codeLater: 'Later',
   codeResend: 'Send a new code',
@@ -342,7 +342,6 @@ export const authCopy = {
   next: 'Next',
   back: 'Back',
   close: 'Close',
-  researcherNote: 'Admin (researcher)? Ask an existing FarmAssist admin to create your account.',
   fullName: 'Full name',
   username: 'Username',
   usernamePlaceholder: 'e.g. juan.dc (you sign in with this)',
@@ -369,7 +368,11 @@ export const forgotPasswordCopy = {
   sentBody: (email: string) => `If ${email} has an account, we sent it a code. Check your inbox and spam folder.`,
   resentTitle: 'Code sent again',
   codeLabel: 'Code from the email',
-  codeInvalid: 'Enter the code from the email.',
+  codeInvalid: `Enter the ${OTP_LENGTH}-digit code from the email.`,
+  codeWrong: "That code didn't work. Check it, or send a new one.",
+  codeExpired: 'Your code expired. Send a new one.',
+  checkingCode: 'Checking code…',
+  passwordSubtitle: 'Code confirmed. Choose a new password.',
   newPasswordLabel: 'New password',
   confirmLabel: 'Confirm new password',
   resend: 'Send a new code',

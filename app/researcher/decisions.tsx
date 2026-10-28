@@ -6,9 +6,9 @@ import { Pager } from '@/src/components/researcher/pager';
 import { ListRowsSkeleton, ListScreenSkeleton } from '@/src/components/researcher/skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
-import { CARD_PADDING, cardShadow, cardSurface, Colors } from '@/src/constants/colors';
+import { CARD_PADDING, cardShadow, cardSurface, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { decisionResultLabel } from '@/src/constants/copy';
-import { wideColumn } from '@/src/constants/layout';
+import { TAB_SCREEN_EDGES, wideColumn } from '@/src/constants/layout';
 import { deleteDecisionRemote, fetchDecisionsPage, type ResearcherDecisionRow } from '@/src/database/repositories/researcher';
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value';
 import { useResearcherPage } from '@/src/hooks/use-researcher-page';
@@ -183,11 +183,11 @@ export default function ResearcherDecisionsScreen() {
   );
 
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <View style={[s.topBar, view === 'map' && [s.topBarFloating, { top: insets.top }]]} pointerEvents="box-none">
         {view === 'list' && <Text style={s.title}>Decisions</Text>}
-        <View style={[s.segment, view === 'map' && s.segmentFloating]} accessibilityRole="tablist">
+        <View style={s.segment} accessibilityRole="tablist">
           {(['map', 'list'] as const).map(v => (
             <TouchableOpacity
               key={v}
@@ -248,16 +248,16 @@ export default function ResearcherDecisionsScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
-  footer: { paddingBottom: 20 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 0 },
+  footer: { paddingBottom: 16 },
 
   fill: { flex: 1 },
   hidden: { display: 'none' },
   topBar: { ...wideColumn, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
   topBarFloating: { position: 'absolute', left: 0, right: 0, justifyContent: 'flex-end', zIndex: 10, elevation: 10 },
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
-  segment: { flexDirection: 'row', backgroundColor: Colors.surfaceAlt, borderRadius: 999, padding: 3, borderWidth: 1, borderColor: Colors.border },
-  segmentFloating: { backgroundColor: Colors.surface, ...cardShadow },
+  // One container style in both views so the selected pill looks the same over the map and the list.
+  segment: { flexDirection: 'row', backgroundColor: Colors.surface, borderRadius: 999, padding: 3, borderWidth: 1, borderColor: Colors.border, ...cardShadow },
   segmentBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 13, height: 34 },
   segmentBtnActive: { backgroundColor: Colors.ink },
   segmentText: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft },
@@ -271,10 +271,10 @@ const s = StyleSheet.create({
 
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.borderStrong,
+    ...inputSurface, borderWidth: 1,
     borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14,
   },
-  searchInput: { flex: 1, fontSize: 15, color: Colors.ink, padding: 0 },
+  searchInput: { flex: 1, fontSize: 15, ...inputTextStyle, padding: 0 },
 
   filterRow: { marginBottom: 18 },
 

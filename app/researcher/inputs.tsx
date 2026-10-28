@@ -9,8 +9,8 @@ import {
   blankPredefinedForm, PredefinedFormInitial, PredefinedFormMode, PredefinedFormSheet,
 } from '@/src/components/researcher/predefined-form-sheet';
 import { DECISIONS, DECISION_LABELS, DecisionType } from '@/src/constants';
-import { cardShadow, ResearcherColors as C } from '@/src/constants/colors';
-import { wideColumn } from '@/src/constants/layout';
+import { cardShadow, inputSurface, inputTextStyle, ResearcherColors as C } from '@/src/constants/colors';
+import { TAB_SCREEN_EDGES, wideColumn } from '@/src/constants/layout';
 import {
   createPredefinedOption, deletePredefinedOption, fetchOptionAverages, fetchPredefinedOptions, PredefinedInput, updatePredefinedOption,
 } from '@/src/database/repositories/predefined';
@@ -306,7 +306,7 @@ export default function ResearcherInputsScreen() {
   );
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
       <ResearcherAsyncState
         isLoading={isLoading}
@@ -355,8 +355,8 @@ export default function ResearcherInputsScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
-  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 20 },
-  footer: { paddingBottom: 20 },
+  content: { ...wideColumn, padding: 20, paddingTop: 12, paddingBottom: 0 },
+  footer: { paddingBottom: 16 },
 
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
@@ -364,14 +364,14 @@ const s = StyleSheet.create({
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 42, paddingHorizontal: 14, borderRadius: 12, backgroundColor: C.accentStrong },
   addText: { fontSize: 14, fontWeight: '800', color: C.accentDeepText },
 
-  segment: { flexDirection: 'row', backgroundColor: C.fill, borderRadius: 12, padding: 4, marginBottom: 12 },
+  segment: { flexDirection: 'row', backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, borderRadius: 12, padding: 4, marginBottom: 12 },
   segmentBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 9 },
   segmentBtnActive: { backgroundColor: C.accentStrong },
   segmentText: { fontSize: 13, fontWeight: '600', color: C.textSoft },
   segmentTextActive: { color: C.accentDeepText, fontWeight: '800' },
 
-  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorderStrong, borderRadius: 13, paddingHorizontal: 12, height: 44, marginBottom: 12 },
-  searchInput: { flex: 1, fontSize: 14, color: C.text, height: '100%' },
+  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, ...inputSurface, borderWidth: 1, borderRadius: 13, paddingHorizontal: 12, height: 44, marginBottom: 12 },
+  searchInput: { flex: 1, fontSize: 14, ...inputTextStyle, height: '100%' },
 
   filterRow: { marginBottom: 18 },
 
