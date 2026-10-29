@@ -1,6 +1,6 @@
 
 export const Colors = {
-  bg: '#F8F8FF',
+  bg: '#FCFCFF',
   surface: '#FFFFFF',
   border: '#E2EAE5',
   borderStrong: '#D3DDD7',
@@ -136,8 +136,8 @@ export const StatGradients = {
   soft: brandGradientSoftCss(135),
 } as const;
 
-// Drop shadow for white cards on the off-white page.
-export const cardShadow = { shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 } as const;
+// Drop shadow for white cards on the off-white page; boxShadow fades with its screen, unlike Android elevation.
+export const cardShadow = { boxShadow: '0px 3px 8px rgba(0,0,0,0.08)' } as const;
 
 // Every page card shares this surface; tinted cards keep their colour but use the same radius and padding.
 export const CARD_RADIUS = 16;

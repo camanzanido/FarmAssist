@@ -81,10 +81,10 @@ const s = StyleSheet.create({
   card: {
     flexDirection: 'row', alignItems: 'center',
     ...cardSurface,
-    padding: CARD_PADDING, gap: 14,
+    paddingVertical: 12, paddingHorizontal: CARD_PADDING, gap: 14,
   },
   iconWrap: {
-    width: 48, height: 48,
+    width: 40, height: 40,
     alignItems: 'center', justifyContent: 'center',
   },
   cardText: { flex: 1 },
