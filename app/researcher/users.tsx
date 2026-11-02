@@ -182,11 +182,11 @@ const s = StyleSheet.create({
   footer: { paddingBottom: 16 },
 
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.accentStrong, borderRadius: 12, paddingHorizontal: 14, height: 40 },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.accentStrong, borderRadius: 12, paddingHorizontal: 14, minHeight: 40 },
   addBtnText: { fontSize: 14, fontWeight: '800', color: C.accentDeepText },
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
 
-  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, ...inputSurface, borderWidth: 1, borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, ...inputSurface, borderWidth: 1, borderRadius: 13, minHeight: 48, paddingHorizontal: 14, marginBottom: 14 },
   searchInput: { flex: 1, fontSize: 15, ...inputTextStyle, padding: 0 },
 
   scopeNote: { fontSize: 12.5, color: C.textSoft, marginTop: -4, marginBottom: 18 },

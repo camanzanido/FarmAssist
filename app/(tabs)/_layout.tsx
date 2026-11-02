@@ -29,6 +29,8 @@ export default function TabLayout() {
           borderTopColor: Colors.border,
           ...tabBarFrame,
         },
+        // The bar has a fixed height, so its labels stay at their designed size.
+        tabBarAllowFontScaling: false,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         headerShown: false,
         animation: 'shift',

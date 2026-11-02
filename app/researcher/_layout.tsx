@@ -28,6 +28,8 @@ export default function ResearcherLayout() {
             borderTopColor: Colors.border,
             ...tabBarFrame,
           },
+          // The bar has a fixed height, so its labels stay at their designed size.
+          tabBarAllowFontScaling: false,
           tabBarLabelStyle: { fontSize: 10.5, fontWeight: '700' },
         }}
       >

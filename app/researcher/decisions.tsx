@@ -258,21 +258,21 @@ const s = StyleSheet.create({
   title: { fontSize: 27, fontWeight: '800', color: Colors.ink, letterSpacing: -0.4 },
   // One container style in both views so the selected pill looks the same over the map and the list.
   segment: { flexDirection: 'row', backgroundColor: Colors.surface, borderRadius: 999, padding: 3, borderWidth: 1, borderColor: Colors.border, ...cardShadow },
-  segmentBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 13, height: 34 },
+  segmentBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 13, minHeight: 34 },
   segmentBtnActive: { backgroundColor: Colors.ink },
   segmentText: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft },
   segmentTextActive: { color: Colors.onDark },
   placeChip: {
     flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', maxWidth: '100%',
     backgroundColor: Colors.accentTint, borderRadius: 999, borderWidth: 1, borderColor: Colors.accentTintStrong,
-    paddingLeft: 11, paddingRight: 8, height: 36, marginBottom: 14,
+    paddingLeft: 11, paddingRight: 8, minHeight: 36, marginBottom: 14,
   },
   placeChipText: { flexShrink: 1, fontSize: 13.5, fontWeight: '700', color: Colors.ink },
 
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     ...inputSurface, borderWidth: 1,
-    borderRadius: 13, height: 48, paddingHorizontal: 14, marginBottom: 14,
+    borderRadius: 13, minHeight: 48, paddingHorizontal: 14, marginBottom: 14,
   },
   searchInput: { flex: 1, fontSize: 15, ...inputTextStyle, padding: 0 },
 

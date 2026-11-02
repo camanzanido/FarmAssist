@@ -286,13 +286,13 @@ const s = StyleSheet.create({
   newComparisonBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, backgroundColor: Colors.surface, borderRadius: 12,
-    height: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
+    minHeight: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
   newComparisonText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
   startOverBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, backgroundColor: Colors.surface, borderRadius: 12,
-    height: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
+    minHeight: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
   startOverText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
 });

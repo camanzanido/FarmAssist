@@ -289,7 +289,7 @@ const s = StyleSheet.create({
   label: { fontSize: 13, fontWeight: '600', color: Colors.inkSoft, marginBottom: 6, marginTop: 12 },
   input: { borderWidth: 1, ...inputSurface, borderRadius: 12, padding: 14, fontSize: 15, ...inputTextStyle },
   codeInput: { fontSize: 22, letterSpacing: 6, fontWeight: '700' },
-  passwordRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 0, height: 52 },
+  passwordRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 0, minHeight: 52 },
   passwordInput: { flex: 1, fontSize: 15, ...inputTextStyle },
   inputError: { borderColor: Colors.danger },
   errorText: { color: Colors.danger, fontSize: 12, marginTop: 5 },
@@ -307,7 +307,7 @@ const s = StyleSheet.create({
   serverError: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.dangerBg, borderRadius: 12, padding: 12, marginTop: 16 },
   serverErrorText: { flex: 1, fontSize: 13, fontWeight: '600', color: Colors.danger },
 
-  submitBtn: { backgroundColor: Colors.ink, borderRadius: 12, height: BUTTON_HEIGHT, alignItems: 'center', justifyContent: 'center', marginTop: 22, marginBottom: 16 },
+  submitBtn: { backgroundColor: Colors.ink, borderRadius: 12, minHeight: BUTTON_HEIGHT, alignItems: 'center', justifyContent: 'center', marginTop: 22, marginBottom: 16 },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
 

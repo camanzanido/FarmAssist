@@ -332,13 +332,13 @@ const s = StyleSheet.create({
   handleZone: { height: 26, alignItems: 'center', justifyContent: 'center' },
   grabber: { width: 40, height: 5, borderRadius: 3, backgroundColor: Colors.borderStrong },
 
-  viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.ink, borderRadius: 999, paddingHorizontal: 14, height: 38 },
+  viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.ink, borderRadius: 999, paddingHorizontal: 14, minHeight: 38 },
   viewBtnText: { fontSize: 13.5, fontWeight: '800', color: Colors.onDark },
 
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 10,
     ...inputSurface, borderWidth: 1,
-    borderRadius: 13, height: 46, paddingHorizontal: 14,
+    borderRadius: 13, minHeight: 46, paddingHorizontal: 14,
   },
   searchInput: { flex: 1, fontSize: 15, ...inputTextStyle, padding: 0 },
 

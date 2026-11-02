@@ -707,7 +707,7 @@ const s = StyleSheet.create({
   footerMeta: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 9 },
   footerMetaText: { fontSize: 12, color: Colors.inkFaint },
   errorTextInline: { fontSize: 12, color: Colors.danger, fontWeight: '600' },
-  nextBtn: { backgroundColor: Colors.ink, borderRadius: 12, height: BUTTON_HEIGHT, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  nextBtn: { backgroundColor: Colors.ink, borderRadius: 12, minHeight: BUTTON_HEIGHT, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   nextBtnDisabled: { backgroundColor: Colors.disabled },
   calcBtn: { experimental_backgroundImage: brandGradientCss(90) },
   nextBtnText: { fontSize: 15, fontWeight: '700', color: Colors.onDark },

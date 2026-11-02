@@ -72,7 +72,7 @@ export function Pager({ info, pageSize, disabled, onPage, onPageSize }: Props) {
 const s = StyleSheet.create({
   wrap: { marginTop: 8, gap: 14 },
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  btn: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 42, paddingHorizontal: 14, borderRadius: 11, borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface },
+  btn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 42, paddingHorizontal: 14, borderRadius: 11, borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface },
   btnDisabled: { opacity: 0.35 },
   btnText: { fontSize: 13.5, fontWeight: '700', color: Colors.ink },
   info: { alignItems: 'center' },

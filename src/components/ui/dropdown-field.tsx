@@ -157,7 +157,7 @@ const s = StyleSheet.create({
   sheetTitle: { fontSize: 17, fontWeight: '700', color: Colors.ink },
   closeBtn: {
     width: 32,
-    height: 32,
+    minHeight: 32,
     borderRadius: 16,
     backgroundColor: Colors.accentTint,
     alignItems: 'center',

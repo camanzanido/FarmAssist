@@ -361,7 +361,7 @@ const s = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   title: { fontSize: 27, fontWeight: '800', color: C.text, letterSpacing: -0.4 },
   subtitle: { fontSize: 13.5, color: C.textSoft, marginTop: 3 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 42, paddingHorizontal: 14, borderRadius: 12, backgroundColor: C.accentStrong },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 42, paddingHorizontal: 14, borderRadius: 12, backgroundColor: C.accentStrong },
   addText: { fontSize: 14, fontWeight: '800', color: C.accentDeepText },
 
   segment: { flexDirection: 'row', backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, borderRadius: 12, padding: 4, marginBottom: 12 },
@@ -370,8 +370,8 @@ const s = StyleSheet.create({
   segmentText: { fontSize: 13, fontWeight: '600', color: C.textSoft },
   segmentTextActive: { color: C.accentDeepText, fontWeight: '800' },
 
-  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, ...inputSurface, borderWidth: 1, borderRadius: 13, paddingHorizontal: 12, height: 44, marginBottom: 12 },
-  searchInput: { flex: 1, fontSize: 14, ...inputTextStyle, height: '100%' },
+  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, ...inputSurface, borderWidth: 1, borderRadius: 13, paddingHorizontal: 12, minHeight: 44, marginBottom: 12 },
+  searchInput: { flex: 1, fontSize: 14, ...inputTextStyle, alignSelf: 'stretch' },
 
   filterRow: { marginBottom: 18 },
 

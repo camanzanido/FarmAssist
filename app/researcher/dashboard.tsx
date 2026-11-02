@@ -331,12 +331,12 @@ const s = StyleSheet.create({
   legendDot: { width: 10, height: 10, borderRadius: 3 },
   legendLabel: { flex: 1, fontSize: 13.5, color: Colors.inkMuted },
   legendCount: { fontSize: 13.5, fontWeight: '700', color: Colors.ink },
-  legendPct: { fontSize: 12, color: Colors.inkFaint, width: 34, textAlign: 'right' },
+  legendPct: { fontSize: 12, color: Colors.inkFaint, minWidth: 34, textAlign: 'right' },
 
   muniTopRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
   muniLabel: { flex: 1, fontSize: 13.5, color: Colors.inkMuted, marginRight: 8 },
   muniCount: { fontSize: 13, fontWeight: '700', color: Colors.ink },
 
-  exportBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface },
+  exportBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 34, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: Colors.borderStrong, backgroundColor: Colors.surface },
   exportBtnText: { fontSize: 13, fontWeight: '700', color: Colors.ink },
 });

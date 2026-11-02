@@ -254,7 +254,7 @@ const s = StyleSheet.create({
   termsLink: { color: Colors.ink, fontWeight: '700', textDecorationLine: 'underline' },
   termsError: { marginTop: 4, marginBottom: 4 },
 
-  submitBtn: { backgroundColor: Colors.ink, borderRadius: 12, height: BUTTON_HEIGHT, flexDirection: 'row', gap: 10, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginBottom: 16 },
+  submitBtn: { backgroundColor: Colors.ink, borderRadius: 12, minHeight: BUTTON_HEIGHT, flexDirection: 'row', gap: 10, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginBottom: 16 },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
 

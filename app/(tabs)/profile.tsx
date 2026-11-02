@@ -306,9 +306,9 @@ const s = StyleSheet.create({
   signedOutTitle: { fontSize: 24, fontWeight: '800', color: Colors.ink, marginBottom: 10, textAlign: 'center' },
   signedOutSubtitle: { fontSize: 14, color: Colors.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
   signedOutLogo: { width: 84, height: 84, alignSelf: 'center', marginBottom: 16 },
-  primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 12, minHeight: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   primaryBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
-  secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center' },
+  secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 12, minHeight: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center' },
   secondaryBtnText: { color: Colors.text, fontWeight: '700', fontSize: 15 },
 
   content: { ...contentColumn, padding: 22, paddingTop: 12, paddingBottom: 16 },
@@ -328,14 +328,14 @@ const s = StyleSheet.create({
   offlineTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 8 },
   offlineTitle: { fontSize: 15, fontWeight: '800', color: Colors.amberText, flexShrink: 1 },
   offlineBody: { fontSize: 13, color: Colors.amberDeepText },
-  syncBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.surface, borderRadius: 10, height: 34, paddingHorizontal: 12 },
+  syncBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.surface, borderRadius: 10, minHeight: 34, paddingHorizontal: 12 },
   syncBtnBusy: { opacity: 0.6 },
   syncBtnText: { fontSize: 13, fontWeight: '700', color: Colors.amberText },
 
   errorCard: { backgroundColor: Colors.dangerBg, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: CARD_RADIUS, padding: CARD_PADDING, marginBottom: 20 },
   errorTitle: { fontSize: 15, fontWeight: '800', color: Colors.danger },
   errorBody: { fontSize: 13.5, color: Colors.dangerText, lineHeight: 19, marginBottom: 12 },
-  errorDismissBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: 11, height: 40 },
+  errorDismissBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: 11, minHeight: 40 },
   errorDismissBtnText: { fontSize: 13, fontWeight: '700', color: Colors.danger },
 
   loadErrorCard: { backgroundColor: Colors.dangerBg, borderWidth: 1, borderColor: Colors.dangerBorder, borderRadius: CARD_RADIUS, padding: CARD_PADDING, marginBottom: 20 },

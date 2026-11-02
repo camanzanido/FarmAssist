@@ -127,6 +127,6 @@ const s = StyleSheet.create({
   labels: { height: 16, marginTop: 8 },
   label: { position: 'absolute', width: LABEL_WIDTH, textAlign: 'center', fontSize: 10, color: Colors.inkFaint },
   labelActive: { fontWeight: '700', color: Colors.accent },
-  bubble: { position: 'absolute', height: 30, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 8, backgroundColor: Colors.ink },
+  bubble: { position: 'absolute', minHeight: 30, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 8, backgroundColor: Colors.ink },
   bubbleText: { fontSize: 12, fontWeight: '700', color: Colors.onDark },
 });

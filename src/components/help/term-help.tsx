@@ -48,6 +48,6 @@ const s = StyleSheet.create({
   entryDivided: { borderTopWidth: 1, borderTopColor: Colors.divider },
   term: { fontSize: 16, fontWeight: '800', color: Colors.ink, marginBottom: 6 },
   definition: { fontSize: 14.5, color: Colors.inkMuted, lineHeight: 21 },
-  close: { marginTop: 12, backgroundColor: Colors.ink, borderRadius: 12, height: BUTTON_HEIGHT, alignItems: 'center', justifyContent: 'center' },
+  close: { marginTop: 12, backgroundColor: Colors.ink, borderRadius: 12, minHeight: BUTTON_HEIGHT, alignItems: 'center', justifyContent: 'center' },
   closeText: { fontSize: 15, fontWeight: '700', color: Colors.onDark },
 });

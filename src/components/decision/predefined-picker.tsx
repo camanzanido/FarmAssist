@@ -147,6 +147,6 @@ const s = StyleSheet.create({
   tagTextLocal: { color: Colors.accent, fontWeight: '700' },
   rowPrice: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft },
 
-  closeBtn: { marginTop: 10, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  closeBtn: { marginTop: 10, minHeight: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   closeText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
 });

@@ -256,15 +256,15 @@ const s = StyleSheet.create({
   subtitle: { fontSize: 13.5, color: C.textSoft, marginBottom: 6, lineHeight: 19 },
 
   label: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint, marginTop: 14, marginBottom: 8 },
-  input: { ...inputSurface, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, height: 48, fontSize: 15, ...inputTextStyle },
+  input: { ...inputSurface, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, minHeight: 48, fontSize: 15, ...inputTextStyle },
   inputError: { borderColor: C.danger },
   error: { fontSize: 12.5, color: C.danger, marginTop: 6 },
   passwordRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  passwordInput: { flex: 1, fontSize: 15, ...inputTextStyle, height: '100%' },
+  passwordInput: { flex: 1, fontSize: 15, ...inputTextStyle, alignSelf: 'stretch' },
   dropdownGap: { height: 14 },
 
   roleRow: { flexDirection: 'row', gap: 8 },
-  roleBtn: { flex: 1, height: 46, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
+  roleBtn: { flex: 1, minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
   roleBtnActive: { backgroundColor: C.accentStrong, borderColor: C.accentStrong },
   roleText: { fontSize: 14.5, fontWeight: '700', color: C.textSoft },
   roleTextActive: { color: C.accentDeepText },
@@ -274,9 +274,9 @@ const s = StyleSheet.create({
   serverErrorText: { flex: 1, fontSize: 13, fontWeight: '600', color: C.danger },
 
   actions: { flexDirection: 'row', gap: 10, marginTop: 22 },
-  cancelBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
+  cancelBtn: { flex: 1, minHeight: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
   cancelText: { fontSize: 15, fontWeight: '700', color: C.text },
-  saveBtn: { flex: 1.4, height: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
+  saveBtn: { flex: 1.4, minHeight: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
   saveText: { fontSize: 15.5, fontWeight: '800', color: C.accentDeepText },
   disabled: { opacity: 0.5 },
 
@@ -285,9 +285,9 @@ const s = StyleSheet.create({
   credLabel: { fontSize: 11.5, fontWeight: '700', letterSpacing: 0.8, color: C.textFaint, marginBottom: 4 },
   credValue: { fontSize: 16.5, fontWeight: '700', color: C.text },
   credDivider: { height: 1, backgroundColor: C.cardBorder, marginVertical: 12 },
-  copyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, marginTop: 14, marginBottom: 6 },
+  copyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, marginTop: 14, marginBottom: 6 },
   copyBtnDone: { borderColor: C.accent, backgroundColor: C.accentTint },
   copyText: { fontSize: 15, fontWeight: '700', color: C.text },
   copyTextDone: { color: C.accent },
-  doneBtn: { flex: 0, height: BUTTON_HEIGHT, marginTop: 22 },
+  doneBtn: { flex: 0, minHeight: BUTTON_HEIGHT, marginTop: 22 },
 });
