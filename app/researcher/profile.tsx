@@ -1,6 +1,7 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { ChangePasswordSheet } from '@/src/components/profile/change-password-sheet';
+import { DeleteAccountSheet } from '@/src/components/profile/delete-account-sheet';
 import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
 import { PopoverMenu } from '@/src/components/ui/popover-menu';
 import { ResearcherColors as C } from '@/src/constants/colors';
@@ -30,6 +31,7 @@ export default function ResearcherProfileScreen() {
   const nav = useNavLock();
   const edit = useEditProfile();
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   async function handleLogout() {
     const confirmed = await confirm({
@@ -42,25 +44,19 @@ export default function ResearcherProfileScreen() {
     if (confirmed) await signOut();
   }
 
-  async function handleDelete() {
-    if (!user) return;
-    const confirmed = await confirm({
-      title: 'Delete your account?',
-      message: "You'll be signed out and won't be able to sign in again. Another admin can't restore it; only the Supabase dashboard can.",
-      confirmText: 'Delete',
-      tone: 'destructive',
-      icon: 'trash-outline',
-    });
-    if (!confirmed) return;
+  // Resolves to an error message for the sheet, or null once the account is disabled.
+  async function handleDelete(): Promise<string | null> {
+    if (!user) return null;
     try {
       await updateUserRemote(user.id, { status: 'inactive' });
     } catch (err) {
       console.error('Failed to delete own account:', err);
-      notify.error('Could not delete', getActionErrorMessage(err, 'Please try again.'));
-      return;
+      return getActionErrorMessage(err, 'Could not delete your account. Please try again.');
     }
+    setDeleteOpen(false);
     // The server already revoked every session, so this only clears what is left on this device.
     await signOut().catch(err => console.warn('Sign-out after account delete failed:', err));
+    return null;
   }
 
   if (!user) return null;
@@ -88,6 +84,7 @@ export default function ResearcherProfileScreen() {
             items={[
               { key: 'edit', label: profileCopy.editProfile, icon: 'create-outline', onPress: edit.open },
               { key: 'password', label: changePasswordCopy.row, icon: 'key-outline', onPress: () => setPasswordOpen(true) },
+              { key: 'delete', label: 'Delete account', icon: 'trash-outline', onPress: () => setDeleteOpen(true) },
             ]}
           />
         </View>
@@ -128,11 +125,9 @@ export default function ResearcherProfileScreen() {
         <TouchableOpacity onPress={handleLogout} style={s.logoutRow} activeOpacity={0.8}>
           <Text style={s.logoutText}>Log out</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleDelete} style={s.deleteRow} activeOpacity={0.8} accessibilityRole="button">
-          <Text style={s.deleteText}>Delete my account</Text>
-        </TouchableOpacity>
       </ScrollView>
       <EditProfileSheet visible={edit.isOpen} online pendingEmail={edit.pendingEmail} onClose={edit.close} onSaved={edit.onSaved} />
+      <DeleteAccountSheet visible={deleteOpen} onClose={() => setDeleteOpen(false)} onConfirm={handleDelete} />
       <ChangePasswordSheet
         visible={passwordOpen}
         onClose={() => setPasswordOpen(false)}
@@ -170,6 +165,4 @@ const s = StyleSheet.create({
 
   logoutRow: { alignItems: 'center', paddingVertical: 10 },
   logoutText: { fontSize: 15, fontWeight: '700', color: C.danger },
-  deleteRow: { alignItems: 'center', paddingVertical: 10, marginTop: 4 },
-  deleteText: { fontSize: 13.5, fontWeight: '600', color: C.textSoft, textDecorationLine: 'underline' },
 });
