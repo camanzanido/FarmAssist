@@ -68,6 +68,23 @@ describe('dictionaries', () => {
     }
   });
 
+  it('Filipino is translated, apart from names that stay the same in both', () => {
+    const SAME_IN_BOTH = /^(FarmAssist|Offline|Sync|Email|EMAIL|USERNAME|CODE|Username|Password|Admin|Field user|FIELD|ADMIN|Home|Profile|Developer|camanzanido@up\.edu\.ph|UPLB-INREM & UPLB-ICS)$/;
+    const same: string[] = [];
+    const walk = (en: unknown, fil: unknown, path: string) => {
+      if (typeof en === 'string') {
+        if (en === fil && !SAME_IN_BOTH.test(en)) same.push(path);
+      } else if (en && typeof en === 'object') {
+        for (const key of Object.keys(en)) {
+          if (key === 'icon' || key === 'key' || key === 'id') continue;
+          walk((en as any)[key], (fil as any)?.[key], `${path}.${key}`);
+        }
+      }
+    };
+    walk(copyFor('en'), copyFor('fil'), 'fil');
+    expect(same).toEqual([]);
+  });
+
   it('keeps a saved result name as it was typed', () => {
     for (const lang of LANGUAGES) expect(copyFor(lang).decisionResultLabel('Rice IR64')).toBe('Rice IR64');
   });
