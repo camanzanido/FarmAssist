@@ -1,12 +1,14 @@
-import { Colors } from '@/src/constants/colors';
+import { Colors, inputSurface } from '@/src/constants/colors';
 import { LANGUAGE_NAMES, LANGUAGES } from '@/src/i18n/dictionary';
 import { useCopy, useLanguage } from '@/src/i18n/LanguageContext';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { PopoverMenu } from './popover-menu';
 
 interface Props {
-  size?: 'large' | 'compact';
+  size?: 'large' | 'compact' | 'icon';
   style?: StyleProp<ViewStyle>;
 }
 
@@ -16,38 +18,43 @@ export function LanguagePicker({ size = 'compact', style }: Props) {
   const { languageCopy } = useCopy();
   const large = size === 'large';
 
+  const items = LANGUAGES.map(lang => ({
+    key: lang,
+    label: LANGUAGE_NAMES[lang],
+    selected: lang === language,
+    onPress: () => {
+      if (lang === language) return;
+      Haptics.selectionAsync().catch(() => {});
+      setLanguage(lang);
+    },
+  }));
+  const label = `${languageCopy.label}: ${LANGUAGE_NAMES[language]}`;
+
+  if (size === 'icon') {
+    return <PopoverMenu icon="language-outline" iconSize={23} accessibilityLabel={label} items={items} style={style} />;
+  }
+
   return (
-    <View style={[s.row, large && s.rowLarge, style]} accessibilityRole="radiogroup" accessibilityLabel={languageCopy.label}>
-      {LANGUAGES.map(lang => {
-        const selected = lang === language;
-        return (
-          <TouchableOpacity
-            key={lang}
-            style={[s.option, large && s.optionLarge, selected && s.optionSelected]}
-            onPress={() => {
-              if (selected) return;
-              Haptics.selectionAsync().catch(() => {});
-              setLanguage(lang);
-            }}
-            activeOpacity={0.85}
-            accessibilityRole="radio"
-            accessibilityState={{ selected }}
-          >
-            <Text style={[s.text, large && s.textLarge, selected && s.textSelected]}>{LANGUAGE_NAMES[lang]}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+    <PopoverMenu
+      accessibilityLabel={label}
+      items={items}
+      matchWidth={large}
+      style={[large && s.stretch, style]}
+      trigger={
+        <View style={[s.field, large && s.fieldLarge]}>
+          {large && <Ionicons name="language-outline" size={20} color={Colors.ink} />}
+          <Text style={[s.text, large && s.textLarge]}>{LANGUAGE_NAMES[language]}</Text>
+          <Ionicons name="chevron-down" size={large ? 20 : 16} color={Colors.inkSoft} />
+        </View>
+      }
+    />
   );
 }
 
 const s = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 6, backgroundColor: Colors.accentTint, borderRadius: 10, padding: 3 },
-  rowLarge: { gap: 8, borderRadius: 14, padding: 4, alignSelf: 'stretch' },
-  option: { minHeight: 34, paddingHorizontal: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  optionLarge: { flex: 1, minHeight: 48, borderRadius: 11 },
-  optionSelected: { backgroundColor: Colors.ink },
-  text: { fontSize: 13, fontWeight: '700', color: Colors.ink },
-  textLarge: { fontSize: 16, fontWeight: '800' },
-  textSelected: { color: Colors.onDark },
+  stretch: { alignSelf: 'stretch' },
+  field: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 10, backgroundColor: Colors.accentTint },
+  fieldLarge: { minHeight: 52, gap: 10, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, ...inputSurface },
+  text: { fontSize: 14, fontWeight: '700', color: Colors.ink },
+  textLarge: { flex: 1, fontSize: 16, fontWeight: '800' },
 });

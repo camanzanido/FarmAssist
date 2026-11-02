@@ -116,6 +116,7 @@ export default function ProfileScreen() {
       {!isAuthenticated ? (
         <View style={s.signedOutScreen}>
           <View style={s.signedOutTop}>
+            <LanguagePicker size="icon" />
             <TouchableOpacity onPress={() => nav.push('/about')} hitSlop={8} style={s.topIcon} accessibilityRole="button" accessibilityLabel={copy.about}>
               <Ionicons name="information-circle-outline" size={24} color={Colors.text} />
             </TouchableOpacity>
@@ -130,7 +131,6 @@ export default function ProfileScreen() {
               resizeMode="contain"
               accessibilityIgnoresInvertColors
             />
-            <LanguagePicker style={s.signedOutLanguage} />
             <Text style={s.signedOutTitle}>{copy.signedOutTitle}</Text>
             <Text style={s.signedOutSubtitle}>{copy.signedOutSubtitle}</Text>
 
@@ -306,7 +306,6 @@ const s = StyleSheet.create({
   signedOutTitle: { fontSize: 24, fontWeight: '800', color: Colors.ink, marginBottom: 10, textAlign: 'center' },
   signedOutSubtitle: { fontSize: 14, color: Colors.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
   signedOutLogo: { width: 84, height: 84, alignSelf: 'center', marginBottom: 16 },
-  signedOutLanguage: { marginBottom: 20 },
   primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   primaryBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
   secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center' },
