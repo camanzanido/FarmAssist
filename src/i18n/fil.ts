@@ -385,9 +385,9 @@ export const fil: Copy = {
     tagline: 'Mga desisyong handa sa klima para sa mga magsasakang Pilipino',
     version: (v: string) => `Bersyon ${v}`,
     whatHeading: 'Ano ang ginagawa nito',
-    whatBody: 'Tinutulungan ng FarmAssist ang mga magsasaka at extension worker na pumili sa pagitan ng dalawang opsyon sa pagsasaka, gaya ng kung aling pananim ang itatanim, aling barayti ang palalaguin, o kung poprotektahan ang pananim mula sa ulan. Ilalagay mo ang inaasahang ani, presyo, at gastos, at irerekomenda ng app ang opsyong mas malamang na kikita sa klima ng darating na panahon. Gumagana ito nang buong offline, at nasi-sync sa cloud ang mga desisyon mo kapag nag-sign in ka. Ginagamit ng mga mananaliksik sa UPLB ang admin na bahagi ng app para pamahalaan ang mga account, maghanda ng mga inirerekomendang halaga para sa bawat lugar, at suriin, i-mapa, at i-export ang mga desisyong ibinabahagi ng mga magsasaka, upang pag-aralan kung paano ginagamit ang impormasyon tungkol sa klima.',
+    whatBody: 'Tinutulungan ng FarmAssist ang mga magsasaka at extension worker na pumili sa pagitan ng dalawang opsyon sa pagsasaka, gaya ng kung aling pananim ang itatanim, aling barayti ang palalaguin, o kung poprotektahan ang pananim mula sa ulan. Ilalagay mo ang inaasahang ani, presyo, at gastos, at irerekomenda ng app ang opsyong mas malamang na kikita sa klima ng darating na panahon. Gumagana ito nang buong offline, at nasi-sync sa cloud ang mga desisyon mo kapag nag-sign in ka. Pinamamahalaan ng mga admin ang mga account, naghahanda sila ng mga inirerekomendang halaga para sa bawat lugar, at sinusuri, imamapa, at ine-export nila ang mga desisyong ibinabahagi ng mga magsasaka, upang pag-aralan kung paano ginagamit ang impormasyon tungkol sa klima.',
     rcdaHeading: 'Ang RCDA model',
-    rcdaBody: 'Nagmumula ang mga rekomendasyon sa Rapid Climate Decision Analysis (RCDA). Pinagsasama nito ang seasonal na forecast ng ulan (ang tsansa ng mas mababa sa normal, halos normal, o mas mataas sa normal na panahon) at ang kita ng bawat opsyon sa tuyo, karaniwan, at maulang kondisyon. Pagkatapos, inihahambing nito ang mga inaasahang kita at ipinapakita ang inirerekomendang opsyon, ang tinatayang pagkakaiba sa kita, at isang puno ng desisyon (decision tree) ng mga posibleng resulta. Ginawa ito mula sa prototype na Rapid Climate Decision Analysis bersyon 3.2. Tumutulong ang FarmAssist sa pagdedesisyon pero hindi ito ang nagdedesisyon: nasa magsasaka pa rin ang huling pasya, at ang bawat resulta ay kasing-tumpak lamang ng datos na inilagay.',
+    rcdaBody: 'Nagmumula ang mga rekomendasyon sa Rapid Climate Decision Analysis (RCDA). Pinagsasama nito ang seasonal na forecast ng ulan (ang tsansa ng mas mababa sa normal, halos normal, o mas mataas sa normal na panahon) at ang kita ng bawat opsyon sa tuyo, karaniwan, at maulang kondisyon. Pagkatapos, inihahambing nito ang mga inaasahang kita at ipinapakita ang inirerekomendang opsyon, ang tinatayang pagkakaiba sa kita, at isang puno ng desisyon (decision tree) ng mga posibleng resulta. Ginawa ito mula sa prototype na Rapid Climate Decision Analysis bersyon 3.2 nina Dr. Peter Hayman at Dr. Canesio Predo. Tumutulong ang FarmAssist sa pagdedesisyon pero hindi ito ang nagdedesisyon: nasa magsasaka pa rin ang huling pasya, at ang bawat resulta ay kasing-tumpak lamang ng datos na inilagay.',
     originHeading: 'Pinagmulan',
     originBody: 'Binuo ang mobile application na ito sa pamamagitan ng pinagsamang proyekto ng UPLB Interdisciplinary Studies Center for Integrated Natural Resources and Environment Management (UPLB-INREM) at ng Institute of Computer Science (ICS) ng University of the Philippines Los Baños (UPLB).',
     creditsHeading: 'Proyekto',
@@ -398,7 +398,7 @@ export const fil: Copy = {
     contactHeading: 'Makipag-ugnayan',
     contactLabel: 'Magpadala ng feedback',
     contactEmail: 'camanzanido@up.edu.ph',
-    footer: 'Ginawa para sa mga magsasaka, extension worker, at mananaliksik.',
+    footer: 'Ginawa para sa mga magsasaka at extension worker.',
   },
 
   authCopy: {

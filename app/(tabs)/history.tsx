@@ -250,6 +250,17 @@ export default function HistoryScreen() {
           <Text style={s.title}>{copy.title}</Text>
           <Text style={s.subtitle}>{copy.subtitle(decisions.length)}</Text>
         </View>
+        {decisions.length > 1 && (
+          <PopoverMenu
+            icon="filter-outline"
+            style={s.sortBtn}
+            accessibilityLabel={copy.sortLabel}
+            items={[
+              { key: 'newest', label: copy.sortNewest, icon: 'arrow-down-outline', selected: sortOrder === 'newest', onPress: () => setSortOrder('newest') },
+              { key: 'oldest', label: copy.sortOldest, icon: 'arrow-up-outline', selected: sortOrder === 'oldest', onPress: () => setSortOrder('oldest') },
+            ]}
+          />
+        )}
       </View>
 
       {decisions.length > 0 && (
@@ -262,17 +273,6 @@ export default function HistoryScreen() {
               style={s.filterContent}
             />
           </View>
-          {decisions.length > 1 && (
-            <PopoverMenu
-              icon="filter-outline"
-              style={s.sortBtn}
-              accessibilityLabel={copy.sortLabel}
-              items={[
-                { key: 'newest', label: copy.sortNewest, icon: 'arrow-down-outline', selected: sortOrder === 'newest', onPress: () => setSortOrder('newest') },
-                { key: 'oldest', label: copy.sortOldest, icon: 'arrow-up-outline', selected: sortOrder === 'oldest', onPress: () => setSortOrder('oldest') },
-              ]}
-            />
-          )}
         </View>
       )}
 
@@ -334,8 +334,8 @@ const s = StyleSheet.create({
   subtitle: { fontSize: 14, color: Colors.inkSoft, marginTop: 3 },
 
   filterRow: { ...contentColumn, flexDirection: 'row', alignItems: 'center', paddingTop: 16, paddingBottom: 4 },
-  filterContent: { paddingLeft: 24, paddingRight: 12 },
-  sortBtn: { marginRight: 18 },
+  filterContent: { paddingHorizontal: 24 },
+  sortBtn: { marginRight: -8 },
 
   centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
   emptyText: { fontSize: 15, fontWeight: '700', color: Colors.ink, marginTop: 4 },
