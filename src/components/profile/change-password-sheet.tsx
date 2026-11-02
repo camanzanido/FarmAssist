@@ -3,7 +3,7 @@ import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import { supabase } from '@/src/database/supabase/supabase';
-import { getAuthErrorMessage, isInvalidCredentialsError } from '@/src/utils/errors';
+import { getAuthErrorMessage, isInvalidCredentialsError, UserFacingError } from '@/src/utils/errors';
 import { validatePassword, validatePasswordConfirm } from '@/src/utils/passwordValidation';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
@@ -49,7 +49,7 @@ export function ChangePasswordSheet({ visible, onClose, onChanged }: Props) {
       // The session's email is the login email, including the hidden one on accounts without an email.
       const { data } = await supabase.auth.getSession();
       const email = data.session?.user.email;
-      if (!email) throw new Error(copy.signedOut);
+      if (!email) throw new UserFacingError(copy.signedOut);
       await changePassword(email, current, next);
       onChanged();
     } catch (err) {

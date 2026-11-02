@@ -31,6 +31,9 @@ export const errorCopy = {
   rateLimit: 'Too many attempts. Please wait a few minutes and try again.',
   session: 'Your sign-in has expired. Log out, then sign in again.',
   disabled: 'This account has been disabled, so it can no longer sign in or sync. You can still use FarmAssist without signing in.',
+  emailTaken: 'An account with this email already exists. Sign in instead.',
+  invalidEmail: 'That email address is not valid. Check it and try again.',
+  weakPassword: 'That password is too easy to guess. Choose a longer one.',
 };
 
 export const languageCopy = {

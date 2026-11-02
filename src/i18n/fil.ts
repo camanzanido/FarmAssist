@@ -37,6 +37,9 @@ export const fil: Copy = {
     rateLimit: 'Masyadong maraming pagsubok. Maghintay ng ilang minuto at subukang muli.',
     session: 'Nag-expire na ang pag-sign in mo. Mag-log out, saka mag-sign in ulit.',
     disabled: 'Na-disable na ang account na ito, kaya hindi na ito makakapag-sign in o makakapag-sync. Magagamit mo pa rin ang FarmAssist nang hindi nagsa-sign in.',
+    emailTaken: 'May account na sa email na ito. Mag-sign in na lang.',
+    invalidEmail: 'Hindi wasto ang email address na iyan. Tingnan ito at subukang muli.',
+    weakPassword: 'Masyadong madaling hulaan ang password na iyan. Pumili ng mas mahaba.',
   },
 
   languageCopy: {
