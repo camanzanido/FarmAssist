@@ -25,3 +25,27 @@ describe('arcDash', () => {
     expect(arcDash(2, 6, 18).dash).toBe(0.5);
   });
 });
+
+describe('segmentLengths', () => {
+  const { segmentLengths } = require('../../src/utils/donutArc');
+
+  it('keeps proportional lengths when every segment is long enough', () => {
+    expect(segmentLengths([1, 1, 2], 400, 24)).toEqual([100, 100, 200]);
+  });
+
+  it('gives a tiny segment the minimum and takes it from the others proportionally', () => {
+    const out: number[] = segmentLengths([1, 49, 50], 400, 24);
+    expect(out[0]).toBe(24);
+    expect(out.reduce((a, b) => a + b, 0)).toBeCloseTo(400);
+    expect(out[1] / out[2]).toBeCloseTo(49 / 50);
+  });
+
+  it('lets a tiny segment keep round caps once it has the minimum', () => {
+    const [tiny] = segmentLengths([1, 99], 400, 18 + 4 + 1);
+    expect(arcDash(tiny, 4, 18).cap).toBe('round');
+  });
+
+  it('splits evenly when there is not room for every minimum', () => {
+    expect(segmentLengths([1, 1, 1, 97], 60, 24)).toEqual([15, 15, 15, 15]);
+  });
+});
