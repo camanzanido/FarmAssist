@@ -25,7 +25,7 @@ function initials(name: string): string {
 }
 
 export default function ResearcherProfileScreen() {
-  const { user, signOut, refreshProfile } = useAuth();
+  const { user, signOut } = useAuth();
   const { confirm, notify } = useFeedback();
   const nav = useNavLock();
   const edit = useEditProfile();
@@ -42,23 +42,25 @@ export default function ResearcherProfileScreen() {
     if (confirmed) await signOut();
   }
 
-  async function handleDeactivate() {
+  async function handleDelete() {
     if (!user) return;
     const confirmed = await confirm({
-      title: 'Deactivate your account?',
-      message: 'You will lose access to admin tools right away. Another admin cannot turn it back on; it has to be reactivated in the Supabase dashboard.',
-      confirmText: 'Deactivate',
+      title: 'Delete your account?',
+      message: "You'll be signed out and won't be able to sign in again. Another admin can't restore it; only the Supabase dashboard can.",
+      confirmText: 'Delete',
       tone: 'destructive',
-      icon: 'person-remove-outline',
+      icon: 'trash-outline',
     });
     if (!confirmed) return;
     try {
       await updateUserRemote(user.id, { status: 'inactive' });
-      await refreshProfile();
     } catch (err) {
-      console.error('Failed to deactivate own account:', err);
-      notify.error('Could not deactivate', getActionErrorMessage(err, 'Please try again.'));
+      console.error('Failed to delete own account:', err);
+      notify.error('Could not delete', getActionErrorMessage(err, 'Please try again.'));
+      return;
     }
+    // The server already revoked every session, so this only clears what is left on this device.
+    await signOut().catch(err => console.warn('Sign-out after account delete failed:', err));
   }
 
   if (!user) return null;
@@ -126,8 +128,8 @@ export default function ResearcherProfileScreen() {
         <TouchableOpacity onPress={handleLogout} style={s.logoutRow} activeOpacity={0.8}>
           <Text style={s.logoutText}>Log out</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleDeactivate} style={s.deactivateRow} activeOpacity={0.8} accessibilityRole="button">
-          <Text style={s.deactivateText}>Deactivate my account</Text>
+        <TouchableOpacity onPress={handleDelete} style={s.deleteRow} activeOpacity={0.8} accessibilityRole="button">
+          <Text style={s.deleteText}>Delete my account</Text>
         </TouchableOpacity>
       </ScrollView>
       <EditProfileSheet visible={edit.isOpen} online pendingEmail={edit.pendingEmail} onClose={edit.close} onSaved={edit.onSaved} />
@@ -168,6 +170,6 @@ const s = StyleSheet.create({
 
   logoutRow: { alignItems: 'center', paddingVertical: 10 },
   logoutText: { fontSize: 15, fontWeight: '700', color: C.danger },
-  deactivateRow: { alignItems: 'center', paddingVertical: 10, marginTop: 4 },
-  deactivateText: { fontSize: 13.5, fontWeight: '600', color: C.textSoft, textDecorationLine: 'underline' },
+  deleteRow: { alignItems: 'center', paddingVertical: 10, marginTop: 4 },
+  deleteText: { fontSize: 13.5, fontWeight: '600', color: C.textSoft, textDecorationLine: 'underline' },
 });

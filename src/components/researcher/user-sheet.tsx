@@ -41,17 +41,17 @@ function describe(user: User, pending: Pending): Confirmation {
   const isApproval = user.status === 'pending';
   const isResearcher = user.user_type === 'researcher';
   return {
-    title: deactivating ? 'Deactivate this account?' : isApproval ? 'Approve this account?' : 'Reactivate this account?',
+    title: deactivating ? 'Disable this account?' : isApproval ? 'Approve this account?' : 'Enable this account?',
     message: deactivating
       ? isResearcher
-        ? `${user.name} will lose access to researcher tools until reactivated. They can still sign in.`
-        : `${user.name} can still sign in and use the app. Their account will be marked inactive.`
+        ? `${user.name} will be signed out and won't be able to sign in again.`
+        : `${user.name} will be signed out and won't be able to sign in or sync. They can still use the app without signing in, and decisions on their phone stay there.`
       : isApproval
         ? `${user.name} will gain full ${isResearcher ? 'researcher ' : ''}access.`
         : isResearcher
-          ? `${user.name} will regain access to researcher tools.`
-          : `${user.name}'s account will be marked active again.`,
-    confirmText: deactivating ? 'Deactivate' : isApproval ? 'Approve' : 'Reactivate',
+          ? `${user.name} will be able to sign in and use researcher tools again.`
+          : `${user.name} will be able to sign in and sync again.`,
+    confirmText: deactivating ? 'Disable' : isApproval ? 'Approve' : 'Enable',
     destructive: deactivating,
     icon: deactivating ? 'person-remove-outline' : 'person-add-outline',
   };
@@ -235,7 +235,7 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
           <Ionicons name="lock-closed-outline" size={18} color={C.textSoft} />
           <Text style={s.lockedText}>
             {isSelf
-              ? 'This is your account. Change your password or deactivate it from Profile.'
+              ? 'This is your account. Change your password or delete it from Profile.'
               : 'Admin accounts are managed by the system owner. You can manage field user accounts.'}
           </Text>
         </View>
@@ -245,7 +245,7 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
           {isDormant(user) && (
             <View style={s.dormantHint}>
               <Ionicons name="time-outline" size={15} color={C.amber} />
-              <Text style={s.dormantHintText}>No activity in over a year. Consider deactivating.</Text>
+              <Text style={s.dormantHintText}>No activity in over a year. Consider disabling.</Text>
             </View>
           )}
           <TouchableOpacity
@@ -258,7 +258,7 @@ export function UserSheet({ visible, user, isSelf, onClose, onChanged }: {
               color={user.status === 'active' ? C.danger : C.accent}
             />
             <Text style={[s.statusText, user.status !== 'active' && s.approveText]}>
-              {user.status === 'active' ? 'Deactivate account' : user.status === 'pending' ? 'Approve account' : 'Reactivate account'}
+              {user.status === 'active' ? 'Disable account' : user.status === 'pending' ? 'Approve account' : 'Enable account'}
             </Text>
           </TouchableOpacity>
 

@@ -49,6 +49,14 @@ export function isExpiredSessionError(err: unknown): boolean {
   return isSessionMissingError(err) || code === 'session_expired' || code === 'bad_jwt';
 }
 
+const DISABLED_MESSAGE = 'This account has been disabled, so it can no longer sign in or sync. You can still use FarmAssist without signing in.';
+
+// Inactive accounts are banned in Supabase Auth; email sign-in hits that ban directly, username sign-in gets it from the sign-in function.
+export function isAccountDisabledError(err: unknown): boolean {
+  const code = errCode(err);
+  return code === 'user_banned' || code === 'account_deactivated' || errMessage(err).includes('User is banned');
+}
+
 function isRateLimitError(err: unknown): boolean {
   const status = err && typeof err === 'object' && 'status' in err ? (err as any).status : undefined;
   return status === 429 || errCode(err) === 'over_request_rate_limit';
@@ -59,6 +67,7 @@ export function getAuthErrorMessage(err: unknown, fallback: string): string {
   if (isNetworkError(err)) return OFFLINE_MESSAGE;
   if (isRateLimitError(err)) return RATE_LIMIT_MESSAGE;
   if (isSessionMissingError(err)) return SESSION_MESSAGE;
+  if (isAccountDisabledError(err)) return DISABLED_MESSAGE;
   const msg = errMessage(err);
   for (const key of Object.keys(AUTH_MESSAGE_OVERRIDES)) {
     if (msg.includes(key)) return AUTH_MESSAGE_OVERRIDES[key];

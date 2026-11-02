@@ -16,6 +16,7 @@ type Props = {
   stroke?: number;
   labels?: Record<BandKey, string>;
   onChange?: (driest: number, wettest: number) => void;
+  onDragActiveChange?: (active: boolean) => void;
 };
 
 type BandKey = 'dry' | 'average' | 'wet';
@@ -29,7 +30,7 @@ const BANDS: { key: BandKey; color: string }[] = [
 ];
 
 // Draws the dry / average / wet split as a ring; with onChange, the two band boundaries can be dragged.
-export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels = resultCopy.normalYearLegend, onChange }: Props) {
+export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels = resultCopy.normalYearLegend, onChange, onDragActiveChange }: Props) {
   const interactive = !!onChange;
   const handleR = interactive ? stroke * 0.4 : 0;
   const c = size / 2;
@@ -56,6 +57,8 @@ export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels
       const boundary = nearestBoundary(pct, latest.current);
       drag.current = { boundary, track: startDrag(boundary, pct, latest.current), pct };
       setActive(boundary);
+      // Fires on touch-down, before a parent ScrollView's touch slop, so the parent can stop scrolling in time.
+      onDragActiveChange?.(true);
     })
     .onUpdate(e => {
       const d = drag.current;
@@ -70,6 +73,7 @@ export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels
       }
     })
     .onFinalize(() => {
+      if (drag.current) onDragActiveChange?.(false);
       drag.current = null;
       setActive(null);
     });

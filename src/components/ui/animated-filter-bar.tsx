@@ -61,16 +61,19 @@ export function AnimatedFilterBar<T extends string>({ options, selected, onSelec
       contentContainerStyle={[s.row, style]}
       accessibilityRole="tablist"
     >
-      <Animated.View pointerEvents="none" style={[s.pill, target && { top: target.y, height: target.height }, pillStyle]} />
-      {options.map(o => (
-        <FilterChip
-          key={o.value}
-          label={o.label}
-          isSelected={o.value === selected}
-          onPress={() => onSelect(o.value)}
-          onLayout={onChipLayout(o.value)}
-        />
-      ))}
+      {/* Pill and chips share this unpadded track, so caller padding can't offset the pill from the chip it covers. */}
+      <View style={s.track}>
+        <Animated.View pointerEvents="none" style={[s.pill, target && { top: target.y, height: target.height }, pillStyle]} />
+        {options.map(o => (
+          <FilterChip
+            key={o.value}
+            label={o.label}
+            isSelected={o.value === selected}
+            onPress={() => onSelect(o.value)}
+            onLayout={onChipLayout(o.value)}
+          />
+        ))}
+      </View>
     </ScrollView>
   );
 }
@@ -94,7 +97,8 @@ function FilterChip({ label, isSelected, onPress, onLayout }: ChipProps) {
 }
 
 const s = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 8 },
+  row: { flexDirection: 'row' },
+  track: { flexDirection: 'row', gap: 8 },
   pill: { position: 'absolute', top: 0, left: 0, borderRadius: 999, backgroundColor: Colors.ink },
   chip: { borderWidth: 1.5, borderColor: Colors.chipBorder, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   chipSelected: { borderColor: 'transparent' },

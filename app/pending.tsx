@@ -59,12 +59,12 @@ export default function PendingScreen() {
         </View>
 
         <Text style={s.title}>
-          {isDeactivated ? 'Account deactivated' : 'Waiting for approval'}
+          {isDeactivated ? 'Account closed' : 'Waiting for approval'}
         </Text>
 
         <Text style={s.body}>
           {isDeactivated
-            ? 'Your account has been deactivated, so researcher features are unavailable. Contact a researcher if you think this is a mistake.'
+            ? 'This account has been closed and can no longer sign in. Log out to keep using FarmAssist on this device.'
             : 'Your researcher account has been created. An existing researcher needs to approve it before you can review data or manage users.'}
         </Text>
 

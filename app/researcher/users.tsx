@@ -36,7 +36,7 @@ function UserRow({ user: u, onPress }: { user: ResearcherUserRow; onPress: (u: R
       <View style={{ flex: 1 }}>
         <Text style={s.userName} numberOfLines={1}>{u.name}</Text>
         <Text style={s.userMeta} numberOfLines={1}>
-          @{u.username}{isPending ? ' · awaiting approval' : isInactive ? ' · deactivated' : ''}
+          @{u.username}{isPending ? ' · awaiting approval' : isInactive ? ' · disabled' : ''}
         </Text>
         {dormant && (
           <View style={s.dormantRow}>
