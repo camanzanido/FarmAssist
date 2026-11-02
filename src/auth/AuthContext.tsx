@@ -139,6 +139,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         if (event === 'SIGNED_OUT') {
           dispatch({ type: 'CLEAR_USER' });
+          // A revoked session (e.g. a disabled account) signs out without signOut(); stop syncing but keep every local decision.
+          setTimeout(() => {
+            db.disconnect().catch(err => console.warn('Sync disconnect after sign-out failed:', err));
+          }, 0);
         }
         if (event === 'TOKEN_REFRESHED') {
           dispatch({ type: 'SET_ONLINE', payload: true });

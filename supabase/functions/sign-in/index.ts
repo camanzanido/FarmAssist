@@ -9,7 +9,8 @@ declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
 
 const INTERNAL_EMAIL_DOMAIN = 'farmassist.invalid';
 const WRONG_LOGIN = 'Incorrect username or password.';
-const TOO_MANY = 'Too many sign-in attempts. Please wait a few minutes and try again.';
+const DISABLED = 'This account has been disabled, so it can no longer sign in or sync. You can still use FarmAssist without signing in.';
+const TOO_MANY ='Too many sign-in attempts. Please wait a few minutes and try again.';
 
 // Supabase Auth sees every call from this function as one IP, so the per-user and per-device limits live here.
 const RATE_WINDOW_S = 15 * 60;
@@ -78,6 +79,9 @@ Deno.serve(async (req) => {
   if (error || !data.session) {
     if (error?.status === 429) {
       return fail(429, 'over_request_rate_limit', TOO_MANY);
+    }
+    if (error?.code === 'user_banned') {
+      return fail(403, 'account_deactivated', DISABLED);
     }
     if (error?.code === 'email_not_confirmed') {
       return fail(400, 'email_not_confirmed', 'Open the confirmation link we emailed you, then sign in.');

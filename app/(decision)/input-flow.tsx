@@ -58,6 +58,7 @@ export default function DecisionInputFlow() {
 
   const [driest, setDriest] = useState('33');
   const [wettest, setWettest] = useState('33');
+  const [donutDragging, setDonutDragging] = useState(false);
 
   // Automatic calculation: 100 - driest - wettest
   const dVal = parseInt(driest) || 0;
@@ -398,7 +399,7 @@ export default function DecisionInputFlow() {
               </View>
             </View>
 
-            <ScrollView style={s.fill} showsVerticalScrollIndicator={false}>
+            <ScrollView style={s.fill} showsVerticalScrollIndicator={false} scrollEnabled={!donutDragging}>
             <View style={s.climateCard}>
               <View style={s.donutWrap}>
                 <ForecastDonut
@@ -406,6 +407,7 @@ export default function DecisionInputFlow() {
                   wettest={wVal}
                   labels={{ dry: climateCopy.dryYears, average: climateCopy.averageYears, wet: climateCopy.wetYears }}
                   onChange={handleDonutChange}
+                  onDragActiveChange={setDonutDragging}
                 />
                 <Text style={s.donutHint}>{climateCopy.donutHint}</Text>
               </View>
