@@ -4,13 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, Text, View } from 'react-native';
 import { AppStartSkeleton } from '../components/skeletons/app-skeletons';
 import { Colors } from '../constants/colors';
-import { startupCopy as copy } from '../constants/copy';
 import { db } from './powersync/powersync';
 import { repairUnsyncableDecisions } from './repositories/decisions';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 const SLOW_STARTUP_MS = 15_000;
 
 export function PowerSyncProvider({ children }: { children: React.ReactNode }) {
+  const { startupCopy: copy } = useCopy();
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [isSlow, setIsSlow] = useState(false);

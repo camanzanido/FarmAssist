@@ -1,13 +1,15 @@
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Colors } from '@/src/constants/colors';
 import { BUTTON_HEIGHT } from '@/src/constants/layout';
-import { GLOSSARY, GlossaryKey, helpCopy } from '@/src/constants/copy';
+import type { GlossaryKey } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 // A "?" button that explains one or more glossary terms in a bottom sheet.
 export function TermHelpButton({ terms, label, size = 20 }: { terms: GlossaryKey[]; label?: string; size?: number }) {
+  const { GLOSSARY, helpCopy } = useCopy();
   const [open, setOpen] = useState(false);
   const title = label ?? GLOSSARY[terms[0]].term;
 

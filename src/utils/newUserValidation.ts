@@ -1,6 +1,7 @@
 import { INTERNAL_EMAIL_DOMAIN, validateUsername } from './accountEmail';
 import { PASSWORD_MIN_LENGTH } from './passwordValidation';
 import { cleanEmail, cleanName, NAME_MAX_LENGTH } from './profileValidation';
+import { getCopy } from '../i18n/dictionary';
 
 export const TEMP_PASSWORD_MIN_LENGTH = PASSWORD_MIN_LENGTH;
 
@@ -46,7 +47,7 @@ export function validateOptionalEmail(raw: string): string | null {
   const email = cleanEmail(raw);
   if (!email) return null;
   if (!EMAIL_PATTERN.test(email) || email.endsWith(`@${INTERNAL_EMAIL_DOMAIN}`)) {
-    return 'Enter a valid email, like juan@example.com.';
+    return getCopy().validationCopy.emailInvalid;
   }
   return null;
 }

@@ -2,9 +2,9 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { claimAnonymousDecisions } from '@/src/auth/authService';
 import { markClaimPromptShown, wasClaimPromptShown } from '@/src/auth/claimPromptState';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
-import { claimCopy as copy } from '@/src/constants/copy';
 import { countAnonymousStagedDecisions } from '@/src/database/repositories/decisions';
 import { useEffect } from 'react';
+import { getCopy } from '@/src/i18n/dictionary';
 
 let busy = false;
 
@@ -21,6 +21,8 @@ export function useOfflineClaimPrompt() {
     busy = true;
 
     const run = async () => {
+      // Read when the prompt fires, not as a dependency, so switching language never re-runs this effect.
+      const copy = getCopy().claimCopy;
       let count: number;
       try {
         count = await countAnonymousStagedDecisions();

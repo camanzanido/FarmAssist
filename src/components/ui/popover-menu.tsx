@@ -5,6 +5,7 @@ import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, useWindowDimensio
 import { EASE_OUT } from '@/src/constants/motion';
 import Animated, { FadeOut, Keyframe, useReducedMotion } from 'react-native-reanimated';
 import { MotionIcon, useIconMotion, type IconMotion } from './animated-icon';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 // Grows from its top-right corner, where the trigger sits.
 const MENU_IN = new Keyframe({
@@ -35,6 +36,7 @@ const MENU_WIDTH = 210;
 
 // An icon button that opens a small menu anchored under it; tapping outside closes it.
 export function PopoverMenu({ icon, accessibilityLabel, items, style, iconSize = 23, motion = 'pop' }: Props) {
+  const { commonCopy } = useCopy();
   const { width } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const triggerRef = useRef<View>(null);
@@ -63,7 +65,7 @@ export function PopoverMenu({ icon, accessibilityLabel, items, style, iconSize =
         <MotionIcon name={icon} size={iconSize} color={Colors.ink} style={iconMotion.style} />
       </TouchableOpacity>
       <Modal visible={!!anchor} transparent animationType="none" onRequestClose={close} statusBarTranslucent>
-        <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close menu" />
+        <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel={commonCopy.closeMenu} />
         {anchor && (
           <Animated.View
             entering={reduceMotion ? undefined : MENU_IN}

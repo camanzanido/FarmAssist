@@ -9,6 +9,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-g
 import Animated, {
   Easing, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming,
 } from 'react-native-reanimated';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 const CLOSE = { duration: 260, easing: Easing.in(Easing.cubic) };
 const SPRING_BACK = GLIDE_SPRING;
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export function BottomSheet({ visible, onClose, avoidKeyboard, style, scrollProps, children }: Props) {
+  const { commonCopy } = useCopy();
   const { height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(visible);
@@ -122,7 +124,7 @@ export function BottomSheet({ visible, onClose, avoidKeyboard, style, scrollProp
       <GestureHandlerRootView style={s.root}>
         <View style={s.root}>
           <Animated.View style={[StyleSheet.absoluteFill, s.backdrop, backdropStyle]}>
-            <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
+            <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={commonCopy.close} />
           </Animated.View>
           <Animated.View
             style={[s.sheet, style, sheetStyle]}
@@ -130,7 +132,7 @@ export function BottomSheet({ visible, onClose, avoidKeyboard, style, scrollProp
             accessibilityViewIsModal
           >
             <GestureDetector gesture={handlePan}>
-              <View style={s.handleZone} accessibilityHint="Swipe down to close">
+              <View style={s.handleZone} accessibilityHint={commonCopy.swipeToClose}>
                 <View style={s.grabber} />
               </View>
             </GestureDetector>

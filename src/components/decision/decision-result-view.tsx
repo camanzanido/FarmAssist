@@ -1,7 +1,6 @@
 import { OdometerText } from '@/src/components/ui/odometer-text';
 import { DECISION_IMAGES, DecisionType } from '@/src/constants';
 import { BrandGradient, brandGradientCss, cardShadow, Colors, ForecastColors } from '@/src/constants/colors';
-import { resultCopy as copy, treeCopy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
 import type { NormalYearComparison } from '@/src/rcda/baseline';
 import type { OutcomeFavor, RcdaSummary } from '@/src/rcda/summary';
@@ -14,6 +13,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DecisionTree, formatPeso } from './decision-tree';
 import { ForecastDonut } from './forecast-donut';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 interface Props {
   summary: RcdaSummary;
@@ -37,6 +37,7 @@ const MASK_BOTTOM = 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,25
 const MUTED_COLUMN = `linear-gradient(180deg, ${Colors.barMuted} 0%, ${Colors.divider} 100%)`;
 
 function ScrollHint({ onPress }: { onPress: () => void }) {
+  const { resultCopy: copy } = useCopy();
   const reduceMotion = useReducedMotion();
   const bob = useSharedValue(0);
 
@@ -70,6 +71,7 @@ function EarningsColumn({ name, score, ratio, highlighted, recommended }: {
   highlighted: boolean;
   recommended: boolean;
 }) {
+  const { resultCopy: copy } = useCopy();
   const reduceMotion = useReducedMotion();
   const target = Math.max(COLUMN_MIN, Math.round(ratio * COLUMN_MAX));
   const height = useSharedValue(reduceMotion ? target : 0);
@@ -97,6 +99,7 @@ function EarningsColumn({ name, score, ratio, highlighted, recommended }: {
 }
 
 function NormalBetterNote({ name, gain }: { name: string; gain: number }) {
+  const { resultCopy: copy } = useCopy();
   return (
     <View style={s.normalBetter}>
       <Ionicons name="trending-up" size={16} color={Colors.inkSoft} />
@@ -145,6 +148,7 @@ function NormalYearSection({ baseline, optionNames, bothNegative }: {
   optionNames: string[];
   bothNegative: boolean;
 }) {
+  const { resultCopy: copy } = useCopy();
   const name = optionNames[baseline.focusOption];
   const amount = formatPeso(Math.abs(baseline.delta));
   let main: string;
@@ -199,6 +203,7 @@ function NormalYearSection({ baseline, optionNames, bothNegative }: {
 }
 
 export function DecisionResultView({ summary, baseline, decisionType, heroTop, banner, footer }: Props) {
+  const { resultCopy: copy, treeCopy } = useCopy();
   const [showDetail, setShowDetail] = useState(false);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();

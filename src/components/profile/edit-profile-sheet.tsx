@@ -4,7 +4,6 @@ import { changeUsername, requestEmailChange, saveName, verifyEmailChange } from 
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { brandGradientCss, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT } from '@/src/constants/layout';
-import { profileCopy as copy } from '@/src/constants/copy';
 import { FunctionError } from '@/src/database/supabase/invokeFunction';
 import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { isInternalEmail, normalizeUsername, realEmail, validateUsername } from '@/src/utils/accountEmail';
@@ -14,6 +13,7 @@ import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 export type ProfileSaveResult = { pendingEmail: string | null; nameChanged: boolean; emailVerified?: boolean };
 
@@ -28,6 +28,7 @@ type Props = {
 const RESEND_COOLDOWN_S = 60;
 
 export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSaved }: Props) {
+  const { profileCopy: copy } = useCopy();
   const { user, refreshProfile } = useAuth();
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');

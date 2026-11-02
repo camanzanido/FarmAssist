@@ -1,5 +1,5 @@
 import { Colors } from '@/src/constants/colors';
-import { GLOSSARY, GlossaryKey, helpCopy as copy } from '@/src/constants/copy';
+import type { GlossaryKey } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
 import { InfoSection, infoRowStyles as rows } from '@/src/components/ui/info-section';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,10 +7,13 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { copyFor } from '@/src/i18n/dictionary';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
-const TERM_ORDER = Object.keys(GLOSSARY) as GlossaryKey[];
+const TERM_ORDER = Object.keys(copyFor('en').GLOSSARY) as GlossaryKey[];
 
 function TermRow({ termKey }: { termKey: GlossaryKey }) {
+  const { GLOSSARY } = useCopy();
   const [open, setOpen] = useState(false);
   const { term, definition } = GLOSSARY[termKey];
   return (
@@ -31,6 +34,7 @@ function TermRow({ termKey }: { termKey: GlossaryKey }) {
 }
 
 export default function HelpScreen() {
+  const { helpCopy: copy } = useCopy();
   const router = useRouter();
 
   return (

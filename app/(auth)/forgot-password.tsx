@@ -3,7 +3,6 @@ import { sendPasswordResetCode, setPasswordAfterReset, verifyResetCode, type Res
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
-import { forgotPasswordCopy as copy } from '@/src/constants/copy';
 import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { isInternalEmail } from '@/src/utils/accountEmail';
 import { getAuthErrorMessage, isExpiredSessionError, isInvalidOtpError } from '@/src/utils/errors';
@@ -14,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 // Supabase allows one reset email per address every 60 seconds.
 const RESEND_COOLDOWN_S = 60;
@@ -21,6 +21,7 @@ const RESEND_COOLDOWN_S = 60;
 type Step = 'email' | 'code' | 'password';
 
 export default function ForgotPasswordScreen() {
+  const { forgotPasswordCopy: copy, commonCopy } = useCopy();
   const router = useRouter();
   const { notify } = useFeedback();
   const [step, setStep] = useState<Step>('email');
@@ -142,7 +143,7 @@ export default function ForgotPasswordScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity onPress={() => router.back()} style={s.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
+          <TouchableOpacity onPress={() => router.back()} style={s.closeBtn} accessibilityRole="button" accessibilityLabel={commonCopy.close}>
             <Ionicons name="close" size={22} color={Colors.ink} />
           </TouchableOpacity>
 

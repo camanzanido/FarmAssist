@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ToastStore } from './feedback-queue';
 import type { FeedbackTheme } from './feedback-theme';
 import type { IconName, Toast, ToastKind } from './types';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 const ICONS: Record<ToastKind, IconName> = {
   success: 'checkmark-circle',
@@ -40,6 +41,7 @@ export function ToastHost({ store, theme }: Props) {
 }
 
 function ToastItem({ toast, theme, onDismiss }: { toast: Toast; theme: FeedbackTheme; onDismiss: () => void }) {
+  const { commonCopy } = useCopy();
   const palette = theme.toast[toast.kind];
 
   useEffect(() => {
@@ -65,7 +67,7 @@ function ToastItem({ toast, theme, onDismiss }: { toast: Toast; theme: FeedbackT
         style={[s.toast, { backgroundColor: palette.bg, borderColor: palette.border }]}
         accessibilityRole="alert"
         accessibilityLiveRegion="polite"
-        accessibilityHint="Tap to dismiss"
+        accessibilityHint={commonCopy.tapToDismiss}
       >
         <Ionicons name={ICONS[toast.kind]} size={22} color={palette.icon} style={s.icon} />
         <View style={s.textWrap}>

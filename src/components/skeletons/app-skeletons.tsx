@@ -4,11 +4,13 @@ import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
 import React from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 function Loading({ children, style }: { children: React.ReactNode; style?: object }) {
+  const { commonCopy } = useCopy();
   return (
     <SkeletonGroup>
-      <View style={style} accessibilityLabel="Loading" accessibilityRole="progressbar">
+      <View style={style} accessibilityLabel={commonCopy.loading} accessibilityRole="progressbar">
         {children}
       </View>
     </SkeletonGroup>

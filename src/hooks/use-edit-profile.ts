@@ -2,11 +2,12 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { getPendingEmail } from '@/src/auth/profileService';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import type { ProfileSaveResult } from '@/src/components/profile/edit-profile-sheet';
-import { profileCopy as copy } from '@/src/constants/copy';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useRef, useState } from 'react';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 export function useEditProfile() {
+  const { profileCopy: copy } = useCopy();
   const { user, refreshProfile } = useAuth();
   const { notify } = useFeedback();
   const [isOpen, setIsOpen] = useState(false);
@@ -40,7 +41,7 @@ export function useEditProfile() {
     } else {
       notify.success(copy.profileUpdated);
     }
-  }, [notify]);
+  }, [notify, copy]);
 
   return {
     isOpen,

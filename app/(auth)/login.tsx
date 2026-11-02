@@ -1,7 +1,6 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { brandGradientCss, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
-import { authCopy as copy, forgotPasswordCopy } from '@/src/constants/copy';
 import { formatLockTime } from '@/src/auth/signInThrottle';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { useSignInThrottle } from '@/src/hooks/use-sign-in-throttle';
@@ -15,12 +14,14 @@ import { useState } from 'react';
 import { ActivityIndicator, Image, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type FieldErrors = Partial<Record<'login' | 'password', string>>;
 
 export default function LoginScreen() {
+  const { authCopy: copy, forgotPasswordCopy } = useCopy();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

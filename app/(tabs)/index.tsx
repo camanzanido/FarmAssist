@@ -1,11 +1,10 @@
 import { useAuth } from '@/src/auth/AuthContext';
-import { DECISIONS } from '@/src/constants';
+import { decisionsIn, type DecisionInfo } from '@/src/constants';
 import { AnimatedIcon, MotionIcon, useIconMotion } from '@/src/components/ui/animated-icon';
 import { usePressScale } from '@/src/components/ui/pressable-scale';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import { BrandGradient, brandGradientCss, CARD_PADDING, CARD_RADIUS, cardShadow, Colors } from '@/src/constants/colors';
 import { contentColumn, TAB_SCREEN_EDGES } from '@/src/constants/layout';
-import { decisionResultLabel, helpCopy, homeCopy as copy } from '@/src/constants/copy';
 import { getDecisionsByUser, type Decision } from '@/src/database/repositories/decisions';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { useUpdateCheck } from '@/src/hooks/use-update-check';
@@ -17,14 +16,16 @@ import React, { useCallback, useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { dateLocale } from '@/src/i18n/dictionary';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric' });
 }
 
-function DecisionCard({ decision: d, onPress }: { decision: (typeof DECISIONS)[number]; onPress: (id: string) => void }) {
+function DecisionCard({ decision: d, onPress }: { decision: DecisionInfo; onPress: (id: string) => void }) {
   const press = usePressScale();
   return (
     <Animated.View style={press.scaleStyle}>
@@ -55,6 +56,7 @@ function DecisionCard({ decision: d, onPress }: { decision: (typeof DECISIONS)[n
 }
 
 export default function HomeScreen() {
+  const { decisionResultLabel, helpCopy, homeCopy: copy, labelCopy } = useCopy();
   const nav = useNavLock();
   const { user } = useAuth();
   const { connected } = useSyncStatus();
@@ -156,7 +158,7 @@ export default function HomeScreen() {
         )}
 
         <View style={s.decisionList}>
-          {DECISIONS.map(d => (
+          {decisionsIn(labelCopy).map(d => (
             <DecisionCard key={d.id} decision={d} onPress={goToDecision} />
           ))}
         </View>

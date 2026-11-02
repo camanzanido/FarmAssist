@@ -1,6 +1,6 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
-import { DECISIONS, DECISION_ICONS, DECISION_LABELS, DecisionType } from '@/src/constants';
+import { DECISION_ICONS, DecisionType, decisionsIn } from '@/src/constants';
 import { HistorySkeleton } from '@/src/components/skeletons/app-skeletons';
 import { AnimatedFilterBar } from '@/src/components/ui/animated-filter-bar';
 import { PopoverMenu } from '@/src/components/ui/popover-menu';
@@ -8,7 +8,6 @@ import { usePressScale } from '@/src/components/ui/pressable-scale';
 import { TrashIcon } from '@/src/components/ui/trash-icon';
 import { brandGradientSoftCss, CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn, TAB_SCREEN_EDGES } from '@/src/constants/layout';
-import { decisionResultLabel, historyCopy as copy } from '@/src/constants/copy';
 import { db } from '@/src/database/powersync/powersync';
 import { deleteDecision, getDecisionsByUser, getStagedDecisionIds, type Decision } from '@/src/database/repositories/decisions';
 import { ProfitAmount } from '@/src/components/ui/profit-amount';
@@ -30,9 +29,11 @@ import {
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { dateLocale, type Copy } from '@/src/i18n/dictionary';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
-function decisionTypeLabel(type: string): string {
-  return DECISION_LABELS[type as DecisionType] ?? type;
+function decisionTypeLabel(labels: Copy['labelCopy'], type: string): string {
+  return labels.decisionLabels[type as DecisionType] ?? type;
 }
 
 function decisionTypeIcon(type: string): keyof typeof Ionicons.glyphMap {
@@ -42,7 +43,7 @@ function decisionTypeIcon(type: string): keyof typeof Ionicons.glyphMap {
 function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric' });
 }
 
 function timeOf(iso: string): number {
@@ -53,7 +54,7 @@ function timeOf(iso: string): number {
 function monthKey(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
 }
 
 // Narrow phones get smaller text so every card stays one line per row.
@@ -69,6 +70,7 @@ type RowProps = {
 
 // Memoised so opening one row's delete dialog doesn't re-render the rest of the list.
 const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen, onDelete }: RowProps) {
+  const { decisionResultLabel, historyCopy: copy, labelCopy } = useCopy();
   const [lidOpen, setLidOpen] = useState(false);
   const press = usePressScale();
   const compact = useWindowDimensions().width < COMPACT_WIDTH;
@@ -98,7 +100,7 @@ const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen,
           </View>
           <View style={s.cardBody}>
             <Text style={[s.cardResult, compact && s.cardResultCompact]} numberOfLines={1}>{decisionResultLabel(item.result)}</Text>
-            <Text style={[s.cardType, compact && s.cardTypeCompact]} numberOfLines={1}>{decisionTypeLabel(item.decision_type)}</Text>
+            <Text style={[s.cardType, compact && s.cardTypeCompact]} numberOfLines={1}>{decisionTypeLabel(labelCopy, item.decision_type)}</Text>
             <View style={s.cardMetaRow}>
               {item.result !== '' && <ProfitAmount value={item.profit_increase} size={compact ? 12 : 14} />}
               <Text style={[s.cardDate, compact && s.cardDateCompact]} numberOfLines={1}>{formatDate(item.datetime)}</Text>
@@ -135,6 +137,7 @@ const HistoryRow = memo(function HistoryRow({ item, isPending, deleting, onOpen,
 });
 
 export default function HistoryScreen() {
+  const { decisionResultLabel, historyCopy: copy, labelCopy } = useCopy();
   const nav = useNavLock();
   const { user } = useAuth();
   const { confirm, notify } = useFeedback();
@@ -195,9 +198,9 @@ export default function HistoryScreen() {
   const filterOptions = useMemo(
     () => [
       { value: 'all' as const, label: copy.filterAll },
-      ...DECISIONS.map(d => ({ value: d.id, label: d.label })),
+      ...decisionsIn(labelCopy).map(d => ({ value: d.id, label: d.label })),
     ],
-    []
+    [copy.filterAll, labelCopy]
   );
 
   const sections = useMemo(() => {
@@ -237,7 +240,7 @@ export default function HistoryScreen() {
     } finally {
       setDeletingId(null);
     }
-  }, [confirm, notify]);
+  }, [confirm, notify, copy, decisionResultLabel]);
 
   return (
     <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>

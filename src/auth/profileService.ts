@@ -2,7 +2,7 @@ import { updateUserRemote } from '../database/repositories/researcher';
 import { updateUser } from '../database/repositories/users';
 import { invokeFunction } from '../database/supabase/invokeFunction';
 import { supabase } from '../database/supabase/supabase';
-import { profileCopy } from '../constants/copy';
+import { getCopy } from '../i18n/dictionary';
 import { normalizeUsername, validateUsername } from '../utils/accountEmail';
 import { cleanEmail, cleanName, validateEmail, validateName } from '../utils/profileValidation';
 import { withTimeout } from '../utils/withTimeout';
@@ -35,7 +35,7 @@ export async function verifyEmailChange(rawEmail: string, code: string): Promise
   if (error) throw error;
   // With Secure email change on, Auth also wants the current address confirmed, so the change is still pending here.
   const { data } = await withTimeout(() => supabase.auth.getUser());
-  if (data.user?.new_email) throw new Error(profileCopy.codeNeedsCurrent);
+  if (data.user?.new_email) throw new Error(getCopy().profileCopy.codeNeedsCurrent);
 }
 
 export async function changeUsername(raw: string): Promise<string> {

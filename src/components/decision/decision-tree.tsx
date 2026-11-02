@@ -1,9 +1,9 @@
 import { BrandGradient, brandGradientCss, CARD_PADDING, cardShadow, cardSurface, Colors, ForecastColors } from '@/src/constants/colors';
 import { GradientBorder } from '@/src/components/ui/gradient-border';
-import { treeCopy as copy } from '@/src/constants/copy';
 import type { DecisionTree as Tree, OutcomeKey, TreeBranch, TreeOutcome } from '@/src/rcda/decisionTree';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 const OUTCOME_COLORS: Record<OutcomeKey, string> = {
   dry: ForecastColors.dry,
@@ -45,6 +45,7 @@ function HalfBar({ side, color, edge }: { side: 'left' | 'right'; color: string;
 }
 
 function OutcomeCard({ outcome: o, overRail }: { outcome: TreeOutcome; overRail: boolean }) {
+  const { treeCopy: copy } = useCopy();
   const notForecast = o.value === null;
   const card = (
     <View style={[s.outcome, notForecast && s.notForecast]}>
@@ -65,6 +66,7 @@ function OutcomeCard({ outcome: o, overRail }: { outcome: TreeOutcome; overRail:
 }
 
 function BranchColumn({ branch, dimmed }: { branch: TreeBranch; dimmed: boolean }) {
+  const { treeCopy: copy } = useCopy();
   // The best column draws one continuous gradient rail behind its cards; its stems become transparent spacers.
   const rail = branch.recommended ? 'transparent' : RAIL;
   return (
@@ -117,6 +119,7 @@ function Formula({ branch }: { branch: TreeBranch }) {
 }
 
 export function DecisionTree({ tree, bare = false }: { tree: Tree; bare?: boolean }) {
+  const { treeCopy: copy } = useCopy();
   const best = tree.branches.find((b) => b.recommended);
   // The best path flows dark at "Your choice" to light at "Best decision".
   const topFor = (i: number) => (tree.branches[i]?.recommended ? PATH_TOP : RAIL);

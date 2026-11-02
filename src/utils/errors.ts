@@ -1,3 +1,5 @@
+import { getCopy, type Copy } from '../i18n/dictionary';
+
 function errMessage(err: unknown): string {
   if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
     return (err as any).message;
@@ -15,23 +17,17 @@ function isNetworkError(err: unknown): boolean {
   return msg.includes('network') || msg.includes('fetch failed') || msg.includes('failed to fetch');
 }
 
-const OFFLINE_MESSAGE = "Check your internet connection and try again.";
-const PERMISSION_MESSAGE = "You don't have permission to do this.";
-
-const AUTH_MESSAGE_OVERRIDES: Record<string, string> = {
-  'Invalid login credentials': 'Incorrect email or password.',
-  'Token has expired or is invalid': 'That code is wrong or has expired. Ask for a new code.',
-  'New password should be different': 'Choose a password that is different from your old one.',
+// Supabase's English message text, mapped to our own wording in the chosen language.
+const AUTH_MESSAGE_OVERRIDES: Record<string, keyof Copy['errorCopy']> = {
+  'Invalid login credentials': 'invalidCredentials',
+  'Token has expired or is invalid': 'otpExpired',
+  'New password should be different': 'samePassword',
 };
-
-const RATE_LIMIT_MESSAGE = 'Too many attempts. Please wait a few minutes and try again.';
 
 // A wrong email or password, as opposed to a network or server problem; only these count toward the sign-in limit.
 export function isInvalidCredentialsError(err: unknown): boolean {
   return errCode(err) === 'invalid_credentials' || errMessage(err).includes('Invalid login credentials');
 }
-
-const SESSION_MESSAGE = 'Your sign-in has expired. Log out, then sign in again.';
 
 // The server no longer has this device's session, e.g. after a password change elsewhere.
 export function isSessionMissingError(err: unknown): boolean {
@@ -49,8 +45,6 @@ export function isExpiredSessionError(err: unknown): boolean {
   return isSessionMissingError(err) || code === 'session_expired' || code === 'bad_jwt';
 }
 
-const DISABLED_MESSAGE = 'This account has been disabled, so it can no longer sign in or sync. You can still use FarmAssist without signing in.';
-
 // Inactive accounts are banned in Supabase Auth; email sign-in hits that ban directly, username sign-in gets it from the sign-in function.
 export function isAccountDisabledError(err: unknown): boolean {
   const code = errCode(err);
@@ -64,21 +58,23 @@ function isRateLimitError(err: unknown): boolean {
 
 
 export function getAuthErrorMessage(err: unknown, fallback: string): string {
-  if (isNetworkError(err)) return OFFLINE_MESSAGE;
-  if (isRateLimitError(err)) return RATE_LIMIT_MESSAGE;
-  if (isSessionMissingError(err)) return SESSION_MESSAGE;
-  if (isAccountDisabledError(err)) return DISABLED_MESSAGE;
+  const copy = getCopy().errorCopy;
+  if (isNetworkError(err)) return copy.offline;
+  if (isRateLimitError(err)) return copy.rateLimit;
+  if (isSessionMissingError(err)) return copy.session;
+  if (isAccountDisabledError(err)) return copy.disabled;
   const msg = errMessage(err);
   for (const key of Object.keys(AUTH_MESSAGE_OVERRIDES)) {
-    if (msg.includes(key)) return AUTH_MESSAGE_OVERRIDES[key];
+    if (msg.includes(key)) return copy[AUTH_MESSAGE_OVERRIDES[key]];
   }
   return msg || fallback;
 }
 
 
 export function getActionErrorMessage(err: unknown, fallback: string): string {
-  if (isNetworkError(err)) return OFFLINE_MESSAGE;
-  if (isSessionMissingError(err)) return SESSION_MESSAGE;
-  if (errCode(err) === '42501') return PERMISSION_MESSAGE;
+  const copy = getCopy().errorCopy;
+  if (isNetworkError(err)) return copy.offline;
+  if (isSessionMissingError(err)) return copy.session;
+  if (errCode(err) === '42501') return copy.permission;
   return fallback;
 }

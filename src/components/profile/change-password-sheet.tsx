@@ -2,13 +2,13 @@ import { changePassword } from '@/src/auth/passwordService';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT } from '@/src/constants/layout';
-import { changePasswordCopy as copy } from '@/src/constants/copy';
 import { supabase } from '@/src/database/supabase/supabase';
 import { getAuthErrorMessage, isInvalidCredentialsError } from '@/src/utils/errors';
 import { validatePassword, validatePasswordConfirm } from '@/src/utils/passwordValidation';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 type Props = {
   visible: boolean;
@@ -17,6 +17,7 @@ type Props = {
 };
 
 export function ChangePasswordSheet({ visible, onClose, onChanged }: Props) {
+  const { changePasswordCopy: copy } = useCopy();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');

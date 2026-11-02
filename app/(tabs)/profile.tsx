@@ -4,8 +4,6 @@ import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
 import { brandGradientCss, CARD_PADDING, CARD_RADIUS, cardSurface, Colors } from '@/src/constants/colors';
 import { BUTTON_HEIGHT, contentColumn, TAB_SCREEN_EDGES } from '@/src/constants/layout';
-import { changePasswordCopy, helpCopy, profileCopy as copy, termsCopy } from '@/src/constants/copy';
-import { ROLE_SHORT } from '@/src/constants/labels';
 import { db } from '@/src/database/powersync/powersync';
 import { getDecisionsByUser, getStagedDecisionIds } from '@/src/database/repositories/decisions';
 import { getLocationsByUser, type Location } from '@/src/database/repositories/locations';
@@ -23,6 +21,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { dateLocale } from '@/src/i18n/dictionary';
+import { LanguagePicker } from '@/src/components/ui/language-picker';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -30,13 +31,14 @@ function initials(name: string): string {
   return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
 }
 
-function formatSyncTime(date: Date | null): string {
-  if (!date) return 'never';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) +
-    ', ' + date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+function formatSyncTime(date: Date | null, never: string): string {
+  if (!date) return never;
+  return date.toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric' }) +
+    ', ' + date.toLocaleTimeString(dateLocale(), { hour: 'numeric', minute: '2-digit' });
 }
 
 export default function ProfileScreen() {
+  const { changePasswordCopy, helpCopy, profileCopy: copy, termsCopy, labelCopy, languageCopy } = useCopy();
   const { user, signOut } = useAuth();
   const { confirm, notify } = useFeedback();
   const nav = useNavLock();
@@ -128,6 +130,7 @@ export default function ProfileScreen() {
               resizeMode="contain"
               accessibilityIgnoresInvertColors
             />
+            <LanguagePicker style={s.signedOutLanguage} />
             <Text style={s.signedOutTitle}>{copy.signedOutTitle}</Text>
             <Text style={s.signedOutSubtitle}>{copy.signedOutSubtitle}</Text>
 
@@ -180,7 +183,7 @@ export default function ProfileScreen() {
             </View>
             <View style={s.statCard}>
               <Text style={[s.statValue, { color: Colors.amber }]}>{pendingCount}</Text>
-              <Text style={s.statLabel}>Pending</Text>
+              <Text style={s.statLabel}>{copy.statsPending}</Text>
             </View>
           </View>
 
@@ -189,7 +192,7 @@ export default function ProfileScreen() {
               <Ionicons name="cloud-offline-outline" size={22} color={Colors.amber} />
               <View style={s.offlineInfo}>
                 <Text style={[s.offlineTitle, { marginBottom: 3 }]}>{copy.offlineTitle}</Text>
-                <Text style={s.offlineBody}>{copy.lastSync(formatSyncTime(sync.lastSyncedAt))}</Text>
+                <Text style={s.offlineBody}>{copy.lastSync(formatSyncTime(sync.lastSyncedAt, copy.neverSynced))}</Text>
               </View>
               <TouchableOpacity style={[s.syncBtn, isSyncing && s.syncBtnBusy]} onPress={handleSyncNow} disabled={isSyncing} activeOpacity={0.8}>
                 <Ionicons name="sync-outline" size={15} color={Colors.amberText} />
@@ -218,7 +221,7 @@ export default function ProfileScreen() {
               <Ionicons name="mail-outline" size={20} color={Colors.text} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={s.emailRow}>
-                  <Text style={s.listRowLabel}>Email</Text>
+                  <Text style={s.listRowLabel}>{copy.emailRow}</Text>
                   <Text style={[s.listRowValue, s.emailValue]} numberOfLines={1}>{displayEmail(user.email)}</Text>
                 </View>
                 {!realEmail(user.email) && !edit.pendingEmail && (
@@ -239,7 +242,12 @@ export default function ProfileScreen() {
             <View style={[s.listRow, s.listRowBorder]}>
               <Ionicons name="shield-checkmark-outline" size={20} color={Colors.text} />
               <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{copy.accountType}</Text>
-              <Text style={s.listRowValue}>{ROLE_SHORT.farmer}</Text>
+              <Text style={s.listRowValue}>{labelCopy.roleShort.farmer}</Text>
+            </View>
+            <View style={[s.listRow, s.listRowBorder]}>
+              <Ionicons name="language-outline" size={20} color={Colors.text} />
+              <Text style={[s.listRowLabel, { flex: 1, marginLeft: 12 }]}>{languageCopy.label}</Text>
+              <LanguagePicker />
             </View>
             <PressableScale style={[s.listRow, s.listRowBorder]} onPress={() => nav.push('/about')} accessibilityRole="button">
               <Ionicons name="information-circle-outline" size={20} color={Colors.text} />
@@ -298,6 +306,7 @@ const s = StyleSheet.create({
   signedOutTitle: { fontSize: 24, fontWeight: '800', color: Colors.ink, marginBottom: 10, textAlign: 'center' },
   signedOutSubtitle: { fontSize: 14, color: Colors.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
   signedOutLogo: { width: 84, height: 84, alignSelf: 'center', marginBottom: 16 },
+  signedOutLanguage: { marginBottom: 20 },
   primaryBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   primaryBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
   secondaryBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 12, height: BUTTON_HEIGHT, width: '100%', maxWidth: 420, alignItems: 'center', justifyContent: 'center' },

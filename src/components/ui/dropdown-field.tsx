@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 export interface DropdownFieldProps {
   label: string;
@@ -36,6 +37,7 @@ export function DropdownField({
   disabled,
   disabledHint,
 }: DropdownFieldProps) {
+  const { commonCopy } = useCopy();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const showError = !!touched && !!error;
@@ -98,7 +100,7 @@ export function DropdownField({
                 data={filtered}
                 keyExtractor={(item) => item}
                 keyboardShouldPersistTaps="handled"
-                ListEmptyComponent={<Text style={s.emptyText}>No matches</Text>}
+                ListEmptyComponent={<Text style={s.emptyText}>{commonCopy.noMatches}</Text>}
                 renderItem={({ item }) => {
                   const selected = item === value;
                   return (

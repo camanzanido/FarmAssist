@@ -1,5 +1,4 @@
 import { Colors } from '@/src/constants/colors';
-import { aboutCopy as copy, termsCopy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
 import { InfoSection, infoRowStyles as rows } from '@/src/components/ui/info-section';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,11 +8,13 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, Linking, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 // CI stamps the tag into the native versionName, so prefer it over app.json's static version.
 const APP_VERSION = Application.nativeApplicationVersion ?? Constants.expoConfig?.version ?? '—';
 
 export default function AboutScreen() {
+  const { aboutCopy: copy, termsCopy } = useCopy();
   const router = useRouter();
 
   function handleContact() {

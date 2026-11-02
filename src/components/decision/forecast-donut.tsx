@@ -1,5 +1,4 @@
 import { Colors, ForecastColors } from '@/src/constants/colors';
-import { resultCopy } from '@/src/constants/copy';
 import {
   angleToPercent, applyDrag, continueDrag, nearestBoundary, percentToPoint, startDrag, type Boundary,
 } from '@/src/utils/forecastSplit';
@@ -8,6 +7,7 @@ import React, { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Svg, { Circle } from 'react-native-svg';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 type Props = {
   driest: number;
@@ -30,7 +30,9 @@ const BANDS: { key: BandKey; color: string }[] = [
 ];
 
 // Draws the dry / average / wet split as a ring; with onChange, the two band boundaries can be dragged.
-export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels = resultCopy.normalYearLegend, onChange, onDragActiveChange }: Props) {
+export function ForecastDonut({ driest, wettest, size = 200, stroke = 26, labels: labelsProp, onChange, onDragActiveChange }: Props) {
+  const { resultCopy } = useCopy();
+  const labels = labelsProp ?? resultCopy.normalYearLegend;
   const interactive = !!onChange;
   const handleR = interactive ? stroke * 0.4 : 0;
   const c = size / 2;
