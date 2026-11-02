@@ -71,13 +71,31 @@ describe('unknown errors', () => {
 
 describe('Supabase Auth codes', () => {
   it('words common sign-up problems plainly', () => {
-    expect(getAuthErrorMessage({ code: 'user_already_exists', message: 'User already registered' }, 'f')).toBe('An account with this email already exists. Sign in instead.');
+    expect(getAuthErrorMessage({ code: 'user_already_exists', message: 'User already registered' }, 'f')).toBe('Another account already uses this email.');
     expect(getAuthErrorMessage({ code: 'email_address_invalid', message: 'Email address "x" is invalid' }, 'f')).toBe('That email address is not valid. Check it and try again.');
-    expect(getAuthErrorMessage({ code: 'weak_password', message: 'Password should contain...' }, 'f')).toBe('That password is too easy to guess. Choose a longer one.');
+    expect(getAuthErrorMessage({ code: 'weak_password', message: 'Password should contain...' }, 'f')).toBe('That password is too weak. Use a longer one with letters and numbers.');
   });
 
   it('keeps our own validation messages', () => {
     const { UserFacingError } = require('../../src/utils/errors');
     expect(getAuthErrorMessage(new UserFacingError('Enter your name.'), 'f')).toBe('Enter your name.');
+  });
+});
+
+describe('review fixes', () => {
+  it('tells an unconfirmed email to open the confirmation link', () => {
+    expect(getAuthErrorMessage({ code: 'email_not_confirmed', message: 'Email not confirmed' }, 'f')).toBe('Open the confirmation link we emailed you, then sign in.');
+  });
+
+  it('words a taken email without telling a signed-in person to sign in', () => {
+    expect(getAuthErrorMessage({ code: 'email_exists', message: 'x' }, 'f')).toBe('Another account already uses this email.');
+  });
+
+  it('does not promise length alone fixes a weak password', () => {
+    expect(getAuthErrorMessage({ code: 'weak_password', message: 'x' }, 'f')).toBe('That password is too weak. Use a longer one with letters and numbers.');
+  });
+
+  it('recognises our own message by name when the prototype chain is lost', () => {
+    expect(getAuthErrorMessage({ name: 'UserFacingError', message: 'Enter your name.' }, 'f')).toBe('Enter your name.');
   });
 });

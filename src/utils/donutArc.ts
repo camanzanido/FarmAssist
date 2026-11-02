@@ -14,8 +14,7 @@ export function arcDash(length: number, gap: number, stroke: number): ArcDash {
   return { dash: Math.max(room, 0.5), lead: gap / 2, cap: 'butt' };
 }
 
-// Each segment's arc length out of `total`, with no segment under `min` so small slices still get round caps.
-// The extra length comes out of the larger segments in proportion; if every minimum can't fit, all segments are equal.
+// Arc lengths summing to `total`, each at least `min` (taken from larger segments) so small slices keep round caps.
 export function segmentLengths(values: number[], total: number, min: number): number[] {
   const n = values.length;
   if (n === 0) return [];

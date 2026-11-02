@@ -35,7 +35,7 @@ export function DeleteAccountSheet({ visible, onClose, onConfirm }: Props) {
   };
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} avoidKeyboard scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
+    <BottomSheet visible={visible} onClose={deleting ? () => {} : onClose} avoidKeyboard scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
       <Text style={s.title}>Delete your account?</Text>
       <Text style={s.body}>
         You&apos;ll be signed out and won&apos;t be able to sign in again. Another admin can&apos;t restore it; only the Supabase dashboard can.

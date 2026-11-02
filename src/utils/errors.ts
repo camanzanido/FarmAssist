@@ -32,7 +32,7 @@ function isNetworkError(err: unknown): boolean {
 }
 
 function isUserFacing(err: unknown): boolean {
-  return err instanceof UserFacingError || errName(err) === 'FunctionError';
+  return err instanceof UserFacingError || errName(err) === 'UserFacingError' || errName(err) === 'FunctionError';
 }
 
 // Supabase's English message text, mapped to our own wording in the chosen language.
@@ -47,6 +47,7 @@ const AUTH_CODE_OVERRIDES: Record<string, keyof Copy['errorCopy']> = {
   email_exists: 'emailTaken',
   email_address_invalid: 'invalidEmail',
   weak_password: 'weakPassword',
+  email_not_confirmed: 'emailNotConfirmed',
   same_password: 'samePassword',
 };
 

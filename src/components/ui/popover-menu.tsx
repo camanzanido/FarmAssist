@@ -36,8 +36,7 @@ type Anchor = { top: number; right: number; width: number };
 
 const MENU_WIDTH = 210;
 
-// An icon button that opens a small menu anchored under it; tapping outside closes it.
-// Pass `trigger` to show custom content instead of an icon; `matchWidth` makes the menu as wide as the trigger.
+// A button (an icon, or custom `trigger` content) that opens a menu under it, as wide as the trigger with `matchWidth`.
 export function PopoverMenu({ icon, trigger, matchWidth, accessibilityLabel, items, style, iconSize = 23, motion = 'pop' }: Props) {
   const { commonCopy } = useCopy();
   const { width } = useWindowDimensions();
