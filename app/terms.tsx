@@ -1,5 +1,4 @@
 import { Colors } from '@/src/constants/colors';
-import { termsCopy as copy } from '@/src/constants/copy';
 import { contentColumn } from '@/src/constants/layout';
 import { InfoSection, infoRowStyles as rows } from '@/src/components/ui/info-section';
 import { TERMS_VERSION } from '@/src/utils/terms';
@@ -8,8 +7,10 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Linking, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 export default function TermsScreen() {
+  const { termsCopy: copy } = useCopy();
   const router = useRouter();
 
   function handleContact() {

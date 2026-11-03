@@ -1,7 +1,6 @@
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { brandGradientCss, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
-import { authCopy as copy, forgotPasswordCopy } from '@/src/constants/copy';
 import { formatLockTime } from '@/src/auth/signInThrottle';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { useSignInThrottle } from '@/src/hooks/use-sign-in-throttle';
@@ -15,12 +14,14 @@ import { useState } from 'react';
 import { ActivityIndicator, Image, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type FieldErrors = Partial<Record<'login' | 'password', string>>;
 
 export default function LoginScreen() {
+  const { authCopy: copy, forgotPasswordCopy } = useCopy();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -170,12 +171,12 @@ const s = StyleSheet.create({
   label: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft, marginBottom: 8 },
   input: {
     ...inputSurface, borderWidth: 1.5,
-    borderRadius: 14, height: 56, paddingHorizontal: 16, fontSize: 16, ...inputTextStyle,
+    borderRadius: 14, minHeight: 56, paddingHorizontal: 16, fontSize: 16, ...inputTextStyle,
   },
   passwordRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     ...inputSurface, borderWidth: 1.5,
-    borderRadius: 14, height: 56, paddingHorizontal: 16,
+    borderRadius: 14, minHeight: 56, paddingHorizontal: 16,
   },
   passwordInput: { flex: 1, fontSize: 16, ...inputTextStyle },
   inputError: { borderColor: Colors.danger },
@@ -183,7 +184,7 @@ const s = StyleSheet.create({
   forgotRow: { alignSelf: 'flex-end', marginTop: 10 },
   forgotText: { fontSize: 13.5, fontWeight: '700', color: Colors.ink },
 
-  signInBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 12, height: BUTTON_HEIGHT, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
+  signInBtn: { experimental_backgroundImage: brandGradientCss(90), borderRadius: 12, minHeight: BUTTON_HEIGHT, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 14 },
   signInBtnDisabled: { opacity: 0.6 },
   signInBtnText: { fontSize: 17, fontWeight: '800', color: Colors.onDark },
   throttleText: { fontSize: 13, color: Colors.amberText, textAlign: 'center', marginTop: -4, marginBottom: 14 },
@@ -197,7 +198,7 @@ const s = StyleSheet.create({
   orLine: { flex: 1, height: 1, backgroundColor: Colors.divider },
   orText: { fontSize: 12, color: Colors.inkFaint },
   offlineBtn: {
-    borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 12, height: BUTTON_HEIGHT,
+    borderWidth: 1.5, borderColor: Colors.borderStrong, borderRadius: 12, minHeight: BUTTON_HEIGHT,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9,
   },
   offlineBtnText: { fontSize: 15, fontWeight: '700', color: Colors.ink },

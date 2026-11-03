@@ -1,6 +1,7 @@
 import { colorAt } from '@/src/components/ui/gradient-text';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, type TextStyle } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View, type TextStyle } from 'react-native';
+import { cappedFontScale, MAX_FONT_SCALE } from '@/src/utils/fontScale';
 import Animated, {
   Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming,
 } from 'react-native-reanimated';
@@ -16,9 +17,10 @@ type Props = {
   style: TextStyle & { lineHeight: number };
 };
 
-function Digit({ digit, color, order, style }: { digit: number; color: string; order: number; style: Props['style'] }) {
+// `cell` is the on-screen line height: the style's lineHeight grown by the (capped) system font size, as Android grows the text.
+function Digit({ digit, color, order, style, cell }: { digit: number; color: string; order: number; style: Props['style']; cell: number }) {
   const reduceMotion = useReducedMotion();
-  const lineHeight = style.lineHeight;
+  const lineHeight = cell;
   const target = -(10 + digit) * lineHeight;
   const offset = useSharedValue(reduceMotion ? target : 0);
 
@@ -35,9 +37,9 @@ function Digit({ digit, color, order, style }: { digit: number; color: string; o
 
   return (
     <View style={[s.slot, { height: lineHeight }]}>
-      <Text style={[textStyle, s.sizer]}>{digit}</Text>
+      <Text style={[textStyle, s.sizer]} maxFontSizeMultiplier={MAX_FONT_SCALE}>{digit}</Text>
       <Animated.View style={[s.strip, stripStyle]}>
-        {STRIP.map((d, i) => <Text key={i} style={textStyle}>{d}</Text>)}
+        {STRIP.map((d, i) => <Text key={i} style={textStyle} maxFontSizeMultiplier={MAX_FONT_SCALE}>{d}</Text>)}
       </Animated.View>
     </View>
   );
@@ -49,6 +51,7 @@ export function OdometerText({ text, colors, style }: Props) {
   let digitOrder = 0;
   const [available, setAvailable] = useState(0);
   const [natural, setNatural] = useState(0);
+  const cell = style.lineHeight * cappedFontScale(useWindowDimensions().fontScale);
   const scale = available > 0 && natural > available ? Math.max(available / natural, MIN_SCALE) : 1;
 
   return (
@@ -62,9 +65,9 @@ export function OdometerText({ text, colors, style }: Props) {
         {chars.map((ch, i) => {
           const color = colorAt(colors, i / last);
           if (/[0-9]/.test(ch)) {
-            return <Digit key={i} digit={Number(ch)} color={color} order={digitOrder++} style={style} />;
+            return <Digit key={i} digit={Number(ch)} color={color} order={digitOrder++} style={style} cell={cell} />;
           }
-          return <Text key={i} style={[style, s.tabular, s.cell, { height: style.lineHeight, color }]}>{ch}</Text>;
+          return <Text key={i} style={[style, s.tabular, s.cell, { height: cell, color }]} maxFontSizeMultiplier={MAX_FONT_SCALE}>{ch}</Text>;
         })}
       </View>
     </View>

@@ -1,6 +1,7 @@
 import { validateUsername } from './accountEmail';
 import { validateOptionalEmail } from './newUserValidation';
 import { validatePassword, validatePasswordConfirm } from './passwordValidation';
+import { getCopy } from '../i18n/dictionary';
 
 export type RegisterForm = {
   name: string;
@@ -23,9 +24,9 @@ export type RegisterStep = (typeof REGISTER_STEPS)[number];
 export function validateRegisterStep(step: RegisterStep, form: RegisterForm): RegisterErrors {
   const errors: RegisterErrors = {};
   if (step === 'about') {
-    if (!form.name.trim()) errors.name = 'Name is required';
-    if (!form.province.trim()) errors.province = 'Province is required';
-    if (!form.city.trim()) errors.city = 'City/municipality is required';
+    if (!form.name.trim()) errors.name = getCopy().validationCopy.registerNameRequired;
+    if (!form.province.trim()) errors.province = getCopy().validationCopy.registerProvinceRequired;
+    if (!form.city.trim()) errors.city = getCopy().validationCopy.registerCityRequired;
     return errors;
   }
   const usernameError = validateUsername(form.username);
@@ -36,7 +37,7 @@ export function validateRegisterStep(step: RegisterStep, form: RegisterForm): Re
   if (passwordError) errors.password = passwordError;
   const confirmError = validatePasswordConfirm(form.password, form.confirmPassword);
   if (confirmError) errors.confirmPassword = confirmError;
-  if (!form.acceptedTerms) errors.acceptedTerms = 'Please agree to the Terms & Privacy to create an account.';
+  if (!form.acceptedTerms) errors.acceptedTerms = getCopy().termsCopy.agreeRequired;
   return errors;
 }
 

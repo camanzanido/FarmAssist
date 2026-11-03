@@ -1,6 +1,5 @@
 import { useAuth } from '@/src/auth/AuthContext';
 import { brandGradientCss, Colors } from '@/src/constants/colors';
-import { helpCopy, onboardingCopy as copy } from '@/src/constants/copy';
 import { BUTTON_HEIGHT, CONTENT_MAX_WIDTH } from '@/src/constants/layout';
 import { useOnboarding } from '@/src/onboarding/OnboardingContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,11 +19,11 @@ import {
 } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LanguagePicker } from '@/src/components/ui/language-picker';
+import type { Copy } from '@/src/i18n/dictionary';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
-type Slide = (typeof copy.slides)[number];
-
-const SLIDES = copy.slides;
-const LAST = SLIDES.length - 1;
+type Slide = Copy['onboardingCopy']['slides'][number];
 
 // Filled glyphs read heavier than outlines, since Ionicons has no stroke weight; the welcome slide shows the logo.
 const SLIDE_ICONS: Record<Exclude<Slide['key'], 'welcome'>, keyof typeof Ionicons.glyphMap> = {
@@ -34,6 +33,9 @@ const SLIDE_ICONS: Record<Exclude<Slide['key'], 'welcome'>, keyof typeof Ionicon
 };
 
 export default function OnboardingScreen() {
+  const { helpCopy, onboardingCopy: copy, languageCopy } = useCopy();
+  const SLIDES = copy.slides;
+  const LAST = SLIDES.length - 1;
   const router = useRouter();
   const { width } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
@@ -104,6 +106,13 @@ export default function OnboardingScreen() {
             <Text style={s.title} accessibilityRole="header">{item.title}</Text>
           )}
           <Text style={s.body}>{item.body}</Text>
+          {/* Asked first, on the welcome page, so the rest of the intro is already in the chosen language. */}
+          {item.key === 'welcome' && (
+            <View style={s.language}>
+              <Text style={s.languageHint}>{languageCopy.chooseHint}</Text>
+              <LanguagePicker size="large" />
+            </View>
+          )}
         </View>
       </View>
     );
@@ -194,6 +203,8 @@ const s = StyleSheet.create({
   art: { width: 150, height: 150, alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
   title: { fontSize: 26, fontWeight: '800', color: Colors.ink, textAlign: 'center', letterSpacing: -0.4 },
   body: { fontSize: 16, color: Colors.inkMuted, textAlign: 'center', lineHeight: 24, marginTop: 12, maxWidth: 440 },
+  language: { width: '100%', maxWidth: 360, marginTop: 28, alignItems: 'center', gap: 10 },
+  languageHint: { fontSize: 14, fontWeight: '700', color: Colors.inkSoft },
 
   footer: { width: '100%', maxWidth: CONTENT_MAX_WIDTH, alignSelf: 'center', paddingHorizontal: 24, paddingBottom: 16 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 24 },

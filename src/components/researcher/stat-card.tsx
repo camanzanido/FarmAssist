@@ -49,11 +49,11 @@ export function StatCard({ label, value, variant, increase, increaseLabel = 'thi
 }
 
 const s = StyleSheet.create({
-  card: { flex: 1, minHeight: 112, borderRadius: CARD_RADIUS, padding: 14, justifyContent: 'space-between', overflow: 'hidden', ...cardShadow },
+  card: { flex: 1, minHeight: 106, borderRadius: CARD_RADIUS, padding: 14, justifyContent: 'space-between', overflow: 'hidden', ...cardShadow },
   cardLight: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
   topRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
   label: { flex: 1, fontSize: 13, fontWeight: '700' },
-  bottomRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6, marginTop: 14 },
+  bottomRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6, marginTop: 12 },
   valueWrap: { flexShrink: 1 },
   value: { fontSize: 24, lineHeight: 30, fontWeight: '800', letterSpacing: -0.5 },
   deltaWrap: { alignItems: 'flex-end' },

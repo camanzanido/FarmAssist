@@ -2,7 +2,6 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { DecisionResultView, heroTopStyles } from '@/src/components/decision/decision-result-view';
 import { Colors } from '@/src/constants/colors';
 import { BUTTON_HEIGHT } from '@/src/constants/layout';
-import { resultCopy as copy } from '@/src/constants/copy';
 import { buildOptionClimateFields } from '@/src/database/climateFields';
 import { createDecision, OptionSnapshot } from '@/src/database/repositories/decisions';
 import { getLocationsByUser } from '@/src/database/repositories/locations';
@@ -22,6 +21,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ResultSkeleton } from '@/src/components/skeletons/app-skeletons';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 function computeResult(params: RcdaInputs): { summary: RcdaSummary; baseline: NormalYearComparison } {
   // Shared pipeline (also used by the decision tree and History detail)
@@ -60,6 +60,7 @@ function computeResult(params: RcdaInputs): { summary: RcdaSummary; baseline: No
 }
 
 export default function ResultScreen() {
+  const { resultCopy: copy } = useCopy();
   const router = useRouter();
   const params = useLocalSearchParams();
 
@@ -171,7 +172,7 @@ export default function ResultScreen() {
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.ink} />
         </TouchableOpacity>
-        <Text style={s.bannerTitle}>Analysis Result</Text>
+        <Text style={s.bannerTitle}>{copy.bannerTitle}</Text>
         <View style={{ width: 40 }} />
       </View>
       <View style={s.loadingWrap}>
@@ -179,7 +180,7 @@ export default function ResultScreen() {
         <Text style={s.loadingText}>{message}</Text>
         <TouchableOpacity style={s.startOverBtn} onPress={startOver} activeOpacity={0.8}>
           <Ionicons name="refresh-outline" size={16} color={Colors.ink} />
-          <Text style={s.startOverText}>New Analysis</Text>
+          <Text style={s.startOverText}>{copy.newAnalysis}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -205,7 +206,7 @@ export default function ResultScreen() {
             <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
               <Ionicons name="arrow-back" size={22} color={Colors.ink} />
             </TouchableOpacity>
-            <Text style={s.bannerTitle}>Analysis Result</Text>
+            <Text style={s.bannerTitle}>{copy.bannerTitle}</Text>
             <View style={{ width: 40 }} />
           </View>
           <ResultSkeleton withTopRow={false} />
@@ -285,13 +286,13 @@ const s = StyleSheet.create({
   newComparisonBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, backgroundColor: Colors.surface, borderRadius: 12,
-    height: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
+    minHeight: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
   newComparisonText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
   startOverBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, backgroundColor: Colors.surface, borderRadius: 12,
-    height: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
+    minHeight: BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
   startOverText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
 });

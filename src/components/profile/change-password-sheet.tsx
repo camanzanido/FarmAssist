@@ -2,13 +2,13 @@ import { changePassword } from '@/src/auth/passwordService';
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT } from '@/src/constants/layout';
-import { changePasswordCopy as copy } from '@/src/constants/copy';
 import { supabase } from '@/src/database/supabase/supabase';
-import { getAuthErrorMessage, isInvalidCredentialsError } from '@/src/utils/errors';
+import { getAuthErrorMessage, isInvalidCredentialsError, UserFacingError } from '@/src/utils/errors';
 import { validatePassword, validatePasswordConfirm } from '@/src/utils/passwordValidation';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 type Props = {
   visible: boolean;
@@ -17,6 +17,7 @@ type Props = {
 };
 
 export function ChangePasswordSheet({ visible, onClose, onChanged }: Props) {
+  const { changePasswordCopy: copy } = useCopy();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -48,7 +49,7 @@ export function ChangePasswordSheet({ visible, onClose, onChanged }: Props) {
       // The session's email is the login email, including the hidden one on accounts without an email.
       const { data } = await supabase.auth.getSession();
       const email = data.session?.user.email;
-      if (!email) throw new Error(copy.signedOut);
+      if (!email) throw new UserFacingError(copy.signedOut);
       await changePassword(email, current, next);
       onChanged();
     } catch (err) {
@@ -115,17 +116,17 @@ const s = StyleSheet.create({
   subtitle: { fontSize: 13.5, color: Colors.inkSoft, marginBottom: 8, lineHeight: 19 },
   label: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: Colors.inkFaint, marginTop: 14, marginBottom: 8 },
   input: {
-    height: 50, borderRadius: 12, borderWidth: 1, ...inputSurface,
+    minHeight: 50, borderRadius: 12, borderWidth: 1, ...inputSurface,
     paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 8,
   },
-  inputText: { flex: 1, fontSize: 15.5, ...inputTextStyle, height: '100%' },
+  inputText: { flex: 1, fontSize: 15.5, ...inputTextStyle, alignSelf: 'stretch' },
   inputError: { borderColor: Colors.danger, borderWidth: 1.5 },
   error: { fontSize: 12.5, color: Colors.danger, marginTop: 6 },
   saveError: { marginTop: 14 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 22 },
-  cancelBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  cancelBtn: { flex: 1, minHeight: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   cancelText: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  saveBtn: { flex: 1.4, height: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
+  saveBtn: { flex: 1.4, minHeight: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
   saveText: { fontSize: 15.5, fontWeight: '800', color: Colors.onDark },
   disabled: { opacity: 0.5 },
 });

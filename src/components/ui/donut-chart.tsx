@@ -1,5 +1,5 @@
 import { Colors } from '@/src/constants/colors';
-import { arcDash } from '@/src/utils/donutArc';
+import { arcDash, segmentLengths } from '@/src/utils/donutArc';
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -27,6 +27,8 @@ export function DonutChart({ segments, size = 132, stroke = 18, centerValue, cen
   const total = segments.reduce((sum, seg) => sum + Math.max(seg.value, 0), 0);
   const shown = segments.filter(seg => seg.value > 0);
   const gap = shown.length > 1 ? (GAP_DEG / 360) * circumference : 0;
+  // A hair over stroke + gap, so even the smallest slice is long enough for round ends.
+  const lengths = gap > 0 ? segmentLengths(shown.map(seg => seg.value), circumference, stroke + gap + 1) : shown.map(seg => (seg.value / total) * circumference);
 
   const reduceMotion = useReducedMotion();
   const progress = useSharedValue(reduceMotion ? 1 : 0);
@@ -46,8 +48,8 @@ export function DonutChart({ segments, size = 132, stroke = 18, centerValue, cen
           <Circle cx={c} cy={c} r={r} stroke={Colors.divider} strokeWidth={stroke} fill="none" />
           {total > 0 && (
             <G rotation={-90} origin={`${c}, ${c}`}>
-              {shown.map(seg => {
-                const length = (seg.value / total) * circumference;
+              {shown.map((seg, i) => {
+                const length = lengths[i];
                 const { dash, lead, cap } = arcDash(length, gap, stroke);
                 const arc = (
                   <Circle

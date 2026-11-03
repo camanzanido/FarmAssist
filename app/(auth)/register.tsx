@@ -3,7 +3,6 @@ import StepIndicator from '@/src/components/decision/steps-indicator';
 import { DropdownField } from '@/src/components/ui/dropdown-field';
 import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
-import { authCopy as copy, termsCopy } from '@/src/constants/copy';
 import { PH_PROVINCES, PH_PROVINCES_TO_CITIES } from '@/src/constants/ph-locations';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { useSubmitOnce } from '@/src/hooks/use-submit-once';
@@ -17,6 +16,7 @@ import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, BackHandler, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthContext';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 const EMPTY_FORM: RegisterForm = { name: '', province: '', city: '', username: '', email: '', password: '', confirmPassword: '', acceptedTerms: false };
 
@@ -46,6 +46,7 @@ function Field({
 }
 
 export default function RegisterScreen() {
+  const { authCopy: copy, termsCopy } = useCopy();
   const [form, setForm] = useState<RegisterForm>(EMPTY_FORM);
   const [step, setStep] = useState<RegisterStep>('about');
   const [touched, setTouched] = useState<Record<RegisterStep, boolean>>({ about: false, account: false });
@@ -153,7 +154,7 @@ export default function RegisterScreen() {
                 onSelect={handleProvinceSelect}
                 error={errors.province}
                 touched={isTouched}
-                placeholder="Select province"
+                placeholder={copy.selectProvince}
               />
               <DropdownField
                 label={copy.cityLabel}
@@ -162,7 +163,7 @@ export default function RegisterScreen() {
                 onSelect={set('city')}
                 error={errors.city}
                 touched={isTouched}
-                placeholder="Select city / municipality"
+                placeholder={copy.selectCity}
                 disabled={!form.province}
                 disabledHint="Select a province first"
               />
@@ -253,7 +254,7 @@ const s = StyleSheet.create({
   termsLink: { color: Colors.ink, fontWeight: '700', textDecorationLine: 'underline' },
   termsError: { marginTop: 4, marginBottom: 4 },
 
-  submitBtn: { backgroundColor: Colors.ink, borderRadius: 12, height: BUTTON_HEIGHT, flexDirection: 'row', gap: 10, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginBottom: 16 },
+  submitBtn: { backgroundColor: Colors.ink, borderRadius: 12, minHeight: BUTTON_HEIGHT, flexDirection: 'row', gap: 10, justifyContent: 'center', alignItems: 'center', marginTop: 8, marginBottom: 16 },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: Colors.onDark, fontWeight: '700', fontSize: 15 },
 

@@ -1,9 +1,8 @@
 import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import StepIndicator from '@/src/components/decision/steps-indicator';
-import { DECISIONS, DecisionType } from '@/src/constants';
+import { DecisionType, decisionsIn } from '@/src/constants';
 import { CARD_PADDING, cardSurface, Colors } from '@/src/constants/colors';
 import { contentColumn } from '@/src/constants/layout';
-import { decisionTypeCopy as copy } from '@/src/constants/copy';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -15,9 +14,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 
 export default function DecisionTypeScreen() {
+  const { decisionTypeCopy: copy, labelCopy } = useCopy();
   const router = useRouter();
   const nav = useNavLock();
 
@@ -48,7 +49,7 @@ export default function DecisionTypeScreen() {
 
         {/* Cards */}
         <View style={s.cards}>
-          {DECISIONS.map((d) => (
+          {decisionsIn(labelCopy).map((d) => (
             <TouchableOpacity
               key={d.id}
               style={s.card}

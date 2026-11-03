@@ -1,8 +1,9 @@
+import { UserFacingError } from '../../utils/errors';
 import { withTimeout } from '../../utils/withTimeout';
 import { supabase } from './supabase';
 
 // Carries an Edge Function's own message, which is already worded for the person using the app.
-export class FunctionError extends Error {
+export class FunctionError extends UserFacingError {
   name = 'FunctionError';
   constructor(message: string, public code?: string, public status?: number) {
     super(message);

@@ -1,9 +1,10 @@
+import { getCopy } from '../i18n/dictionary';
+
 // Accounts without an email get a hidden one on this reserved domain, which can never receive mail.
 export const INTERNAL_EMAIL_DOMAIN = 'farmassist.invalid';
 
 export const USERNAME_MIN_LENGTH = 3;
 export const USERNAME_MAX_LENGTH = 30;
-export const NO_EMAIL_LABEL = 'No email';
 
 const USERNAME_PATTERN = /^[a-z0-9._]+$/;
 
@@ -13,10 +14,10 @@ export function normalizeUsername(raw: string): string {
 
 export function validateUsername(raw: string): string | null {
   const username = normalizeUsername(raw);
-  if (!username) return 'Enter a username.';
-  if (username.length < USERNAME_MIN_LENGTH) return `Use at least ${USERNAME_MIN_LENGTH} characters.`;
-  if (username.length > USERNAME_MAX_LENGTH) return `Keep it under ${USERNAME_MAX_LENGTH} characters.`;
-  if (!USERNAME_PATTERN.test(username)) return 'Use only letters, numbers, dots (.) and underscores (_).';
+  if (!username) return getCopy().validationCopy.usernameRequired;
+  if (username.length < USERNAME_MIN_LENGTH) return getCopy().validationCopy.usernameTooShort(USERNAME_MIN_LENGTH);
+  if (username.length > USERNAME_MAX_LENGTH) return getCopy().validationCopy.usernameTooLong(USERNAME_MAX_LENGTH);
+  if (!USERNAME_PATTERN.test(username)) return getCopy().validationCopy.usernameInvalid;
   return null;
 }
 
@@ -35,7 +36,7 @@ export function realEmail(email: string | null | undefined): string | null {
 }
 
 export function displayEmail(email: string | null | undefined): string {
-  return realEmail(email) ?? NO_EMAIL_LABEL;
+  return realEmail(email) ?? getCopy().commonCopy.noEmail;
 }
 
 // Login accepts either; anything with an @ is treated as an email.

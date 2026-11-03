@@ -2,15 +2,16 @@ import { updateUserRemote } from '../database/repositories/researcher';
 import { updateUser } from '../database/repositories/users';
 import { invokeFunction } from '../database/supabase/invokeFunction';
 import { supabase } from '../database/supabase/supabase';
-import { profileCopy } from '../constants/copy';
+import { getCopy } from '../i18n/dictionary';
 import { normalizeUsername, validateUsername } from '../utils/accountEmail';
 import { cleanEmail, cleanName, validateEmail, validateName } from '../utils/profileValidation';
+import { UserFacingError } from '../utils/errors';
 import { withTimeout } from '../utils/withTimeout';
 import type { AuthUser } from './types';
 
 export async function saveName(user: AuthUser, raw: string): Promise<void> {
   const error = validateName(raw);
-  if (error) throw new Error(error);
+  if (error) throw new UserFacingError(error);
   const name = cleanName(raw);
   if (user.user_type === 'researcher') {
     await updateUserRemote(user.id, { name });
@@ -21,7 +22,7 @@ export async function saveName(user: AuthUser, raw: string): Promise<void> {
 
 export async function requestEmailChange(raw: string): Promise<string | null> {
   const error = validateEmail(raw);
-  if (error) throw new Error(error);
+  if (error) throw new UserFacingError(error);
   const { data, error: authError } = await withTimeout(() => supabase.auth.updateUser({ email: cleanEmail(raw) }));
   if (authError) throw authError;
   return data.user?.new_email ?? null;
@@ -35,12 +36,12 @@ export async function verifyEmailChange(rawEmail: string, code: string): Promise
   if (error) throw error;
   // With Secure email change on, Auth also wants the current address confirmed, so the change is still pending here.
   const { data } = await withTimeout(() => supabase.auth.getUser());
-  if (data.user?.new_email) throw new Error(profileCopy.codeNeedsCurrent);
+  if (data.user?.new_email) throw new UserFacingError(getCopy().profileCopy.codeNeedsCurrent);
 }
 
 export async function changeUsername(raw: string): Promise<string> {
   const error = validateUsername(raw);
-  if (error) throw new Error(error);
+  if (error) throw new UserFacingError(error);
   const { username } = await invokeFunction<{ ok: boolean; username: string }>('change-username', { username: normalizeUsername(raw) });
   // The hidden sign-in email was renamed server-side; refresh so the session's copy matches.
   await withTimeout(() => supabase.auth.refreshSession()).catch((e) => console.warn('Session refresh after username change failed:', e));

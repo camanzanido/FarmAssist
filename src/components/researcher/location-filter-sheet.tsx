@@ -145,7 +145,7 @@ const s = StyleSheet.create({
 
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12,
-    borderWidth: 1, ...inputSurface, borderRadius: 13, height: 46, paddingHorizontal: 14,
+    borderWidth: 1, ...inputSurface, borderRadius: 13, minHeight: 46, paddingHorizontal: 14,
   },
   searchInput: { flex: 1, fontSize: 15, ...inputTextStyle, padding: 0 },
 
@@ -162,9 +162,9 @@ const s = StyleSheet.create({
   rowCount: { fontSize: 13, fontWeight: '700', color: C.textSoft },
 
   actionRow: { flexDirection: 'row', gap: 10 },
-  clearBtn: { height: BUTTON_HEIGHT, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
+  clearBtn: { minHeight: BUTTON_HEIGHT, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },
   clearBtnText: { fontSize: 15, fontWeight: '700', color: C.text },
-  applyBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
+  applyBtn: { flex: 1, minHeight: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: C.accentStrong, alignItems: 'center', justifyContent: 'center' },
   applyBtnDisabled: { opacity: 0.4 },
   applyBtnText: { fontSize: 16, fontWeight: '800', color: C.accentDeepText },
 });

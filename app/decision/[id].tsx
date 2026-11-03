@@ -1,7 +1,6 @@
 import { DecisionResultView, heroTopStyles } from '@/src/components/decision/decision-result-view';
-import { DECISION_LABELS, DecisionType } from '@/src/constants';
+import { DecisionType } from '@/src/constants';
 import { Colors } from '@/src/constants/colors';
-import { decisionDetailCopy as copy } from '@/src/constants/copy';
 import { getDecision } from '@/src/database/repositories/decisions';
 import { compareToNormalYear, NormalYearComparison } from '@/src/rcda/baseline';
 import { computeRcda, decisionToRcdaInputs, RcdaComputeError } from '@/src/rcda/decisionTree';
@@ -12,19 +11,22 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ResultSkeleton } from '@/src/components/skeletons/app-skeletons';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { dateLocale } from '@/src/i18n/dictionary';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 type LoadState =
   | { status: 'loading' }
-  | { status: 'error'; message: string; canRetry: boolean }
+  | { status: 'error'; message: 'notFound' | 'incomplete' | 'cannotRecompute' | 'loadError'; canRetry: boolean }
   | { status: 'ready'; summary: RcdaSummary; baseline: NormalYearComparison; decisionType: string; datetime: string };
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  return date.toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export default function DecisionDetailScreen() {
+  const { decisionDetailCopy: copy, labelCopy } = useCopy();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
@@ -34,12 +36,12 @@ export default function DecisionDetailScreen() {
     try {
       const decision = id ? await getDecision(id) : null;
       if (!decision) {
-        setState({ status: 'error', message: copy.notFound, canRetry: false });
+        setState({ status: 'error', message: 'notFound', canRetry: false });
         return;
       }
       const inputs = decisionToRcdaInputs(decision);
       if (!inputs) {
-        setState({ status: 'error', message: copy.incomplete, canRetry: false });
+        setState({ status: 'error', message: 'incomplete', canRetry: false });
         return;
       }
       const computation = computeRcda(inputs);
@@ -55,11 +57,11 @@ export default function DecisionDetailScreen() {
     } catch (err) {
       if (err instanceof RcdaComputeError) {
         console.warn('[decision detail] saved inputs cannot be recomputed:', err.message);
-        setState({ status: 'error', message: copy.cannotRecompute, canRetry: false });
+        setState({ status: 'error', message: 'cannotRecompute', canRetry: false });
         return;
       }
       console.error('Failed to load decision detail:', err);
-      setState({ status: 'error', message: copy.loadError, canRetry: true });
+      setState({ status: 'error', message: 'loadError', canRetry: true });
     }
   }, [id]);
 
@@ -83,7 +85,7 @@ export default function DecisionDetailScreen() {
         ) : (
           <View style={s.centerWrap}>
             <Ionicons name="warning-outline" size={32} color={Colors.danger} />
-            <Text style={s.message}>{state.message}</Text>
+            <Text style={s.message}>{copy[state.message]}</Text>
             <TouchableOpacity
               style={s.actionBtn}
               onPress={state.canRetry ? load : () => router.back()}
@@ -97,7 +99,7 @@ export default function DecisionDetailScreen() {
     );
   }
 
-  const typeLabel = DECISION_LABELS[state.decisionType as DecisionType] ?? state.decisionType;
+  const typeLabel = labelCopy.decisionLabels[state.decisionType as DecisionType] ?? state.decisionType;
   const date = formatDate(state.datetime);
 
   return (

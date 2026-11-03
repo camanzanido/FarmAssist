@@ -1,13 +1,15 @@
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Colors } from '@/src/constants/colors';
 import { BUTTON_HEIGHT } from '@/src/constants/layout';
-import { GLOSSARY, GlossaryKey, helpCopy } from '@/src/constants/copy';
+import type { GlossaryKey } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 // A "?" button that explains one or more glossary terms in a bottom sheet.
 export function TermHelpButton({ terms, label, size = 20 }: { terms: GlossaryKey[]; label?: string; size?: number }) {
+  const { GLOSSARY, helpCopy } = useCopy();
   const [open, setOpen] = useState(false);
   const title = label ?? GLOSSARY[terms[0]].term;
 
@@ -46,6 +48,6 @@ const s = StyleSheet.create({
   entryDivided: { borderTopWidth: 1, borderTopColor: Colors.divider },
   term: { fontSize: 16, fontWeight: '800', color: Colors.ink, marginBottom: 6 },
   definition: { fontSize: 14.5, color: Colors.inkMuted, lineHeight: 21 },
-  close: { marginTop: 12, backgroundColor: Colors.ink, borderRadius: 12, height: BUTTON_HEIGHT, alignItems: 'center', justifyContent: 'center' },
+  close: { marginTop: 12, backgroundColor: Colors.ink, borderRadius: 12, minHeight: BUTTON_HEIGHT, alignItems: 'center', justifyContent: 'center' },
   closeText: { fontSize: 15, fontWeight: '700', color: Colors.onDark },
 });

@@ -1,6 +1,5 @@
 import { Colors } from '@/src/constants/colors';
 import { BUTTON_HEIGHT } from '@/src/constants/layout';
-import { predefinedCopy as copy } from '@/src/constants/copy';
 import { getLocationsByUser } from '@/src/database/repositories/locations';
 import { fetchPredefinedOptions } from '@/src/database/repositories/predefined';
 import { formatCurrency } from '@/src/utils/formatters';
@@ -9,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { PickerRowsSkeleton } from '@/src/components/skeletons/app-skeletons';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 type State =
   | { status: 'loading' }
@@ -27,6 +27,7 @@ export function PredefinedPicker({
   onPick: (option: PredefinedOption) => void;
   onClose: () => void;
 }) {
+  const { predefinedCopy: copy } = useCopy();
   const [state, setState] = useState<State>({ status: 'loading' });
 
   const load = useCallback(async () => {
@@ -146,6 +147,6 @@ const s = StyleSheet.create({
   tagTextLocal: { color: Colors.accent, fontWeight: '700' },
   rowPrice: { fontSize: 13, fontWeight: '700', color: Colors.inkSoft },
 
-  closeBtn: { marginTop: 10, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  closeBtn: { marginTop: 10, minHeight: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   closeText: { fontSize: 15, fontWeight: '700', color: Colors.ink },
 });

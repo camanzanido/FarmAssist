@@ -6,10 +6,9 @@ import { wizardHeader } from '@/src/components/decision/wizard-styles';
 import { GradientText } from '@/src/components/ui/gradient-text';
 import StepIndicator from '@/src/components/decision/steps-indicator';
 import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
-import { CLIMATES, DECISION_LABELS, DecisionType, PLACEHOLDERS } from '@/src/constants';
+import { DecisionType } from '@/src/constants';
 import { BrandGradient, brandGradientCss, CARD_PADDING, cardShadow, cardSurface, Colors, ForecastColors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT, contentColumn } from '@/src/constants/layout';
-import { climateCopy, dataEntryCopy, namingCopy, predefinedCopy } from '@/src/constants/copy';
 import { useSyncStatus } from '@/src/hooks/use-sync-status';
 import { isForecastComputable } from '@/src/rcda/decisionTree';
 import { formatNumberDisplay, normalizeNumberInput } from '@/src/utils/numberInput';
@@ -21,6 +20,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 type OptionEntry = { yield: string[]; cost: string[]; addCost: string[]; price: string };
 // What an option looked like before saved values were loaded, so Remove can put it back.
@@ -31,6 +31,7 @@ function emptyFive(): string[] {
 }
 
 export default function DecisionInputFlow() {
+  const { climateCopy, dataEntryCopy, namingCopy, predefinedCopy, labelCopy } = useCopy();
   const router = useRouter();
   const nav = useNavLock();
   const { confirm, notify } = useFeedback();
@@ -45,7 +46,7 @@ export default function DecisionInputFlow() {
   const [names, setNames] = useState<string[]>(['', '']);
   const [pickerFor, setPickerFor] = useState<number | null>(null);
   const [loaded, setLoaded] = useState<(LoadedSaved | null)[]>([null, null]);
-  const placeholders = decisionType ? PLACEHOLDERS[decisionType] : undefined;
+  const placeholders = decisionType ? labelCopy.placeholders[decisionType] : undefined;
   const namesFilled = names[0].trim().length > 0 && names[1].trim().length > 0;
   const namesDuplicate = namesFilled && names[0].trim().toLowerCase() === names[1].trim().toLowerCase();
   const namesValid = namesFilled && !namesDuplicate;
@@ -128,7 +129,7 @@ export default function DecisionInputFlow() {
   const hasPriceError = isPriceFieldInvalid(currentOptionData.price)
     || (isValidNumber(currentOptionData.price) && !isValidPrice(currentOptionData.price));
 
-  const filledScenarioCount = CLIMATES.filter((_, i) =>
+  const filledScenarioCount = labelCopy.climates.filter((_, i) =>
     isValidNumber(currentOptionData.yield[i]) &&
     isValidNumber(currentOptionData.cost[i]) &&
     isValidNumber(currentOptionData.addCost[i])
@@ -257,7 +258,7 @@ export default function DecisionInputFlow() {
 
   // ---------- Render naming step ----------
   if (step === 'naming') {
-    const decisionLabel = DECISION_LABELS[decisionType];
+    const decisionLabel = labelCopy.decisionLabels[decisionType];
     return (
       <>
       <Stack.Screen options={{ gestureEnabled: false }} />
@@ -422,7 +423,7 @@ export default function DecisionInputFlow() {
                   </View>
                 </View>
                 <View style={s.stepperRow}>
-                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustDriest(-1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Decrease driest">
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustDriest(-1)} hitSlop={8} accessibilityRole="button" accessibilityLabel={climateCopy.decreaseDriest}>
                     <Ionicons name="remove" size={22} color={Colors.ink} />
                   </TouchableOpacity>
                   <TextInput
@@ -434,7 +435,7 @@ export default function DecisionInputFlow() {
                     onBlur={handleDriestBlur}
                     selectTextOnFocus
                   />
-                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustDriest(1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Increase driest">
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustDriest(1)} hitSlop={8} accessibilityRole="button" accessibilityLabel={climateCopy.increaseDriest}>
                     <Ionicons name="add" size={22} color={Colors.ink} />
                   </TouchableOpacity>
                 </View>
@@ -464,7 +465,7 @@ export default function DecisionInputFlow() {
                   </View>
                 </View>
                 <View style={s.stepperRow}>
-                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustWettest(-1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Decrease wettest">
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustWettest(-1)} hitSlop={8} accessibilityRole="button" accessibilityLabel={climateCopy.decreaseWettest}>
                     <Ionicons name="remove" size={22} color={Colors.ink} />
                   </TouchableOpacity>
                   <TextInput
@@ -476,7 +477,7 @@ export default function DecisionInputFlow() {
                     onBlur={handleWettestBlur}
                     selectTextOnFocus
                   />
-                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustWettest(1)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Increase wettest">
+                  <TouchableOpacity style={s.stepperBtn} onPress={() => adjustWettest(1)} hitSlop={8} accessibilityRole="button" accessibilityLabel={climateCopy.increaseWettest}>
                     <Ionicons name="add" size={22} color={Colors.ink} />
                   </TouchableOpacity>
                 </View>
@@ -529,7 +530,7 @@ export default function DecisionInputFlow() {
 
           <View style={s.titleBlock}>
             <GradientText text={optionName} colors={BrandGradient} style={s.optionTitle} numberOfLines={1} />
-            <Text style={s.subtitle}>Enter values for each climate scenario.</Text>
+            <Text style={s.subtitle}>{dataEntryCopy.scenariosSubtitle}</Text>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
@@ -560,7 +561,7 @@ export default function DecisionInputFlow() {
             </View>
             <Text style={s.unitsNote}>{dataEntryCopy.unitsNote}</Text>
 
-            {CLIMATES.map((climateName, i) => (
+            {labelCopy.climates.map((climateName, i) => (
               <View key={climateName} style={s.scenarioCard}>
                 <View style={s.scenarioHeader}>
                   <Text style={s.scenarioName}>{climateName}</Text>
@@ -706,7 +707,7 @@ const s = StyleSheet.create({
   footerMeta: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 9 },
   footerMetaText: { fontSize: 12, color: Colors.inkFaint },
   errorTextInline: { fontSize: 12, color: Colors.danger, fontWeight: '600' },
-  nextBtn: { backgroundColor: Colors.ink, borderRadius: 12, height: BUTTON_HEIGHT, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  nextBtn: { backgroundColor: Colors.ink, borderRadius: 12, minHeight: BUTTON_HEIGHT, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   nextBtnDisabled: { backgroundColor: Colors.disabled },
   calcBtn: { experimental_backgroundImage: brandGradientCss(90) },
   nextBtnText: { fontSize: 15, fontWeight: '700', color: Colors.onDark },

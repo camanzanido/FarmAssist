@@ -6,8 +6,10 @@ import { useOnboarding } from '@/src/onboarding/OnboardingContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 export default function TabLayout() {
+  const { tabsCopy } = useCopy();
   const { isResearcher } = useAuth();
   const { status: onboarding } = useOnboarding();
   const tabBarFrame = useTabBarFrame();
@@ -27,6 +29,8 @@ export default function TabLayout() {
           borderTopColor: Colors.border,
           ...tabBarFrame,
         },
+        // The bar has a fixed height, so its labels stay at their designed size.
+        tabBarAllowFontScaling: false,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         headerShown: false,
         animation: 'shift',
@@ -36,7 +40,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: tabsCopy.home,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={28} color={color} />
           ),
@@ -45,7 +49,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: 'History',
+          title: tabsCopy.history,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'time' : 'time-outline'} size={28} color={color} />
           ),
@@ -54,7 +58,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: tabsCopy.profile,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={28} color={color} />
           ),

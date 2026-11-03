@@ -332,7 +332,7 @@ const s = StyleSheet.create({
   customCard: { backgroundColor: C.fill, borderRadius: 14, paddingHorizontal: 15, marginBottom: 12 },
   customDivider: { height: 1, backgroundColor: C.divider },
   stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
-  stepperLabel: { fontSize: 14, color: C.textSoft, width: 48 },
+  stepperLabel: { fontSize: 14, color: C.textSoft, minWidth: 48 },
   stepperBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, borderColor: C.cardBorder, alignItems: 'center', justifyContent: 'center' },
   stepperBtnDisabled: { opacity: 0.3 },
   stepperValue: { flex: 1, fontSize: 15, fontWeight: '700', color: C.text, textAlign: 'center' },
@@ -353,7 +353,7 @@ const s = StyleSheet.create({
   emptyHint: { fontSize: 13, color: C.amberText, marginBottom: 12, textAlign: 'center' },
 
   actionRow: { flexDirection: 'row', gap: 10 },
-  exportBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: C.accentStrong, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9 },
+  exportBtn: { flex: 1, minHeight: BUTTON_HEIGHT, borderRadius: 12, backgroundColor: C.accentStrong, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9 },
   exportBtnDisabled: { opacity: 0.4 },
   exportBtnText: { fontSize: 16, fontWeight: '800', color: C.accentDeepText },
   shareBtn: { width: BUTTON_HEIGHT, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: C.cardBorderStrong, alignItems: 'center', justifyContent: 'center' },

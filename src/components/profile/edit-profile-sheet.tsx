@@ -4,7 +4,6 @@ import { changeUsername, requestEmailChange, saveName, verifyEmailChange } from 
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { brandGradientCss, Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { BUTTON_HEIGHT } from '@/src/constants/layout';
-import { profileCopy as copy } from '@/src/constants/copy';
 import { FunctionError } from '@/src/database/supabase/invokeFunction';
 import { useSubmitOnce } from '@/src/hooks/use-submit-once';
 import { isInternalEmail, normalizeUsername, realEmail, validateUsername } from '@/src/utils/accountEmail';
@@ -14,6 +13,7 @@ import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useCopy } from '@/src/i18n/LanguageContext';
 
 export type ProfileSaveResult = { pendingEmail: string | null; nameChanged: boolean; emailVerified?: boolean };
 
@@ -28,6 +28,7 @@ type Props = {
 const RESEND_COOLDOWN_S = 60;
 
 export function EditProfileSheet({ visible, online, pendingEmail, onClose, onSaved }: Props) {
+  const { profileCopy: copy } = useCopy();
   const { user, refreshProfile } = useAuth();
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -255,7 +256,7 @@ const s = StyleSheet.create({
   subtitle: { fontSize: 13.5, color: Colors.inkSoft, marginBottom: 8, lineHeight: 19 },
   label: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: Colors.inkFaint, marginTop: 14, marginBottom: 8 },
   input: {
-    height: 50, borderRadius: 12, borderWidth: 1, ...inputSurface,
+    minHeight: 50, borderRadius: 12, borderWidth: 1, ...inputSurface,
     paddingHorizontal: 14, fontSize: 15.5, ...inputTextStyle,
   },
   codeInput: { fontSize: 20, fontWeight: '800', letterSpacing: 4 },
@@ -270,9 +271,9 @@ const s = StyleSheet.create({
   link: { fontSize: 13.5, fontWeight: '700', color: Colors.text },
   linkDisabled: { color: Colors.inkFaint },
   actions: { flexDirection: 'row', gap: 10, marginTop: 24 },
-  cancelBtn: { flex: 1, height: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  cancelBtn: { flex: 1, minHeight: BUTTON_HEIGHT, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   cancelText: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  saveBtn: { flex: 1.4, height: BUTTON_HEIGHT, borderRadius: 12, experimental_backgroundImage: brandGradientCss(90), alignItems: 'center', justifyContent: 'center' },
+  saveBtn: { flex: 1.4, minHeight: BUTTON_HEIGHT, borderRadius: 12, experimental_backgroundImage: brandGradientCss(90), alignItems: 'center', justifyContent: 'center' },
   saveText: { fontSize: 15.5, fontWeight: '800', color: Colors.onDark },
   disabled: { opacity: 0.6 },
 });

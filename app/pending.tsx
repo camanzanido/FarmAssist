@@ -109,10 +109,10 @@ const s = StyleSheet.create({
   cardValue: { fontSize: 16, fontWeight: '700', color: Colors.ink },
   cardEmail: { fontSize: 13, color: Colors.inkSoft, marginTop: 2 },
   primaryBtn: {
-    backgroundColor: Colors.accent, borderRadius: 12, height: BUTTON_HEIGHT,
+    backgroundColor: Colors.accent, borderRadius: 12, minHeight: BUTTON_HEIGHT,
     alignItems: 'center', justifyContent: 'center',
   },
   primaryBtnText: { color: Colors.onDark, fontSize: 15.5, fontWeight: '700' },
-  secondaryBtn: { height: 48, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
+  secondaryBtn: { minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
   secondaryBtnText: { color: Colors.inkFaint, fontSize: 14.5, fontWeight: '600' },
 });

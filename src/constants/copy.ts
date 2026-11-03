@@ -1,6 +1,82 @@
 
 import { OTP_LENGTH } from '../auth/otp';
 
+// Every user-facing string lives here; src/i18n/fil.ts must mirror this file's shape.
+// Farmers and extension workers share the 'farmer' role; researchers are the admins. Only the wording differs from the stored value.
+export const labelCopy = {
+  roleLabel: { farmer: 'Field user (farmer or extension worker)', researcher: 'Admin (researcher)' },
+  roleShort: { farmer: 'Field user', researcher: 'Admin' },
+  roleTag: { farmer: 'FIELD', researcher: 'ADMIN' },
+  decisionLabels: { crop_choice: 'Crop Choice', crop_variety: 'Crop Variety', protect: 'Protect from Rain' },
+  decisionDescriptions: {
+    crop_choice: 'Compare two crops to find the better option given climate risk.',
+    crop_variety: 'Compare two varieties of the same crop to see which pays off better.',
+    protect: 'Decide if protecting your crop from rain is worth the extra cost.',
+  },
+  placeholders: {
+    crop_choice: ['e.g. Rice IR64', 'e.g. Corn OPV'],
+    crop_variety: ['e.g. NSIC Rc222', 'e.g. NSIC Rc160'],
+    protect: ['e.g. Cover from Rain', 'e.g. Leave Uncovered'],
+  },
+  climates: ['Driest', 'Below Average', 'Average', 'Above Average', 'Wettest'],
+  fieldLabels: { yield: 'Yield', cost: 'Cost', addCost: 'Additional Cost' },
+};
+
+export const errorCopy = {
+  offline: 'Check your internet connection and try again.',
+  permission: "You don't have permission to do this.",
+  invalidCredentials: 'Incorrect email or password.',
+  otpExpired: 'That code is wrong or has expired. Ask for a new code.',
+  samePassword: 'Choose a password that is different from your old one.',
+  rateLimit: 'Too many attempts. Please wait a few minutes and try again.',
+  session: 'Your sign-in has expired. Log out, then sign in again.',
+  disabled: 'This account has been disabled, so it can no longer sign in or sync. You can still use FarmAssist without signing in.',
+  emailTaken: 'Another account already uses this email.',
+  invalidEmail: 'That email address is not valid. Check it and try again.',
+  weakPassword: 'That password is too weak. Use a longer one with letters and numbers.',
+  emailNotConfirmed: 'Open the confirmation link we emailed you, then sign in.',
+};
+
+export const languageCopy = {
+  label: 'Language',
+  chooseHint: 'Choose your language',
+};
+
+// Shared controls used on many screens, including accessibility text read aloud by screen readers.
+export const commonCopy = {
+  close: 'Close',
+  closeMenu: 'Close menu',
+  loading: 'Loading',
+  swipeToClose: 'Swipe down to close',
+  tapToDismiss: 'Tap to dismiss',
+  noMatches: 'No matches',
+  noEmail: 'No email',
+};
+
+export const tabsCopy = {
+  home: 'Home',
+  history: 'History',
+  profile: 'Profile',
+};
+
+export const validationCopy = {
+  passwordRequired: 'Enter a password.',
+  passwordTooShort: (min: number) => `Use at least ${min} characters.`,
+  confirmRequired: 'Type the password again.',
+  passwordMismatch: 'The passwords do not match.',
+  nameRequired: 'Enter your name.',
+  nameTooLong: (max: number) => `Keep your name under ${max} characters.`,
+  emailRequired: 'Enter your email.',
+  emailInvalid: 'Enter a valid email, like juan@example.com.',
+  usernameRequired: 'Enter a username.',
+  usernameTooShort: (min: number) => `Use at least ${min} characters.`,
+  usernameTooLong: (max: number) => `Keep it under ${max} characters.`,
+  usernameInvalid: 'Use only letters, numbers, dots (.) and underscores (_).',
+  registerNameRequired: 'Name is required',
+  registerProvinceRequired: 'Province is required',
+  registerCityRequired: 'City/municipality is required',
+};
+
 export const decisionTypeCopy = {
   title: 'What decision do\nyou want to make?',
   subtitle: 'Choose one. You can always come back.',
@@ -62,6 +138,7 @@ export const dataEntryCopy = {
   filledCount: (n: number) => `${n} of 5 climate scenarios filled`,
   continueToOption: (nextName: string) => `Continue to ${nextName}`,
   continueToClimate: 'Continue to climate',
+  scenariosSubtitle: 'Enter values for each climate scenario.',
   errorNumbersOnly: 'Enter numbers only.',
   errorPriceMustBePositive: 'Selling price must be greater than 0.',
 };
@@ -77,6 +154,10 @@ export const climateCopy = {
   wetYears: 'Wettest',
   wetYearsSub: 'Above-normal rainfall (La Niña)',
   offlineNote: 'Calculated right here on your phone. No internet needed.',
+  decreaseDriest: 'Decrease driest',
+  increaseDriest: 'Increase driest',
+  decreaseWettest: 'Decrease wettest',
+  increaseWettest: 'Increase wettest',
   submit: 'Calculate Now',
   errorOver100: 'Total cannot exceed 100%',
   errorNoAverage: 'Leave at least 1% for average years.',
@@ -91,6 +172,8 @@ function joinList(items: string[]): string {
 }
 
 export const resultCopy = {
+  bannerTitle: 'Analysis Result',
+  newAnalysis: 'New Analysis',
   savingPill: 'Saving…',
   savedPill: 'Saved',
   notSavedPill: 'Not saved',
@@ -206,6 +289,9 @@ export const historyCopy = {
 
 export const profileCopy = {
   statsDecisions: 'Decisions',
+  statsPending: 'Pending',
+  emailRow: 'Email',
+  neverSynced: 'never',
   loadErrorTitle: "Couldn't load your stats.",
   loadErrorBody: 'Some information on this screen may be out of date.',
   retry: 'Retry',
@@ -302,9 +388,9 @@ export const aboutCopy = {
   tagline: 'Climate-smart decisions for Filipino farmers',
   version: (v: string) => `Version ${v}`,
   whatHeading: 'What it does',
-  whatBody: 'FarmAssist helps farmers and extension workers choose between two farming options, such as which crop to plant, which variety to grow, or whether to protect a crop from rain. You enter the expected yields, prices, and costs, and the app recommends the option likely to earn more under the coming season\'s climate. It works fully offline, and your decisions sync to the cloud once you sign in. Researchers at UPLB use the admin side of the app to manage accounts, prepare recommended values for each area, and review, map, and export the decisions farmers share, to study how climate information is used.',
+  whatBody: 'FarmAssist helps farmers and extension workers choose between two farming options, such as which crop to plant, which variety to grow, or whether to protect a crop from rain. You enter the expected yields, prices, and costs, and the app recommends the option likely to earn more under the coming season\'s climate. It works fully offline, and your decisions sync to the cloud once you sign in. Admins manage accounts, prepare recommended values for each area, and review, map, and export the decisions farmers share, to study how climate information is used.',
   rcdaHeading: 'The RCDA model',
-  rcdaBody: 'Recommendations come from Rapid Climate Decision Analysis (RCDA). It combines the seasonal rainfall forecast (the chance of a below-normal, near-normal, or above-normal season) with the profit of each option under dry, average, and wet conditions. It then compares the expected returns and shows the recommended option, the estimated profit difference, and a decision tree of possible outcomes. It is created from the prototype Rapid Climate Decision Analysis version 3.2. FarmAssist supports decisions but does not make them: the final decision stays with the farmer, and every result is only as accurate as the data entered.',
+  rcdaBody: 'Recommendations come from Rapid Climate Decision Analysis (RCDA). It combines the seasonal rainfall forecast (the chance of a below-normal, near-normal, or above-normal season) with the profit of each option under dry, average, and wet conditions. It then compares the expected returns and shows the recommended option, the estimated profit difference, and a decision tree of possible outcomes. It is created from the prototype Rapid Climate Decision Analysis version 3.2 by Dr. Peter Hayman and Dr. Canesio Predo. FarmAssist supports decisions but does not make them: the final decision stays with the farmer, and every result is only as accurate as the data entered.',
   originHeading: 'Origin',
   originBody: 'This mobile application is developed through the collaborative project between the UPLB Interdisciplinary Studies Center for Integrated Natural Resources and Environment Management (UPLB-INREM) and the Institute of Computer Science (ICS) of the University of the Philippines Los Baños (UPLB).',
   creditsHeading: 'Project',
@@ -315,7 +401,7 @@ export const aboutCopy = {
   contactHeading: 'Contact',
   contactLabel: 'Send feedback',
   contactEmail: 'camanzanido@up.edu.ph',
-  footer: 'Made for farmers, extension workers, and researchers.',
+  footer: 'Made for farmers and extension workers.',
 } as const;
 
 export const authCopy = {
@@ -350,6 +436,8 @@ export const authCopy = {
   noEmailNote: "Without an email you can't reset a forgotten password yourself. Ask your researcher or extension worker to reset it.",
   cityLabel: 'City / Municipality',
   provinceLabel: 'Province',
+  selectProvince: 'Select province',
+  selectCity: 'Select city / municipality',
   confirmPassword: 'Confirm password',
   createAccount: 'Create account',
   creatingAccount: 'Creating account…',
