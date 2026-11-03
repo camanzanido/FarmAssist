@@ -53,7 +53,7 @@ export function LanguagePicker({ size = 'compact', style }: Props) {
 
 const s = StyleSheet.create({
   stretch: { alignSelf: 'stretch' },
-  field: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 10, backgroundColor: Colors.accentTint },
+  field: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingLeft: 8, borderRadius: 10 },
   fieldLarge: { minHeight: 52, gap: 10, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, ...inputSurface },
   text: { fontSize: 14, fontWeight: '700', color: Colors.ink },
   textLarge: { flex: 1, fontSize: 16, fontWeight: '800' },
