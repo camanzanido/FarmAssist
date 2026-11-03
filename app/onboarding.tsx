@@ -106,8 +106,8 @@ export default function OnboardingScreen() {
             <Text style={s.title} accessibilityRole="header">{item.title}</Text>
           )}
           <Text style={s.body}>{item.body}</Text>
-          {/* Asked first, on the welcome page, so the rest of the intro is already in the chosen language. */}
-          {item.key === 'welcome' && (
+          {/* Asked first, on the welcome page, so the rest of the intro is already in the chosen language; admins always get English. */}
+          {item.key === 'welcome' && user?.user_type !== 'researcher' && (
             <View style={s.language}>
               <Text style={s.languageHint}>{languageCopy.chooseHint}</Text>
               <LanguagePicker size="large" />

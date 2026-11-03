@@ -33,6 +33,11 @@ export function isLanguage(value: unknown): value is Language {
   return value === 'en' || value === 'fil';
 }
 
+// Admins always work in English; everyone else gets the language saved on the device.
+export function effectiveLanguage(saved: Language, userType: string | null | undefined): Language {
+  return userType === 'researcher' ? 'en' : saved;
+}
+
 export function setCurrentLanguage(language: Language): void {
   current = language;
 }

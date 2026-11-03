@@ -101,3 +101,18 @@ describe('error messages follow the chosen language', () => {
     expect(getAuthErrorMessage(new Error('Invalid login credentials'), 'fallback')).toBe(e.invalidCredentials);
   });
 });
+
+describe('effectiveLanguage', () => {
+  const { effectiveLanguage } = require('../../src/i18n/dictionary');
+
+  it('always gives admins English', () => {
+    expect(effectiveLanguage('fil', 'researcher')).toBe('en');
+    expect(effectiveLanguage('en', 'researcher')).toBe('en');
+  });
+
+  it('keeps the saved choice for field users and signed-out use', () => {
+    expect(effectiveLanguage('fil', 'farmer')).toBe('fil');
+    expect(effectiveLanguage('fil', undefined)).toBe('fil');
+    expect(effectiveLanguage('en', null)).toBe('en');
+  });
+});
