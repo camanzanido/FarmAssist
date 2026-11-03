@@ -50,7 +50,7 @@ export function StatCard({ label, value, variant, increase, increaseLabel = 'thi
 }
 
 const s = StyleSheet.create({
-  card: { flex: 1, minHeight: 106, borderRadius: CARD_RADIUS, padding: 14, justifyContent: 'space-between', overflow: 'hidden', ...cardShadow },
+  card: { flex: 1, minHeight: 103, borderRadius: CARD_RADIUS, padding: 14, justifyContent: 'space-between', overflow: 'hidden', ...cardShadow },
   cardLight: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
   topRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
   label: { flex: 1, fontSize: 13, fontWeight: '700' },
