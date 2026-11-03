@@ -15,7 +15,8 @@ import { isDormant } from '@/src/utils/userActivity';
 import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Platform, RefreshControl, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function UserRow({ user: u, onPress }: { user: ResearcherUserRow; onPress: (u: ResearcherUserRow) => void }) {

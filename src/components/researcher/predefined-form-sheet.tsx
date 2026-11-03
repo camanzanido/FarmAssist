@@ -7,9 +7,8 @@ import { emptyFormValues, OptionFormValues, predefinedKey, validateOptionForm } 
 import { BottomSheet } from '@/src/components/ui/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 
 type Group = 'yield' | 'cost' | 'addCost';
 const GROUPS: { key: Group; label: string; money: boolean }[] = [

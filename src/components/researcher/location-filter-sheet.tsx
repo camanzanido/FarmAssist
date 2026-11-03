@@ -5,7 +5,8 @@ import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import { fetchCityStats, type CityStats, type Place } from '@/src/database/repositories/researcher';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 
 const placeKey = (p: Place) => `${p.city}|${p.province}`;
 

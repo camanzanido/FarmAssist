@@ -5,7 +5,8 @@ import { InfoSection, infoRowStyles as rows } from '@/src/components/ui/info-sec
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { copyFor } from '@/src/i18n/dictionary';
 import { useCopy } from '@/src/i18n/LanguageContext';

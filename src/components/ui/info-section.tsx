@@ -1,6 +1,7 @@
 import { Colors } from '@/src/constants/colors';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 
 // A titled block on reading pages (About, Terms, How to use): text sits on the page, whitespace separates sections.
 export function InfoSection({ heading, body, hint, children }: {

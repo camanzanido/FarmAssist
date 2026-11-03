@@ -24,7 +24,8 @@ import {
 } from '@/src/utils/predefinedOptions';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Platform, RefreshControl, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Tab = 'farmers' | 'published';

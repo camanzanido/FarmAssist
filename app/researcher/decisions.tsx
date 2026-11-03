@@ -16,9 +16,8 @@ import { getActionErrorMessage } from '@/src/utils/errors';
 import { ProfitAmount } from '@/src/components/ui/profit-amount';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator, FlatList, Platform, RefreshControl, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Platform, RefreshControl, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type TypeFilter = 'all' | DecisionType;

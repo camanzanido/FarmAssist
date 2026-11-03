@@ -12,7 +12,8 @@ import { generateTempPassword } from '@/src/utils/tempPassword';
 import { isDormant } from '@/src/utils/userActivity';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 
 type Pending = { next: 'active' | 'inactive' };
 

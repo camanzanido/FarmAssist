@@ -1,4 +1,4 @@
-import { copyFor, getCopy, getCurrentLanguage, LANGUAGES, setCurrentLanguage, type Language } from '../../src/i18n/dictionary';
+import { copyFor, effectiveLanguage, getCopy, getCurrentLanguage, LANGUAGES, setCurrentLanguage, type Language } from '../../src/i18n/dictionary';
 import { getActionErrorMessage, getAuthErrorMessage } from '../../src/utils/errors';
 
 type Problem = string;
@@ -103,8 +103,6 @@ describe('error messages follow the chosen language', () => {
 });
 
 describe('effectiveLanguage', () => {
-  const { effectiveLanguage } = require('../../src/i18n/dictionary');
-
   it('always gives admins English', () => {
     expect(effectiveLanguage('fil', 'researcher')).toBe('en');
     expect(effectiveLanguage('en', 'researcher')).toBe('en');

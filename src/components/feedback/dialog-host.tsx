@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef, useSyncExternalStore } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { EASE_OUT } from '@/src/constants/motion';
 import Animated, { FadeIn, Keyframe, useReducedMotion } from 'react-native-reanimated';
 import type { DialogQueue } from './feedback-queue';

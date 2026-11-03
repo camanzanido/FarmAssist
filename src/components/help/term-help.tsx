@@ -4,7 +4,8 @@ import { BUTTON_HEIGHT } from '@/src/constants/layout';
 import type { GlossaryKey } from '@/src/constants/copy';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { useCopy } from '@/src/i18n/LanguageContext';
 
 // A "?" button that explains one or more glossary terms in a bottom sheet.

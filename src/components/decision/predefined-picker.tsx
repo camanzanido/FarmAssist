@@ -7,7 +7,8 @@ import { normalizePlace, placeLabel, PredefinedOption, predefinedForLocation } f
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { PickerRowsSkeleton } from '@/src/components/skeletons/app-skeletons';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { useCopy } from '@/src/i18n/LanguageContext';
 
 type State =

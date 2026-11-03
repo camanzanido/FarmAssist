@@ -4,7 +4,8 @@ import { useCopy, useLanguage } from '@/src/i18n/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { PopoverMenu } from './popover-menu';
 
 interface Props {

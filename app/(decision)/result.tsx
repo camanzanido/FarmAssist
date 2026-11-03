@@ -13,12 +13,8 @@ import { RcdaSummary, summarizeRcda } from '@/src/rcda/summary';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  StatusBar,
-  StyleSheet,
-  Text, TouchableOpacity,
-  View,
-} from 'react-native';
+import { StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ResultSkeleton } from '@/src/components/skeletons/app-skeletons';
 import { useCopy } from '@/src/i18n/LanguageContext';

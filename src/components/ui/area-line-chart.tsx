@@ -1,7 +1,8 @@
 import { BrandGradient, Colors } from '@/src/constants/colors';
 import { areaPath, chartPoints, nearestSlot, slotX, smoothLinePath } from '@/src/utils/chartPaths';
 import React, { useEffect, useId, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
+import { Pressable, StyleSheet, View, type GestureResponderEvent, type LayoutChangeEvent } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 

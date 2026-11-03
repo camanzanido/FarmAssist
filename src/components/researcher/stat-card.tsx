@@ -2,7 +2,8 @@ import { OdometerText } from '@/src/components/ui/odometer-text';
 import { CARD_RADIUS, cardShadow, Colors, StatGradients } from '@/src/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 
 export type StatVariant = keyof typeof StatGradients;
 

@@ -6,7 +6,8 @@ import type { NormalYearComparison } from '@/src/rcda/baseline';
 import type { OutcomeFavor, RcdaSummary } from '@/src/rcda/summary';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import Animated, {
   Easing, FadeIn, LinearTransition, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming,
 } from 'react-native-reanimated';

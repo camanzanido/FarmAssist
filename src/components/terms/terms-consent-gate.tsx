@@ -10,7 +10,8 @@ import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { useCopy } from '@/src/i18n/LanguageContext';
 
 // Asks signed-in accounts that never agreed (researcher-made, older, or after a terms update) once; offline use without an account is never gated.
