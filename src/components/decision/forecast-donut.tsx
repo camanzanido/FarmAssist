@@ -4,7 +4,8 @@ import {
 } from '@/src/utils/forecastSplit';
 import { arcDash } from '@/src/utils/donutArc';
 import React, { useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Svg, { Circle } from 'react-native-svg';
 import { useCopy } from '@/src/i18n/LanguageContext';

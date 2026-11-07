@@ -1,16 +1,8 @@
 import { Colors, inputSurface, inputTextStyle } from '@/src/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import {
-  FlatList,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { FlatList, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCopy } from '@/src/i18n/LanguageContext';
 

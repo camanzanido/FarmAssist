@@ -14,7 +14,8 @@ import { NewUserForm, validateNewUser } from '@/src/utils/newUserValidation';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 
 const NO_EMAIL_HINT = "Without an email, they can't reset a forgotten password themselves. You can reset it for them from Field Users.";
 

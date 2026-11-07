@@ -1,4 +1,4 @@
-import { copyFor, getCopy, getCurrentLanguage, LANGUAGES, setCurrentLanguage, type Language } from '../../src/i18n/dictionary';
+import { copyFor, effectiveLanguage, getCopy, getCurrentLanguage, LANGUAGES, setCurrentLanguage, type Language } from '../../src/i18n/dictionary';
 import { getActionErrorMessage, getAuthErrorMessage } from '../../src/utils/errors';
 
 type Problem = string;
@@ -99,5 +99,18 @@ describe('error messages follow the chosen language', () => {
     expect(getAuthErrorMessage(new Error('Network request failed'), 'fallback')).toBe(e.offline);
     expect(getActionErrorMessage({ code: '42501' }, 'fallback')).toBe(e.permission);
     expect(getAuthErrorMessage(new Error('Invalid login credentials'), 'fallback')).toBe(e.invalidCredentials);
+  });
+});
+
+describe('effectiveLanguage', () => {
+  it('always gives admins English', () => {
+    expect(effectiveLanguage('fil', 'researcher')).toBe('en');
+    expect(effectiveLanguage('en', 'researcher')).toBe('en');
+  });
+
+  it('keeps the saved choice for field users and signed-out use', () => {
+    expect(effectiveLanguage('fil', 'farmer')).toBe('fil');
+    expect(effectiveLanguage('fil', undefined)).toBe('fil');
+    expect(effectiveLanguage('en', null)).toBe('en');
   });
 });

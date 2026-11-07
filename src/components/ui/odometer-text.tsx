@@ -1,6 +1,7 @@
 import { colorAt } from '@/src/components/ui/gradient-text';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View, type TextStyle } from 'react-native';
+import { StyleSheet, useWindowDimensions, View, type TextStyle } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { cappedFontScale, MAX_FONT_SCALE } from '@/src/utils/fontScale';
 import Animated, {
   Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming,

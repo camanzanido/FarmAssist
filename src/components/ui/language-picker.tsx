@@ -4,7 +4,8 @@ import { useCopy, useLanguage } from '@/src/i18n/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { PopoverMenu } from './popover-menu';
 
 interface Props {
@@ -53,7 +54,7 @@ export function LanguagePicker({ size = 'compact', style }: Props) {
 
 const s = StyleSheet.create({
   stretch: { alignSelf: 'stretch' },
-  field: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 10, backgroundColor: Colors.accentTint },
+  field: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingLeft: 8, borderRadius: 10 },
   fieldLarge: { minHeight: 52, gap: 10, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, ...inputSurface },
   text: { fontSize: 14, fontWeight: '700', color: Colors.ink },
   textLarge: { flex: 1, fontSize: 16, fontWeight: '800' },

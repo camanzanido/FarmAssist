@@ -12,7 +12,8 @@ import { cleanName, emailChanged, validateEmail, validateName } from '@/src/util
 import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 import { useCopy } from '@/src/i18n/LanguageContext';
 
 export type ProfileSaveResult = { pendingEmail: string | null; nameChanged: boolean; emailVerified?: boolean };

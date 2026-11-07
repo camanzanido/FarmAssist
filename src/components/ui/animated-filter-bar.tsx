@@ -1,7 +1,8 @@
 import { Colors } from '@/src/constants/colors';
 import { SNAP_SPRING } from '@/src/constants/motion';
 import React, { useEffect, useRef, useState } from 'react';
-import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 
 export type FilterOption<T extends string> = { value: T; label: string };

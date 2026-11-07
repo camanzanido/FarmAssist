@@ -2,7 +2,8 @@ import { Colors } from '@/src/constants/colors';
 import { PAGE_SIZES, type PageSize, type PageWindow } from '@/src/utils/pagination';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 
 type Props = {
   info: PageWindow;

@@ -2,7 +2,8 @@ import { BrandGradient, brandGradientCss, CARD_PADDING, cardShadow, cardSurface,
 import { GradientBorder } from '@/src/components/ui/gradient-border';
 import type { DecisionTree as Tree, OutcomeKey, TreeBranch, TreeOutcome } from '@/src/rcda/decisionTree';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { useCopy } from '@/src/i18n/LanguageContext';
 
 const OUTCOME_COLORS: Record<OutcomeKey, string> = {

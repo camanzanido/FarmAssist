@@ -7,12 +7,8 @@ import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import {
-  StatusBar,
-  StyleSheet,
-  Text, TouchableOpacity,
-  View,
-} from 'react-native';
+import { StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCopy } from '@/src/i18n/LanguageContext';
 

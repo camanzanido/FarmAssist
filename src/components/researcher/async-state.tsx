@@ -1,7 +1,8 @@
 import { Colors } from '@/src/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 
 export function ResearcherAsyncState({
   isLoading,

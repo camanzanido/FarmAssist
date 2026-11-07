@@ -7,4 +7,15 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*', 'supabase/functions/**'],
   },
+  {
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [{
+          name: 'react-native',
+          importNames: ['Text', 'TextInput'],
+          message: "Import Text and TextInput from '@/src/components/ui/text' so they get the font size cap.",
+        }],
+      }],
+    },
+  },
 ]);

@@ -28,7 +28,8 @@ import {
 } from '@/src/utils/exportReport';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 
 type Format = 'excel' | 'pdf';
 type Action = 'save' | 'share';

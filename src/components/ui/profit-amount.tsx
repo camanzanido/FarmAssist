@@ -2,7 +2,8 @@ import { Colors } from '@/src/constants/colors';
 import { formatCurrency } from '@/src/utils/formatters';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type TextStyle } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 
 type Props = {
   value: number;

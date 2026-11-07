@@ -1,6 +1,7 @@
 import { Colors } from '@/src/constants/colors';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 
 const s = StyleSheet.create({
   wrap: { flex: 1, alignItems: 'flex-end' },

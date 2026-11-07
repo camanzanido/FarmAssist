@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { copyFor, setCurrentLanguage, type Copy, type Language } from './dictionary';
+import { copyFor, effectiveLanguage, setCurrentLanguage, type Copy, type Language } from './dictionary';
 import { loadLanguage, saveLanguage } from './languageStorage';
 
 interface LanguageContextValue {
@@ -37,6 +37,23 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   );
 
   if (!value) return null;
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+}
+
+const noop = () => {};
+
+// Re-provides the language for an account type without touching the saved choice, so logging out restores it.
+export function LanguageOverride({ userType, children }: { userType: string | null | undefined; children: React.ReactNode }) {
+  const outer = useLanguage();
+  const language = effectiveLanguage(outer.language, userType);
+  const overridden = language !== outer.language;
+  // getCopy() callers (error messages) read the module-level language, so every render sets it before the children draw.
+  setCurrentLanguage(language);
+
+  const value = useMemo(
+    () => (overridden ? { language, setLanguage: noop, copy: copyFor(language) } : outer),
+    [overridden, language, outer],
+  );
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 

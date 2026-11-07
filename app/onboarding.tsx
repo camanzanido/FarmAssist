@@ -5,18 +5,8 @@ import { useOnboarding } from '@/src/onboarding/OnboardingContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import {
-  FlatList,
-  Image,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { FlatList, Image, NativeScrollEvent, NativeSyntheticEvent, StatusBar, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LanguagePicker } from '@/src/components/ui/language-picker';
@@ -106,8 +96,8 @@ export default function OnboardingScreen() {
             <Text style={s.title} accessibilityRole="header">{item.title}</Text>
           )}
           <Text style={s.body}>{item.body}</Text>
-          {/* Asked first, on the welcome page, so the rest of the intro is already in the chosen language. */}
-          {item.key === 'welcome' && (
+          {/* Asked first, on the welcome page, so the rest of the intro is already in the chosen language; admins always get English. */}
+          {item.key === 'welcome' && user?.user_type !== 'researcher' && (
             <View style={s.language}>
               <Text style={s.languageHint}>{languageCopy.chooseHint}</Text>
               <LanguagePicker size="large" />

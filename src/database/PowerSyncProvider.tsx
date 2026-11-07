@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { PowerSyncContext } from '@powersync/react-native';
 import React, { useEffect, useState } from 'react';
-import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { AppStartSkeleton } from '../components/skeletons/app-skeletons';
 import { Colors } from '../constants/colors';
 import { db } from './powersync/powersync';

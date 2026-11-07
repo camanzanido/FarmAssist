@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, type TextStyle } from 'react-native';
+import { type TextStyle } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 
 function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.replace('#', ''), 16);

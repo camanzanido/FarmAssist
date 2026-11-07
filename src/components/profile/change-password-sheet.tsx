@@ -7,7 +7,8 @@ import { getAuthErrorMessage, isInvalidCredentialsError, UserFacingError } from 
 import { validatePassword, validatePasswordConfirm } from '@/src/utils/passwordValidation';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '@/src/components/ui/text';
 import { useCopy } from '@/src/i18n/LanguageContext';
 
 type Props = {

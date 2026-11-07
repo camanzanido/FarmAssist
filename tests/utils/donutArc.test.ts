@@ -1,4 +1,4 @@
-import { arcDash } from '../../src/utils/donutArc';
+import { arcDash, segmentLengths } from '../../src/utils/donutArc';
 
 // What the eye sees: the dash plus any round caps.
 const visible = (a: ReturnType<typeof arcDash>, stroke: number) => a.dash + (a.cap === 'round' ? stroke : 0);
@@ -27,7 +27,6 @@ describe('arcDash', () => {
 });
 
 describe('segmentLengths', () => {
-  const { segmentLengths } = require('../../src/utils/donutArc');
 
   it('keeps proportional lengths when every segment is long enough', () => {
     expect(segmentLengths([1, 1, 2], 400, 24)).toEqual([100, 100, 200]);

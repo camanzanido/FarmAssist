@@ -1,4 +1,4 @@
-import { getActionErrorMessage, getAuthErrorMessage, isAccountDisabledError, isInvalidCredentialsError, isSessionMissingError } from '../../src/utils/errors';
+import { getActionErrorMessage, getAuthErrorMessage, isAccountDisabledError, isInvalidCredentialsError, isSessionMissingError, UserFacingError } from '../../src/utils/errors';
 
 class AuthSessionMissingError extends Error {
   name = 'AuthSessionMissingError';
@@ -77,7 +77,6 @@ describe('Supabase Auth codes', () => {
   });
 
   it('keeps our own validation messages', () => {
-    const { UserFacingError } = require('../../src/utils/errors');
     expect(getAuthErrorMessage(new UserFacingError('Enter your name.'), 'f')).toBe('Enter your name.');
   });
 });

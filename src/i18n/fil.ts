@@ -97,10 +97,10 @@ export const fil: Copy = {
     continue: 'Magpatuloy sa Paglalagay ng Datos',
     continueDisabledHint: 'Punan muna ang dalawang pangalan',
     duplicateNames: 'Bigyan ng magkaibang pangalan ang bawat opsyon.',
-    discardTitle: 'Itapon ang paghahambing na ito?',
+    discardTitle: 'Itigil ang paghahambing na ito?',
     discardBody: 'Hindi mase-save ang mga pangalang inilagay mo.',
     discardCancel: 'Ituloy ang pag-edit',
-    discardConfirm: 'Itapon',
+    discardConfirm: 'Itigil',
   },
 
   predefinedCopy: {
@@ -130,11 +130,11 @@ export const fil: Copy = {
     priceUnit: 'bawat kilo',
     scenariosHeading: 'PARA SA BAWAT URI NG PANAHON',
     scenarioMeaning: [
-      'Ang pinakatuyong 1 sa bawat 5 panahon',
+      'Ang pinakatuyo sa bawat 5 panahon',
       'Medyo mas tuyo kaysa karaniwan',
       'Karaniwang panahon',
       'Medyo mas maulan kaysa karaniwan',
-      'Ang pinakamaulang 1 sa bawat 5 panahon',
+      'Ang pinakamaulan sa bawat 5 panahon',
     ],
     yield: 'Ani',
     cost: 'Gastos',
@@ -182,7 +182,7 @@ export const fil: Copy = {
     heroNormalBetter: (name: string, amount: string) =>
       `Sa karaniwang taon (walang forecast), kikita ang ${name} ng ${amount} nang higit bawat ektarya kaysa sa forecast mo.`,
     verdictDetail: (winner: string, loser: string) =>
-      `Inaasahang mas kikita kaysa sa ${loser} sa malamang na klima ngayong taon.`,
+      `Inaasahang mas kikita kaysa sa ${loser} sa maaring klima ngayong taon.`,
     earningsHeading: 'Inaasahang kita bawat ektarya',
     earningsForecast: 'Ayon sa forecast mo',
     earningsNormal: 'Karaniwang taon (walang forecast)',
@@ -197,7 +197,7 @@ export const fil: Copy = {
     yearNames: { dry: 'tuyo', average: 'karaniwan', wet: 'maulan' },
     bothNegativeVerdict: 'Inaasahang malulugi\nang dalawang opsyon.',
     bothNegativeDetail: (a: string, b: string) =>
-      `Hindi inaasahang kikita ang ${a} o ang ${b} sa malamang na klima ngayong taon.`,
+      `Hindi inaasahang kikita ang ${a} o ang ${b} sa maaring klima ngayong taon.`,
     seeDetails: 'Tingnan ang detalye',
     fullBreakdown: 'Ipakita ang buong detalye',
     hideBreakdown: 'Itago ang buong detalye',
@@ -227,7 +227,7 @@ export const fil: Copy = {
     subtitle: 'Tsansa ng bawat uri ng taon × kita ng opsyon dito, pinagsama-sama.',
     rootLabel: 'Ang pinili mo',
     expected: 'Inaasahan',
-    outcomes: { dry: 'Tuyong taon', average: 'Karaniwang taon', wet: 'Maulang taon' },
+    outcomes: { dry: 'Tagtuyong taon', average: 'Karaniwang taon', wet: 'Maulang taon' },
     notForecast: 'wala sa forecast',
     conclusionBest: (name: string) => `Pinakamainam: ${name}`,
     conclusionNone: 'Parehong malulugi ang dalawang opsyon',
@@ -517,11 +517,11 @@ export const fil: Copy = {
     scenarios: {
       term: 'Mga uri ng panahon (Climate scenarios)',
       definition: 'Ang limang uri ng panahon na pinaghahandaan ng FarmAssist: Pinakatuyo, Medyo Tuyo, Karaniwan, Medyo Maulan, at Pinakamaulan. Inilalarawan nito kung gaano karaming ulan ang natatanggap ng isang panahon kumpara sa karaniwan sa lugar mo. Kadalasang kasabay ng El Niño ang pinakatuyong panahon; ng La Niña naman ang pinakamaulan.\n\n'
-        + 'Pinakatuyo: ang pinakatuyong 1 sa bawat 5 panahon.\n'
+        + 'Pinakatuyo: ang pinakatuyo sa bawat 5 panahon.\n'
         + 'Medyo Tuyo: mas tuyo kaysa karaniwan, pero hindi ang pinakatuyo.\n'
         + 'Karaniwan: isang karaniwang panahon sa lugar mo.\n'
         + 'Medyo Maulan: mas maulan kaysa karaniwan, pero hindi ang pinakamaulan.\n'
-        + 'Pinakamaulan: ang pinakamaulang 1 sa bawat 5 panahon.',
+        + 'Pinakamaulan: ang pinakamaulan sa bawat 5 panahon.',
     },
     price: {
       term: 'Presyo ng benta (Selling price)',

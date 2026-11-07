@@ -1,7 +1,8 @@
 import { cardShadow, Colors } from '@/src/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Modal, Pressable, StyleSheet, TouchableOpacity, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { EASE_OUT } from '@/src/constants/motion';
 import Animated, { FadeOut, Keyframe, useReducedMotion } from 'react-native-reanimated';
 import { MotionIcon, useIconMotion, type IconMotion } from './animated-icon';

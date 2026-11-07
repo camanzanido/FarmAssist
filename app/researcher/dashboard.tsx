@@ -18,7 +18,8 @@ import { placesLabel } from '@/src/utils/placeFilter';
 import { monthsBack } from '@/src/utils/researcherStats';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TYPE_COLORS = DecisionTypeColors as Record<DecisionType, string>;
