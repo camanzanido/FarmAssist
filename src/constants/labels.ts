@@ -1,6 +1,6 @@
+import type { UserType } from '@/src/auth/types';
 import { Ionicons } from '@expo/vector-icons';
 import type { ImageSourcePropType } from 'react-native';
-import type { UserType } from '@/src/auth/types';
 import { labelCopy } from './copy';
 
 // --- Types ---
@@ -17,8 +17,8 @@ export const PLACEHOLDERS = labelCopy.placeholders as Record<DecisionType, strin
 
 export const DECISION_IMAGES: Record<DecisionType, ImageSourcePropType> = {
   crop_choice: require('@/assets/images/crop_choice.jpg'),
-  crop_variety: require('@/assets/images/crop_choice.jpg'),
-  protect: require('@/assets/images/apply_or_not_apply.jpg'),
+  crop_variety: require('@/assets/images/crop_variety.jpg'),
+  protect: require('@/assets/images/protect_from_rain.jpg'),
 };
 
 export const DECISION_LABELS: Record<DecisionType, string> = labelCopy.decisionLabels;

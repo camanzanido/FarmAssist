@@ -125,11 +125,11 @@ export const dataEntryCopy = {
   priceUnit: 'per kilogram',
   scenariosHeading: 'FOR EACH CLIMATE SCENARIO',
   scenarioMeaning: [
-    'The driest 1 in 5 seasons',
+    'The driest in 5 seasons',
     'Somewhat drier than usual',
     'A typical season',
     'Somewhat wetter than usual',
-    'The wettest 1 in 5 seasons',
+    'The wettest in 5 seasons',
   ],
   yield: 'Yield',
   cost: 'Cost',
@@ -526,11 +526,11 @@ export const GLOSSARY: Record<GlossaryKey, { term: string; definition: string }>
   scenarios: {
     term: 'Climate scenarios',
     definition: 'The five kinds of season FarmAssist plans for: Driest, Below Average, Average, Above Average, and Wettest. They describe how much rain a season gets compared with what is usual for your area. Driest seasons often come with El Niño; Wettest with La Niña.\n\n'
-      + 'Driest: the driest 1 in 5 seasons.\n'
+      + 'Driest: the driest in 5 seasons.\n'
       + 'Below Average: drier than usual, but not the driest.\n'
       + 'Average: a typical season for your area.\n'
       + 'Above Average: wetter than usual, but not the wettest.\n'
-      + 'Wettest: the wettest 1 in 5 seasons.',
+      + 'Wettest: the wettest in 5 seasons.',
   },
   price: {
     term: 'Selling price',
