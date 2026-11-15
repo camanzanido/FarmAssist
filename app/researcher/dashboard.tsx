@@ -8,6 +8,7 @@ import { AreaLineChart, type ChartSlot } from '@/src/components/ui/area-line-cha
 import { DonutChart } from '@/src/components/ui/donut-chart';
 import { GradientBar } from '@/src/components/ui/gradient-bar';
 import { Skeleton } from '@/src/components/ui/skeleton';
+import { Text } from '@/src/components/ui/text';
 import { DECISIONS, DecisionType } from '@/src/constants';
 import { CARD_PADDING, cardSurface, Colors, DecisionTypeColors } from '@/src/constants/colors';
 import { TAB_SCREEN_EDGES, useIsWide, wideColumn } from '@/src/constants/layout';
@@ -19,7 +20,6 @@ import { monthsBack } from '@/src/utils/researcherStats';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Text } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TYPE_COLORS = DecisionTypeColors as Record<DecisionType, string>;
@@ -188,7 +188,7 @@ export default function ResearcherDashboardScreen() {
               <StatCard label="Active field users" value={overview.active_farmers.toLocaleString()} variant="teal" increase={overview.new_farmers_this_month} />
             </View>
             <View style={[s.statRow, isWide && s.statRowWide]}>
-              <StatCard label="Researchers" value={overview.researchers.toLocaleString()} variant="brand" />
+              <StatCard label="Admins" value={overview.researchers.toLocaleString()} variant="brand" />
               <StatCard label="Average gain/ha" value={formatCurrency(overview.average_gain)} variant="soft" />
             </View>
           </View>

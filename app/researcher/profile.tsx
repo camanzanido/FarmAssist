@@ -4,20 +4,20 @@ import { ChangePasswordSheet } from '@/src/components/profile/change-password-sh
 import { DeleteAccountSheet } from '@/src/components/profile/delete-account-sheet';
 import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
 import { PopoverMenu } from '@/src/components/ui/popover-menu';
+import { PressableScale } from '@/src/components/ui/pressable-scale';
+import { Text } from '@/src/components/ui/text';
 import { ResearcherColors as C } from '@/src/constants/colors';
 import { changePasswordCopy, profileCopy, termsCopy } from '@/src/constants/copy';
 import { ROLE_SHORT } from '@/src/constants/labels';
 import { TAB_SCREEN_EDGES, wideColumn } from '@/src/constants/layout';
-import { updateUserRemote } from '@/src/database/repositories/researcher';
+import { invokeFunction } from '@/src/database/supabase/invokeFunction';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
 import { displayEmail } from '@/src/utils/accountEmail';
 import { getActionErrorMessage } from '@/src/utils/errors';
-import { PressableScale } from '@/src/components/ui/pressable-scale';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Text } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function initials(name: string): string {
@@ -45,18 +45,19 @@ export default function ResearcherProfileScreen() {
     if (confirmed) await signOut();
   }
 
-  // Resolves to an error message for the sheet, or null once the account is disabled.
+
   async function handleDelete(): Promise<string | null> {
     if (!user) return null;
     try {
-      await updateUserRemote(user.id, { status: 'inactive' });
+      await invokeFunction('delete-account-hard', { user_id: user.id });
     } catch (err) {
       console.error('Failed to delete own account:', err);
       return getActionErrorMessage(err, 'Could not delete your account. Please try again.');
     }
+
     setDeleteOpen(false);
-    // The server already revoked every session, so this only clears what is left on this device.
-    await signOut().catch(err => console.warn('Sign-out after account delete failed:', err));
+    await signOut();
+
     return null;
   }
 
