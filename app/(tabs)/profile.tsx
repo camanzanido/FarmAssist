@@ -1,30 +1,33 @@
 // app/(tabs)/profile.tsx
 import { useAuth } from '@/src/auth/AuthContext';
-import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
 import { connectSync } from '@/src/auth/authService';
+import { useFeedback } from '@/src/components/feedback/FeedbackProvider';
+import { ChangePasswordSheet } from '@/src/components/profile/change-password-sheet';
+import { DeleteAccountSheet } from '@/src/components/profile/delete-account-sheet';
+import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
+import { LanguagePicker } from '@/src/components/ui/language-picker';
+import { PopoverMenu } from '@/src/components/ui/popover-menu';
+import { PressableScale } from '@/src/components/ui/pressable-scale';
+import { Text } from '@/src/components/ui/text';
 import { brandGradientCss, CARD_PADDING, CARD_RADIUS, cardSurface, Colors } from '@/src/constants/colors';
 import { BUTTON_HEIGHT, contentColumn, TAB_SCREEN_EDGES } from '@/src/constants/layout';
 import { db } from '@/src/database/powersync/powersync';
 import { getDecisionsByUser, getStagedDecisionIds } from '@/src/database/repositories/decisions';
 import { getLocationsByUser, type Location } from '@/src/database/repositories/locations';
 import { clearSyncErrors } from '@/src/database/repositories/syncErrors';
-import { ChangePasswordSheet } from '@/src/components/profile/change-password-sheet';
-import { EditProfileSheet } from '@/src/components/profile/edit-profile-sheet';
-import { PopoverMenu } from '@/src/components/ui/popover-menu';
+import { invokeFunction } from '@/src/database/supabase/invokeFunction';
 import { useEditProfile } from '@/src/hooks/use-edit-profile';
-import { useSyncStatus } from '@/src/hooks/use-sync-status';
-import { displayEmail, realEmail } from '@/src/utils/accountEmail';
 import { useNavLock } from '@/src/hooks/use-nav-lock';
-import { PressableScale } from '@/src/components/ui/pressable-scale';
+import { useSyncStatus } from '@/src/hooks/use-sync-status';
+import { dateLocale } from '@/src/i18n/dictionary';
+import { useCopy } from '@/src/i18n/LanguageContext';
+import { displayEmail, realEmail } from '@/src/utils/accountEmail';
+import { getActionErrorMessage } from '@/src/utils/errors';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import { Image, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Text } from '@/src/components/ui/text';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { dateLocale } from '@/src/i18n/dictionary';
-import { LanguagePicker } from '@/src/components/ui/language-picker';
-import { useCopy } from '@/src/i18n/LanguageContext';
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -53,6 +56,8 @@ export default function ProfileScreen() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -111,6 +116,21 @@ export default function ProfileScreen() {
     }
   }
 
+  async function handleDelete(): Promise<string | null> {
+    if (!user) return null;
+    try {
+      await invokeFunction('delete-account-hard', { user_id: user.id });
+    } catch (err) {
+      console.error('Failed to delete own account:', err);
+      return getActionErrorMessage(err, 'Could not delete your account. Please try again.');
+    }
+
+    setDeleteOpen(false);
+    await signOut();
+
+    return null;
+  }
+
   return (
     <SafeAreaView style={s.safe} edges={TAB_SCREEN_EDGES}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
@@ -160,6 +180,7 @@ export default function ProfileScreen() {
               items={[
                 { key: 'edit', label: copy.editProfile, icon: 'create-outline', onPress: edit.open },
                 { key: 'password', label: changePasswordCopy.row, icon: 'key-outline', onPress: () => setPasswordOpen(true) },
+                { key: 'delete', label: 'Delete account', icon: 'trash-outline', onPress: () => setDeleteOpen(true) },
               ]}
             />
           </View>
@@ -284,6 +305,7 @@ export default function ProfileScreen() {
         onClose={edit.close}
         onSaved={edit.onSaved}
       />
+       <DeleteAccountSheet visible={deleteOpen} onClose={() => setDeleteOpen(false)} onConfirm={handleDelete} />
       <ChangePasswordSheet
         visible={passwordOpen}
         onClose={() => setPasswordOpen(false)}
